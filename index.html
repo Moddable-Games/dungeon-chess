@@ -5,154 +5,58 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Moddable Chess — Dungeon Battles</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --gold:#b8860b; --dark:#1a1008; --dark2:#2c1810; --dark3:#3d2415;
-  --parchment:#f5e6c8; --parchment2:#ede0c4; --muted:#8b7355; --border:#6b4c11;
-  --sq-light:#f0d9b5; --sq-dark:#b58863; --sq-water:#3a78b5; --sq-void:transparent;
-}
-body { font-family:'Crimson Text',Georgia,serif; background:var(--dark); color:var(--parchment); min-height:100vh; }
-.screen { display:none; min-height:100vh; }
-.screen.active { display:flex; flex-direction:column; }
-h1,h2,h3,h4 { font-family:'Cinzel',serif; }
-.divider { width:60px; height:2px; background:var(--gold); margin:1rem auto; }
-
-/* ── BUTTONS ── */
-.btn { font-family:'Cinzel',serif; font-size:13px; letter-spacing:1.5px; padding:10px 24px;
-  border:1px solid var(--border); background:transparent; color:var(--parchment);
-  cursor:pointer; border-radius:4px; transition:all 0.15s; }
-.btn:hover:not(:disabled) { background:rgba(184,134,11,0.15); border-color:var(--gold); }
-.btn:disabled { opacity:0.35; cursor:not-allowed; }
-.btn.primary { background:var(--dark2); border-color:var(--gold); }
-.btn.primary:hover:not(:disabled) { background:var(--dark3); }
-.btn.sm { font-size:11px; padding:5px 12px; letter-spacing:1px; }
-.btn.danger { border-color:#922; color:#e8a0a0; }
-.btn.danger:hover { background:rgba(192,57,43,0.15); }
-
-/* ── HOME ── */
-#screen-home { align-items:center; justify-content:center; text-align:center; padding:3rem 2rem; }
-.home-crest { font-size:72px; margin-bottom:1.5rem; }
-.home-title { font-size:clamp(30px,6vw,52px); font-weight:700; color:var(--gold); letter-spacing:4px; margin-bottom:0.5rem; }
-.home-sub { font-size:18px; color:var(--muted); font-style:italic; letter-spacing:2px; margin-bottom:2rem; }
-.home-desc { max-width:440px; line-height:1.9; color:var(--parchment2); font-size:16px; margin-bottom:3rem; }
-
-/* ── SHARED SCREEN WRAPPER ── */
-.screen-inner { max-width:900px; width:100%; margin:0 auto; padding:2.5rem 1.5rem; }
-.screen-header { text-align:center; margin-bottom:2rem; }
-.screen-header h2 { font-size:26px; color:var(--gold); letter-spacing:3px; }
-.screen-header p { color:var(--muted); font-style:italic; margin-top:6px; }
-.back-row { margin-bottom:1.5rem; }
-
-/* ── MAP ── */
-.map-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; }
-.map-card { border:1px solid var(--border); border-radius:8px; padding:1.25rem;
-  background:rgba(44,24,16,0.6); cursor:pointer; transition:all 0.15s; }
-.map-card:hover { border-color:var(--gold); transform:translateY(-2px); }
-.map-card .mc-icon { font-size:32px; margin-bottom:8px; }
-.map-card h3 { font-size:13px; color:var(--gold); letter-spacing:1px; margin-bottom:5px; }
-.map-card p { font-size:13px; color:var(--muted); line-height:1.5; margin-bottom:10px; }
-
-/* ── SPECIES ── */
-.species-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(185px,1fr)); gap:14px; }
-.species-card { border:1px solid transparent; border-radius:8px; padding:1.25rem;
-  background:rgba(44,24,16,0.5); cursor:pointer; transition:all 0.2s; }
-.species-card:hover { transform:translateY(-3px); }
-.sp-emoji { font-size:36px; margin-bottom:8px; }
-.sp-desc { font-size:13px; color:var(--muted); line-height:1.6; margin-bottom:10px; }
-.sp-roster { border-top:1px solid rgba(255,255,255,0.07); padding-top:8px; }
-.sp-unit { font-size:12px; color:var(--muted); margin-bottom:2px; }
-
-/* ── DRAFT ── */
-.draft-layout { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
-.draft-panel { background:rgba(44,24,16,0.6); border:1px solid var(--border); border-radius:8px; padding:1.1rem; }
-.draft-panel h3 { font-size:11px; letter-spacing:2px; color:var(--muted); margin-bottom:.9rem; }
-.unit-row { display:flex; justify-content:space-between; align-items:center;
-  padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
-.unit-row:last-child { border-bottom:none; }
-.unit-name { font-size:14px; }
-.unit-tag { font-size:11px; color:var(--muted); margin-left:4px; }
-.unit-cost { font-family:'Cinzel',serif; font-size:12px; margin-right:6px; }
-.xp-row { display:flex; align-items:baseline; gap:10px; justify-content:center; margin-bottom:1.25rem; }
-.xp-num { font-family:'Cinzel',serif; font-size:40px; font-weight:700; }
-.xp-num.ok { color:#27ae60; } .xp-num.low { color:#dc2626; }
-.xp-lbl { font-size:14px; color:var(--muted); }
-.draft-warn { font-size:12px; color:#dc2626; margin-top:5px; font-style:italic; }
-.ai-box { background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.06);
-  border-radius:8px; padding:.9rem; margin-top:10px; }
-.ai-box h3 { font-size:11px; letter-spacing:2px; color:var(--muted); margin-bottom:6px; }
-.ai-line { font-size:13px; color:var(--muted); margin-bottom:2px; }
-
-/* ── BATTLE ── */
-#screen-battle { flex-direction:row !important; align-items:flex-start;
-  padding:1rem; gap:12px; flex-wrap:wrap; overflow-x:auto; }
-.b-left, .b-right { display:flex; flex-direction:column; gap:8px; flex:0 0 148px; }
-.b-centre { flex:1; min-width:280px; display:flex; flex-direction:column; align-items:center; gap:8px; }
-.info-panel { background:rgba(44,24,16,0.75); border:1px solid var(--border); border-radius:8px; padding:.8rem; }
-.info-panel h4 { font-size:10px; letter-spacing:2px; color:var(--muted); margin-bottom:7px; }
-.turn-panel { border-width:2px; text-align:center; }
-.t-emoji { font-size:24px; margin-bottom:3px; }
-.t-label { font-family:'Cinzel',serif; font-size:11px; letter-spacing:1px; }
-.stat { font-size:13px; color:var(--parchment2); margin-bottom:3px; }
-.stat-s { font-size:12px; color:var(--muted); margin-bottom:2px; }
-.h-scroll { max-height:160px; overflow-y:auto; font-size:12px; color:var(--muted); }
-.h-scroll::-webkit-scrollbar { width:3px; }
-.h-scroll::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
-.h-entry { padding:2px 0; border-bottom:1px solid rgba(255,255,255,0.04); line-height:1.4; }
-.sel-name { font-size:15px; margin-bottom:2px; }
-.sel-meta { font-size:12px; color:var(--muted); }
-
-/* ── SVG BOARD ── */
-#board-wrap {
-  background:rgba(20,12,4,0.95);
-  border:2px solid var(--border);
-  border-radius:8px;
-  padding:10px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.6), inset 0 1px 0 rgba(184,134,11,0.2);
-  overflow:auto;
-  max-width:100%;
-}
-#dungeon-board { display:block; }
-
-/* Square interaction states */
-.sq { cursor:pointer; transition:filter 0.1s; }
-.sq:hover .sq-bg { filter:brightness(1.15); }
-.sq.selected .sq-bg { filter:brightness(1.3); }
-.sq-bg { transition:fill 0.15s; }
-
-/* Coordinate labels */
-.coord { font-family:'Cinzel',serif; font-size:9px; fill:#8b7355; pointer-events:none; user-select:none; }
-
-/* ── END ── */
-#screen-end { align-items:center; justify-content:center; text-align:center; padding:3rem 2rem; }
-.end-icon { font-size:80px; margin-bottom:1.5rem; }
-.end-title { font-size:46px; font-weight:700; letter-spacing:5px; margin-bottom:.5rem; }
-.end-sub { font-size:18px; font-style:italic; color:var(--muted); margin-bottom:2.5rem; }
-.end-stats { display:flex; gap:18px; margin-bottom:3rem; flex-wrap:wrap; justify-content:center; }
-.end-stat { background:rgba(44,24,16,0.7); border:1px solid var(--border); border-radius:8px;
-  padding:.9rem 1.4rem; min-width:95px; }
-.end-val { font-family:'Cinzel',serif; font-size:28px; font-weight:600; }
-.end-lbl { font-size:13px; color:var(--muted); margin-top:2px; }
-
-@media(max-width:660px) {
-  #screen-battle { flex-direction:column !important; }
-  .draft-layout { grid-template-columns:1fr; }
-  .b-left,.b-right { flex-direction:row; flex-wrap:wrap; flex:unset; width:100%; }
-  .info-panel { flex:1; min-width:120px; }
-}
-</style>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <!-- HOME -->
 <section id="screen-home" class="screen active">
-  <div class="home-crest">♛</div>
-  <h1 class="home-title">MODDABLE CHESS</h1>
-  <p class="home-sub">Dungeon Crawler Battles</p>
-  <div class="divider"></div>
-  <p class="home-desc">Choose your species, draft your team, and battle on a modular dungeon board. Asymmetric units, terrain hazards, and dungeon tokens await.</p>
-  <button class="btn primary" id="btn-play" style="font-size:15px;padding:14px 40px;letter-spacing:2px;">⚔ PLAY VS AI</button>
-  <p style="margin-top:3rem;font-size:12px;color:var(--muted);font-family:'Cinzel',serif;letter-spacing:1px;">Phase 1 — Solo vs AI · v0.1</p>
+  <canvas id="home-canvas" class="bg-canvas"></canvas>
+  <div class="home-wrapper">
+    <div class="stone-frame">
+      <div class="torch-corner torch-corner--tl"></div>
+      <div class="torch-corner torch-corner--tr"></div>
+      <div class="torch-corner torch-corner--bl"></div>
+      <div class="torch-corner torch-corner--br"></div>
+
+      <div class="home-sword">⚔</div>
+      <h1 class="home-title">MODDABLE CHESS</h1>
+      <p class="home-sub">Dungeon Crawler Battles</p>
+      <div class="divider"></div>
+
+      <div class="faction-row">
+        <span title="Humans" class="faction-icon--human">⚔️</span>
+        <span title="Undead" class="faction-icon--undead">💀</span>
+        <span title="Redskins" class="faction-icon--redskin">👹</span>
+        <span title="Greenskins" class="faction-icon--greenskin">🐲</span>
+      </div>
+
+      <p class="home-desc">Draft your warband, explore the dungeon, and crush your enemies. Every species fights differently — choose wisely.</p>
+
+      <button class="btn primary btn-play" id="btn-play">⚔ ENTER THE DUNGEON</button>
+      <p class="version-tag">Phase 1 — Solo vs AI · v0.1</p>
+    </div>
+  </div>
+</section>
+
+<!-- PLAYER COUNT -->
+<section id="screen-players" class="screen">
+  <div class="screen-inner screen-inner--narrow">
+    <div class="back-row"><button class="btn sm" id="players-back">← Back</button></div>
+    <div class="screen-header"><h2>HOW MANY PLAYERS?</h2><p>Choose your battle size</p></div>
+    <div class="player-grid">
+      <div class="map-card" id="pick-2p">
+        <div class="mc-icon">⚔</div>
+        <h3>2 PLAYERS</h3>
+        <p>You vs AI — pick Compact or Two Player dungeon map</p>
+      </div>
+      <div class="map-card" id="pick-4p">
+        <div class="mc-icon">🏰</div>
+        <h3>4 PLAYERS</h3>
+        <p>You + 3 AI opponents on the Four Player dungeon map</p>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- MAP -->
@@ -166,7 +70,7 @@ h1,h2,h3,h4 { font-family:'Cinzel',serif; }
 
 <!-- SPECIES -->
 <section id="screen-species" class="screen">
-  <div class="screen-inner" style="max-width:920px;">
+  <div class="screen-inner screen-inner--species">
     <div class="back-row"><button class="btn sm" id="species-back">← Back</button></div>
     <div class="screen-header"><h2>CHOOSE YOUR SPECIES</h2><p>Each species fights differently</p></div>
     <div class="species-grid" id="species-grid"></div>
@@ -175,11 +79,11 @@ h1,h2,h3,h4 { font-family:'Cinzel',serif; }
 
 <!-- DRAFT -->
 <section id="screen-draft" class="screen">
-  <div class="screen-inner" style="max-width:940px;">
+  <div class="screen-inner screen-inner--draft">
     <div class="back-row"><button class="btn sm" id="draft-back">← Back</button></div>
     <div class="screen-header">
       <h2>DRAFT YOUR TEAM</h2>
-      <p id="draft-sub" style="color:var(--muted);font-style:italic;margin-top:6px;"></p>
+      <p id="draft-sub" class="draft-sub"></p>
     </div>
     <div class="xp-row">
       <div class="xp-num ok" id="xp-left">75</div>
@@ -199,11 +103,59 @@ h1,h2,h3,h4 { font-family:'Cinzel',serif; }
         <div class="ai-box">
           <h3 id="ai-prev-title">AI TEAM</h3>
           <div id="ai-prev-list"></div>
+          <div id="ai2-prev" class="ai-prev-extra">
+            <h3 id="ai2-prev-title"></h3>
+            <div id="ai2-prev-list"></div>
+          </div>
+          <div id="ai3-prev" class="ai-prev-extra">
+            <h3 id="ai3-prev-title"></h3>
+            <div id="ai3-prev-list"></div>
+          </div>
         </div>
-        <button class="btn primary" id="begin-btn" disabled
-          style="width:100%;margin-top:12px;padding:11px;letter-spacing:2px;">⚔ BEGIN BATTLE</button>
+        <button class="btn primary btn-begin" id="begin-btn" disabled>⚔ BEGIN BATTLE</button>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- PLACEMENT -->
+<section id="screen-place" class="screen">
+  <div class="b-left">
+    <div class="info-panel">
+      <h4>YOUR PIECES</h4>
+      <div id="tray-list" class="tray-list"></div>
+    </div>
+    <div class="place-btn-row">
+      <button class="btn sm" id="place-back">← Back</button>
+      <button class="btn sm" id="place-reset">↺ Reset</button>
+    </div>
+  </div>
+
+  <div class="b-centre">
+    <div class="place-header">
+      <h2>DEPLOY YOUR FORCES</h2>
+      <p id="place-sub" class="place-sub"></p>
+      <p class="place-hint" id="place-hint">
+        <span>Click a piece</span> then <span>click a square</span>
+      </p>
+    </div>
+    <div id="place-board-wrap" class="board-wrap">
+      <canvas id="place-canvas" class="board-canvas"></canvas>
+      <svg id="place-board" xmlns="http://www.w3.org/2000/svg" class="board-svg"></svg>
+      <canvas id="place-lights" class="board-lights"></canvas>
+    </div>
+  </div>
+
+  <div class="b-right">
+    <div class="info-panel" id="place-tray-wrap">
+      <h4>YOUR TEAM</h4>
+      <div id="place-team-list" class="place-team-list"></div>
+    </div>
+    <div class="info-panel">
+      <h4>AI TEAMS</h4>
+      <div id="place-ai-list" class="place-ai-list"></div>
+    </div>
+    <button class="btn primary btn-confirm" id="confirm-place-btn" disabled>⚔ BEGIN BATTLE</button>
   </div>
 </section>
 
@@ -227,7 +179,7 @@ h1,h2,h3,h4 { font-family:'Cinzel',serif; }
     </div>
     <div class="info-panel">
       <h4>LEGEND</h4>
-      <div class="stat-s" style="margin-top:0;">
+      <div class="stat-s legend-swatch">
         <svg width="12" height="12"><rect width="12" height="12" fill="#3a78b5" rx="2"/></svg>
         Water
       </div>
@@ -236,17 +188,19 @@ h1,h2,h3,h4 { font-family:'Cinzel',serif; }
   </div>
 
   <div class="b-centre">
-    <div id="board-wrap">
-      <svg id="dungeon-board" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div id="board-wrap" class="board-wrap">
+      <canvas id="dungeon-canvas" class="board-canvas"></canvas>
+      <svg id="dungeon-board" xmlns="http://www.w3.org/2000/svg" class="board-svg"></svg>
+      <canvas id="dungeon-lights" class="board-lights"></canvas>
     </div>
   </div>
 
   <div class="b-right">
-    <div class="info-panel" style="border-color:var(--gold);min-height:85px;">
+    <div class="info-panel info-panel--selected">
       <h4>SELECTED</h4>
-      <div id="sel-info" style="color:var(--muted);font-style:italic;font-size:13px;">Click a piece</div>
+      <div id="sel-info" class="sel-info">Click a piece</div>
     </div>
-    <div class="info-panel" style="flex:1;">
+    <div class="info-panel info-panel--log">
       <h4>MOVE LOG</h4>
       <div class="h-scroll" id="h-list"></div>
     </div>
@@ -255,861 +209,30 @@ h1,h2,h3,h4 { font-family:'Cinzel',serif; }
 
 <!-- END -->
 <section id="screen-end" class="screen">
-  <div class="end-icon" id="end-icon">👑</div>
-  <h1 class="end-title" id="end-title">VICTORY</h1>
-  <p class="end-sub" id="end-sub"></p>
-  <div class="end-stats" id="end-stats"></div>
-  <button class="btn primary" id="play-again-btn"
-    style="font-size:14px;padding:12px 36px;letter-spacing:2px;">↩ PLAY AGAIN</button>
+  <canvas id="end-canvas" class="bg-canvas"></canvas>
+  <div class="home-wrapper">
+    <div class="stone-frame stone-frame--end">
+      <div class="torch-corner torch-corner--tl"></div>
+      <div class="torch-corner torch-corner--tr"></div>
+      <div class="torch-corner torch-corner--bl"></div>
+      <div class="torch-corner torch-corner--br"></div>
+      <div class="end-icon" id="end-icon">👑</div>
+      <h1 class="end-title" id="end-title">VICTORY</h1>
+      <div class="divider"></div>
+      <p class="end-sub" id="end-sub"></p>
+      <div class="end-stats" id="end-stats"></div>
+      <button class="btn primary btn-play-again" id="play-again-btn">↩ RETURN TO DUNGEON</button>
+    </div>
+  </div>
 </section>
 
-<script>
-'use strict'
-
-// ═══════════════════════════════════════════════════════════
-// INLINE PIECE SPRITES — Cburnett set (CC BY-SA 3.0)
-// Same pieces used by Wikipedia, Lichess, and cm-chessboard's
-// "standard.svg" set. Inlined here so no CDN fetch is needed.
-// Each symbol uses viewBox="0 0 45 45".
-// ═══════════════════════════════════════════════════════════
-const TILE = 56  // px per square on the board
-
-// Piece letter → sprite id suffix
-const PIECE_TO_SPRITE = { p:'p', r:'r', n:'n', b:'b', q:'q', k:'k' }
-
-// All 12 piece symbols as inline SVG strings (id = piece-wp, piece-bp, etc.)
-const PIECE_SYMBOLS = {
-'wp': `<symbol id="piece-wp" viewBox="0 0 45 45"><path d="M 22,9 C 19.79,9 18,10.79 18,13 C 18,13.89 18.29,14.71 18.78,15.38 C 16.83,16.5 15.5,18.59 15.5,21 C 15.5,23.03 16.44,24.84 17.91,26.03 C 14.91,27.09 10.5,31.58 10.5,39.5 L 33.5,39.5 C 33.5,31.58 29.09,27.09 26.09,26.03 C 27.56,24.84 28.5,23.03 28.5,21 C 28.5,18.59 27.17,16.5 25.22,15.38 C 25.71,14.71 26,13.89 26,13 C 26,10.79 24.21,9 22,9 z" style="fill:#fff;stroke:#000;stroke-width:1.5;stroke-linecap:round"/></symbol>`,
-'bp': `<symbol id="piece-bp" viewBox="0 0 45 45"><path d="M 22,9 C 19.79,9 18,10.79 18,13 C 18,13.89 18.29,14.71 18.78,15.38 C 16.83,16.5 15.5,18.59 15.5,21 C 15.5,23.03 16.44,24.84 17.91,26.03 C 14.91,27.09 10.5,31.58 10.5,39.5 L 33.5,39.5 C 33.5,31.58 29.09,27.09 26.09,26.03 C 27.56,24.84 28.5,23.03 28.5,21 C 28.5,18.59 27.17,16.5 25.22,15.38 C 25.71,14.71 26,13.89 26,13 C 26,10.79 24.21,9 22,9 z" style="fill:#000;stroke:#000;stroke-width:1.5;stroke-linecap:round"/></symbol>`,
-'wr': `<symbol id="piece-wr" viewBox="0 0 45 45"><g style="opacity:1;fill:#fff;fill-opacity:1;fill-rule:evenodd;stroke:#000;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"><path d="M 9,39 L 36,39 L 36,36 L 9,36 L 9,39 z"/><path d="M 12,36 L 12,32 L 33,32 L 33,36 L 12,36 z"/><path d="M 11,14 L 11,9 L 15,9 L 15,11 L 20,11 L 20,9 L 25,9 L 25,11 L 30,11 L 30,9 L 34,9 L 34,14"/><path d="M 34,14 L 31,17 L 14,17 L 11,14"/><path d="M 31,17 L 31,29.5 L 14,29.5 L 14,17"/><path d="M 31,29.5 L 32.5,32 L 12.5,32 L 14,29.5"/><path d="M 11,14 L 34,14" style="fill:none"/></g></symbol>`,
-'br': `<symbol id="piece-br" viewBox="0 0 45 45"><g style="opacity:1;fill:#000;fill-opacity:1;fill-rule:evenodd;stroke:#000;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"><path d="M 9,39 L 36,39 L 36,36 L 9,36 L 9,39 z" style="stroke-linecap:butt"/><path d="M 12,36 L 12,32 L 33,32 L 33,36 L 12,36 z" style="stroke-linecap:butt"/><path d="M 11,14 L 11,9 L 15,9 L 15,11 L 20,11 L 20,9 L 25,9 L 25,11 L 30,11 L 30,9 L 34,9 L 34,14" style="stroke-linecap:butt"/><path d="M 34,14 L 31,17 L 14,17 L 11,14"/><path d="M 31,17 L 31,29.5 L 14,29.5 L 14,17"/><path d="M 31,29.5 L 32.5,32 L 12.5,32 L 14,29.5"/><path d="M 11,14 L 34,14" style="fill:none;stroke:#fff;stroke-linejoin:miter"/><path d="M 12,35.5 L 33,35.5" style="fill:none;stroke:#fff;stroke-width:1;stroke-linejoin:miter"/><path d="M 13,31.5 L 32,31.5" style="fill:none;stroke:#fff;stroke-width:1;stroke-linejoin:miter"/><path d="M 14,29.5 L 31,29.5" style="fill:none;stroke:#fff;stroke-width:1;stroke-linejoin:miter"/></g></symbol>`,
-'wn': `<symbol id="piece-wn" viewBox="0 0 45 45"><g style="opacity:1;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"><path d="M 22,10 C 32.5,11 38.5,18 38,39 L 15,39 C 15,30 25,32.5 23,18" style="fill:#fff;stroke:#000"/><path d="M 24,18 C 24.38,20.91 18.45,25.37 16,27 C 13,29 13.18,31.34 11,31 C 9.958,30.06 12.41,27.96 11,28 C 10,28 11.19,29.23 10,30 C 9,30 5.997,31 6,26 C 6,24 12,14 12,14 C 12,14 13.89,12.1 14,10.5 C 13.27,9.506 13.5,8.5 13.5,7.5 C 14.5,6.5 16.5,10 16.5,10 L 18.5,10 C 18.5,10 19.28,8.008 21,7 C 22,7 22,10 22,10" style="fill:#fff;stroke:#000"/><path d="M 9.5,25.5 A 0.5,0.5 0 1 1 8.5,25.5 A 0.5,0.5 0 1 1 9.5,25.5 z" style="fill:#000;stroke:#000"/><path d="M 15,15.5 A 0.5,1.5 0 1 1 14,15.5 A 0.5,1.5 0 1 1 15,15.5 z" transform="matrix(0.866,0.5,-0.5,0.866,9.693,-5.173)" style="fill:#000;stroke:#000"/></g></symbol>`,
-'bn': `<symbol id="piece-bn" viewBox="0 0 45 45"><g style="opacity:1;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#000;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"><path d="M 22,10 C 32.5,11 38.5,18 38,39 L 15,39 C 15,30 25,32.5 23,18" style="fill:#000;stroke:#000"/><path d="M 24,18 C 24.38,20.91 18.45,25.37 16,27 C 13,29 13.18,31.34 11,31 C 9.958,30.06 12.41,27.96 11,28 C 10,28 11.19,29.23 10,30 C 9,30 5.997,31 6,26 C 6,24 12,14 12,14 C 12,14 13.89,12.1 14,10.5 C 13.27,9.506 13.5,8.5 13.5,7.5 C 14.5,6.5 16.5,10 16.5,10 L 18.5,10 C 18.5,10 19.28,8.008 21,7 C 22,7 22,10 22,10" style="fill:#000;stroke:#000"/><path d="M 9.5,25.5 A 0.5,0.5 0 1 1 8.5,25.5 A 0.5,0.5 0 1 1 9.5,25.5 z" style="fill:#fff;stroke:#fff"/><path d="M 15,15.5 A 0.5,1.5 0 1 1 14,15.5 A 0.5,1.5 0 1 1 15,15.5 z" transform="matrix(0.866,0.5,-0.5,0.866,9.693,-5.173)" style="fill:#fff;stroke:#fff"/><path d="M 24.55,10.4 L 24.1,11.85 L 24.6,12 C 27.75,13 30.25,14.49 32.5,18.75 C 34.75,23.01 35.75,29.06 35.25,39 L 35.2,39.5 L 37.45,39.5 L 37.5,39 C 38,28.94 36.62,22.15 34.25,17.66 C 31.88,13.17 28.46,11.02 25.06,10.5 L 24.55,10.4 z" style="fill:#fff;stroke:none"/></g></symbol>`,
-'wb': `<symbol id="piece-wb" viewBox="0 0 45 45"><g style="opacity:1;fill:none;fill-rule:evenodd;fill-opacity:1;stroke:#000;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"><g style="fill:#fff;stroke:#000;stroke-linecap:butt"><path d="M 9,36 C 12.39,35.03 19.11,36.43 22.5,34 C 25.89,36.43 32.61,35.03 36,36 C 36,36 37.65,36.54 39,38 C 38.32,38.97 37.2,38.91 36,38.5 C 32.61,37.53 25.89,38.96 22.5,37.5 C 19.11,38.96 12.39,37.53 9,38.5 C 7.8,38.91 6.68,38.97 6,38 C 7.35,36.54 9,36 9,36 z"/><path d="M 15,32 C 17.5,34.5 27.5,34.5 30,32 C 30.5,30.5 30,30 30,30 C 30,27.5 27.5,26 27.5,26 C 33,24.5 33.5,14.5 22.5,10.5 C 11.5,14.5 12,24.5 17.5,26 C 17.5,26 15,27.5 15,30 C 15,30 14.5,30.5 15,32 z"/><path d="M 25,8 A 2.5,2.5 0 1 1 20,8 A 2.5,2.5 0 1 1 25,8 z"/></g><path d="M 17.5,26 L 27.5,26 M 15,30 L 30,30 M 22.5,15.5 L 22.5,20.5 M 20,18 L 25,18" style="fill:none;stroke:#000;stroke-linejoin:miter"/></g></symbol>`,
-'bb': `<symbol id="piece-bb" viewBox="0 0 45 45"><g style="opacity:1;fill:none;fill-rule:evenodd;fill-opacity:1;stroke:#000;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"><g style="fill:#000;stroke:#000;stroke-linecap:butt"><path d="M 9,36 C 12.39,35.03 19.11,36.43 22.5,34 C 25.89,36.43 32.61,35.03 36,36 C 36,36 37.65,36.54 39,38 C 38.32,38.97 37.2,38.91 36,38.5 C 32.61,37.53 25.89,38.96 22.5,37.5 C 19.11,38.96 12.39,37.53 9,38.5 C 7.8,38.91 6.68,38.97 6,38 C 7.35,36.54 9,36 9,36 z"/><path d="M 15,32 C 17.5,34.5 27.5,34.5 30,32 C 30.5,30.5 30,30 30,30 C 30,27.5 27.5,26 27.5,26 C 33,24.5 33.5,14.5 22.5,10.5 C 11.5,14.5 12,24.5 17.5,26 C 17.5,26 15,27.5 15,30 C 15,30 14.5,30.5 15,32 z"/><path d="M 25,8 A 2.5,2.5 0 1 1 20,8 A 2.5,2.5 0 1 1 25,8 z"/></g><path d="M 17.5,26 L 27.5,26 M 15,30 L 30,30 M 22.5,15.5 L 22.5,20.5 M 20,18 L 25,18" style="fill:none;stroke:#fff;stroke-linejoin:miter"/></g></symbol>`,
-'wq': `<symbol id="piece-wq" viewBox="0 0 45 45"><g style="fill:#fff;stroke:#000;stroke-width:1.5;stroke-linejoin:round"><path d="M 9,26 C 17.5,24.5 30,24.5 36,26 L 38.5,13.5 L 31,25 L 30.7,10.9 L 25.5,24.5 L 22.5,10 L 19.5,24.5 L 14.3,10.9 L 14,25 L 6.5,13.5 L 9,26 z"/><path d="M 9,26 C 9,28 10.5,28 11.5,30 C 12.5,31.5 12.5,31 12,33.5 C 10.5,34.5 11,36 11,36 C 9.5,37.5 11.5,38.5 11.5,38.5 C 17.5,39.5 27.5,39.5 33.5,38.5 C 33.5,38.5 35.5,37.5 34,36 C 34,36 34.5,34.5 33,33.5 C 32.5,31 32.5,31.5 33.5,30 C 34.5,28 36,28 36,26 C 27.5,24.5 17.5,24.5 9,26 z"/><path d="M 11.5,30 C 15,29 30,29 33.5,30" style="fill:none"/><path d="M 12,33.5 C 15,32.5 30,32.5 33,33.5" style="fill:none"/><circle cx="6" cy="12" r="2"/><circle cx="14" cy="9" r="2"/><circle cx="22.5" cy="8" r="2"/><circle cx="31" cy="9" r="2"/><circle cx="39" cy="12" r="2"/></g></symbol>`,
-'bq': `<symbol id="piece-bq" viewBox="0 0 45 45"><g style="fill:#000;stroke:#000;stroke-width:1.5;stroke-linejoin:round"><path d="M 9,26 C 17.5,24.5 30,24.5 36,26 L 38.5,13.5 L 31,25 L 30.7,10.9 L 25.5,24.5 L 22.5,10 L 19.5,24.5 L 14.3,10.9 L 14,25 L 6.5,13.5 L 9,26 z"/><path d="M 9,26 C 9,28 10.5,28 11.5,30 C 12.5,31.5 12.5,31 12,33.5 C 10.5,34.5 11,36 11,36 C 9.5,37.5 11.5,38.5 11.5,38.5 C 17.5,39.5 27.5,39.5 33.5,38.5 C 33.5,38.5 35.5,37.5 34,36 C 34,36 34.5,34.5 33,33.5 C 32.5,31 32.5,31.5 33.5,30 C 34.5,28 36,28 36,26 C 27.5,24.5 17.5,24.5 9,26 z"/><path d="M 11.5,30 C 15,29 30,29 33.5,30" style="fill:none;stroke:#fff"/><path d="M 12,33.5 C 15,32.5 30,32.5 33,33.5" style="fill:none;stroke:#fff"/><circle cx="6" cy="12" r="2" style="fill:#fff"/><circle cx="14" cy="9" r="2" style="fill:#fff"/><circle cx="22.5" cy="8" r="2" style="fill:#fff"/><circle cx="31" cy="9" r="2" style="fill:#fff"/><circle cx="39" cy="12" r="2" style="fill:#fff"/></g></symbol>`,
-'wk': `<symbol id="piece-wk" viewBox="0 0 45 45"><g style="fill:#fff;stroke:#000;stroke-width:1.5;stroke-linejoin:round"><path d="M 22.5,11.63 L 22.5,6" style="fill:none;stroke:#000;stroke-linejoin:miter"/><path d="M 20,8 L 25,8" style="fill:none;stroke:#000;stroke-linejoin:miter"/><path d="M 22.5,25 C 22.5,25 27,17.5 25.5,14.5 C 25.5,14.5 24.5,12 22.5,12 C 20.5,12 19.5,14.5 19.5,14.5 C 18,17.5 22.5,25 22.5,25"/><path d="M 12.5,37 C 18,40.5 27,40.5 32.5,37 L 32.5,30 C 32.5,30 41.5,25.5 38.5,19.5 C 34.5,13 25,16 22.5,23.5 L 22.5,27 L 22.5,23.5 C 20,16 10.5,13 6.5,19.5 C 3.5,25.5 12.5,30 12.5,30 L 12.5,37"/><path d="M 12.5,30 C 18,27 27,27 32.5,30"/><path d="M 12.5,33.5 C 18,30.5 27,30.5 32.5,33.5"/><path d="M 12.5,37 C 18,34 27,34 32.5,37"/></g></symbol>`,
-'bk': `<symbol id="piece-bk" viewBox="0 0 45 45"><g style="fill:#000;stroke:#000;stroke-width:1.5;stroke-linejoin:round"><path d="M 22.5,11.63 L 22.5,6" style="fill:none;stroke:#fff;stroke-linejoin:miter"/><path d="M 20,8 L 25,8" style="fill:none;stroke:#fff;stroke-linejoin:miter"/><path d="M 22.5,25 C 22.5,25 27,17.5 25.5,14.5 C 25.5,14.5 24.5,12 22.5,12 C 20.5,12 19.5,14.5 19.5,14.5 C 18,17.5 22.5,25 22.5,25"/><path d="M 12.5,37 C 18,40.5 27,40.5 32.5,37 L 32.5,30 C 32.5,30 41.5,25.5 38.5,19.5 C 34.5,13 25,16 22.5,23.5 L 22.5,27 L 22.5,23.5 C 20,16 10.5,13 6.5,19.5 C 3.5,25.5 12.5,30 12.5,30 L 12.5,37"/><path d="M 12.5,30 C 18,27 27,27 32.5,30" style="fill:none;stroke:#fff"/><path d="M 12.5,33.5 C 18,30.5 27,30.5 32.5,33.5" style="fill:none;stroke:#fff"/><path d="M 12.5,37 C 18,34 27,34 32.5,37" style="fill:none;stroke:#fff"/></g></symbol>`,
-}
-
-// ═══════════════════════════════════════════════════════════
-// GAME DATA
-// ═══════════════════════════════════════════════════════════
-const SP = { H:'human', U:'undead', R:'redskin', G:'greenskin' }
-const PT = { P:'pawn',  C:'castle', N:'knight',  B:'bishop', Q:'queen', K:'king' }
-const FEN_CH = { [PT.P]:'p', [PT.C]:'r', [PT.N]:'n', [PT.B]:'b', [PT.Q]:'q', [PT.K]:'k' }
-
-const UNITS = {
-  hero:       { type:PT.P, sp:SP.H, cost:2,  name:'Hero',        cannon:null },
-  stronghold: { type:PT.C, sp:SP.H, cost:10, name:'Stronghold',  cannon:null },
-  knight_h:   { type:PT.N, sp:SP.H, cost:15, name:'Knight',      cannon:null },
-  archer:     { type:PT.B, sp:SP.H, cost:15, name:'Archer',      cannon:null },
-  wizard:     { type:PT.Q, sp:SP.H, cost:20, name:'Wizard',      cannon:null },
-  princess:   { type:PT.K, sp:SP.H, cost:15, name:'Princess',    cannon:null },
-  skeleton:   { type:PT.P, sp:SP.U, cost:2,  name:'Skeleton',    cannon:null },
-  tomb:       { type:PT.C, sp:SP.U, cost:10, name:'Tomb',        cannon:null },
-  reaper:     { type:PT.N, sp:SP.U, cost:15, name:'Reaper',      cannon:null },
-  wraith:     { type:PT.B, sp:SP.U, cost:15, name:'Wraith',      cannon:null },
-  vampire:    { type:PT.Q, sp:SP.U, cost:20, name:'Vampire',     cannon:null },
-  warlock:    { type:PT.K, sp:SP.U, cost:20, name:'Warlock',     cannon:null },
-  kobold:     { type:PT.P, sp:SP.R, cost:5,  name:'Kobold',      cannon:'pawn' },
-  iron_golem: { type:PT.C, sp:SP.R, cost:15, name:'Iron Golem',  cannon:'castle' },
-  salamander: { type:PT.N, sp:SP.R, cost:15, name:'Salamander',  cannon:null },
-  fire_elem:  { type:PT.B, sp:SP.R, cost:15, name:'Fire Elem.',  cannon:null },
-  demonics:   { type:PT.Q, sp:SP.R, cost:20, name:'Demonics',    cannon:null },
-  red_dragon: { type:PT.K, sp:SP.R, cost:20, name:'Red Dragon',  cannon:null },
-  goblin:     { type:PT.P, sp:SP.G, cost:5,  name:'Goblin',      cannon:'pawn' },
-  ogre:       { type:PT.C, sp:SP.G, cost:15, name:'Ogre',        cannon:'castle' },
-  orc:        { type:PT.N, sp:SP.G, cost:15, name:'Orc',         cannon:null },
-  troll:      { type:PT.B, sp:SP.G, cost:15, name:'Troll',       cannon:null },
-  shaman:     { type:PT.Q, sp:SP.G, cost:20, name:'Shaman',      cannon:null },
-  warlord:    { type:PT.K, sp:SP.G, cost:15, name:'Warlord',     cannon:null },
-}
-const SP_UNITS = {
-  [SP.H]: ['hero','stronghold','knight_h','archer','wizard','princess'],
-  [SP.U]: ['skeleton','tomb','reaper','wraith','vampire','warlock'],
-  [SP.R]: ['kobold','iron_golem','salamander','fire_elem','demonics','red_dragon'],
-  [SP.G]: ['goblin','ogre','orc','troll','shaman','warlord'],
-}
-const SP_INFO = {
-  [SP.H]: { label:'Humans',     accent:'#b8860b', emoji:'⚔️',  desc:'Heroes, knights & archers. Balanced and versatile.' },
-  [SP.U]: { label:'Undead',     accent:'#7c3aed', emoji:'💀',  desc:'Skeletons & vampires. Masters of movement across gaps.' },
-  [SP.R]: { label:'Redskins',   accent:'#c0392b', emoji:'🐲',  desc:'Kobolds & iron golems. Cannon attacks and fire power.' },
-  [SP.G]: { label:'Greenskins', accent:'#16a34a', emoji:'👹',  desc:'Goblins, ogres & trolls. Brute force and cannon attacks.' },
-}
-
-// ═══════════════════════════════════════════════════════════
-// MAP DEFINITIONS
-// Grid cell values:
-//   null  = void (off-board, no square drawn)
-//   0     = normal square
-//   'w'   = water square
-//   object = token square { type, ...props }
-// ═══════════════════════════════════════════════════════════
-function makeGrid(rows, cols, fill=null) {
-  return Array.from({length:rows}, ()=>Array(cols).fill(fill))
-}
-
-const MAPS = (() => {
-  const N=0, W='w', _=null
-
-  // ── MAP 1: Compact 10×10 ────────────────────────────────
-  // 10×10 grid, 4×4 water in the middle (rows 3-6, cols 3-6)
-  const compact = makeGrid(10,10,N)
-  for(let r=3;r<=6;r++) for(let c=3;c<=6;c++) compact[r][c]=W
-
-  // ── MAP 2: Two-Player Cross ──────────────────────────────
-  //
-  // Sections (confirmed dimensions):
-  //   Top section:      8 wide × 3 tall
-  //   Top connector:    2 wide × 4 tall   (centred on top section & centre)
-  //   Centre:           8 wide × 8 tall   (water 4×4 in middle)
-  //   Bottom connector: 2 wide × 4 tall
-  //   Bottom section:   8 wide × 3 tall
-  //   NO left/right sections (those are four-player only)
-  //
-  // Grid layout (20 rows × 10 cols, centred on cols 1-8):
-  //   Centre:           rows 6–13,  cols 1–8
-  //   Water:            rows 8–11,  cols 3–6   (middle 4×4 of centre)
-  //   Top connector:    rows 2–5,   cols 4–5   (2 wide, 4 tall)
-  //   Top section:      rows 0–2,   cols 1–8   (8 wide, 3 tall)
-  //   Bottom connector: rows 14–17, cols 4–5
-  //   Bottom section:   rows 17–19, cols 1–8
-
-  const two = makeGrid(20,10,_)
-  // Centre 8×8
-  for(let r=6;r<=13;r++) for(let c=1;c<=8;c++) two[r][c]=N
-  // Water 4×4 in middle of centre
-  for(let r=8;r<=11;r++) for(let c=3;c<=6;c++) two[r][c]=W
-  // Top connector 2×4
-  for(let r=2;r<=5;r++) for(let c=4;c<=5;c++) two[r][c]=N
-  // Top section 8×3
-  for(let r=0;r<=2;r++) for(let c=1;c<=8;c++) two[r][c]=N
-  // Bottom connector 2×4
-  for(let r=14;r<=17;r++) for(let c=4;c<=5;c++) two[r][c]=N
-  // Bottom section 8×3
-  for(let r=17;r<=19;r++) for(let c=1;c<=8;c++) two[r][c]=N
-
-  // ── MAP 3: Four-Player Cross ─────────────────────────────
-  // Identical to two-player but with left AND right sections and connectors.
-  // (Two-player map already has left + right — four-player is the same shape,
-  //  just with all four spawn zones active.)
-  // For Phase 1 the grid is identical; the 4-player designation means all four
-  // outer sections serve as spawn areas. Layout is the same 20×20 grid.
-  const four = makeGrid(20,20,_)
-  // Centre
-  for(let r=6;r<=13;r++) for(let c=6;c<=13;c++) four[r][c]=N
-  // Water
-  for(let r=8;r<=11;r++) for(let c=8;c<=11;c++) four[r][c]=W
-  // Top connector + section
-  for(let r=2;r<=5;r++) for(let c=9;c<=10;c++) four[r][c]=N
-  for(let r=0;r<=2;r++) for(let c=6;c<=13;c++) four[r][c]=N
-  // Bottom connector + section
-  for(let r=14;r<=17;r++) for(let c=9;c<=10;c++) four[r][c]=N
-  for(let r=17;r<=19;r++) for(let c=6;c<=13;c++) four[r][c]=N
-  // Left connector + section
-  for(let r=9;r<=10;r++) for(let c=2;c<=5;c++) four[r][c]=N
-  for(let r=6;r<=13;r++) for(let c=0;c<=2;c++) four[r][c]=N
-  // Right connector + section
-  for(let r=9;r<=10;r++) for(let c=14;c<=17;c++) four[r][c]=N
-  for(let r=6;r<=13;r++) for(let c=17;c<=19;c++) four[r][c]=N
-
-  return [
-    { id:'compact',    name:'Compact Skirmish',   icon:'⚔',  players:2, grid:compact, rows:10, cols:10, desc:'10×10 dungeon — 4×4 water hazard in centre' },
-    { id:'two_player', name:'Two Player Dungeon',  icon:'🗡', players:2, grid:two,     rows:20, cols:10, desc:'Cross-shaped dungeon — top & bottom spawns, central water' },
-    { id:'four_player',name:'Four Player Dungeon', icon:'🏰', players:4, grid:four,    rows:20, cols:20, desc:'Symmetric cross — four spawn zones, central water' },
-  ]
-})()
-
-// ═══════════════════════════════════════════════════════════
-// CUSTOM SVG BOARD RENDERER
-// ═══════════════════════════════════════════════════════════
-const SVGns = 'http://www.w3.org/2000/svg'
-
-function svgEl(tag, attrs={}) {
-  const el = document.createElementNS(SVGns, tag)
-  for (const [k,v] of Object.entries(attrs)) el.setAttribute(k, v)
-  return el
-}
-
-// Colours
-const SQ_LIGHT  = '#f0d9b5'
-const SQ_DARK   = '#b58863'
-const SQ_WATER  = '#3a78b5'
-const SQ_WATER2 = '#2d5f8f'  // water dark checker
-const VOID_FILL = 'none'
-
-// Board state for interaction
-let boardState = {
-  map: null,
-  selectedR: null, selectedC: null,
-  legalMoves: [], legalAttacks: [],
-  onSquareClick: null,   // callback(r, c)
-}
-
-function renderBoard(map, pieces, selectedR, selectedC, legalMoves, legalAttacks, onSquareClick) {
-  boardState = { map, selectedR, selectedC, legalMoves, legalAttacks, onSquareClick }
-
-  const svg = document.getElementById('dungeon-board')
-  svg.innerHTML = ''
-
-  const { grid, rows, cols } = map
-  const W = cols * TILE, H = rows * TILE
-
-  svg.setAttribute('width', W)
-  svg.setAttribute('height', H)
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`)
-
-  // Inline the sprite as a <defs> for piece rendering — fully synchronous
-  ensureSpriteDefs(svg)
-
-  // Draw squares layer
-  for (let r=0; r<rows; r++) {
-    for (let c=0; c<cols; c++) {
-      const cell = grid[r][c]
-      if (cell === null) continue  // void — draw nothing
-
-      const x = c * TILE, y = r * TILE
-      const isLight = (r+c) % 2 === 0
-      const isWater = cell === 'w'
-
-      // Group per square for easy interaction
-      const g = svgEl('g', {
-        class:'sq',
-        'data-r': r, 'data-c': c,
-        transform:`translate(${x},${y})`,
-        style:'cursor:pointer'
-      })
-
-      // Background rect
-      let fill
-      if (isWater)       fill = isLight ? SQ_WATER : SQ_WATER2
-      else               fill = isLight ? SQ_LIGHT : SQ_DARK
-
-      const rect = svgEl('rect', {
-        class:'sq-bg', x:0, y:0, width:TILE, height:TILE, fill
-      })
-      g.appendChild(rect)
-
-      // Highlight overlay for selected / legal / attack
-      const key = `${r},${c}`
-      const isSelected  = selectedR===r && selectedC===c
-      const isLegal     = legalMoves.some(([lr,lc])=>lr===r&&lc===c)
-      const isAttack    = legalAttacks.some(([ar,ac])=>ar===r&&ac===c)
-
-      if (isSelected) {
-        g.appendChild(svgEl('rect', { x:0, y:0, width:TILE, height:TILE,
-          fill:'none', stroke:'#f6c747', 'stroke-width':3, 'stroke-inset':1.5 }))
-      }
-      if (isLegal) {
-        // Dot marker
-        g.appendChild(svgEl('circle', {
-          cx:TILE/2, cy:TILE/2, r:TILE*0.16,
-          fill:'rgba(20,100,30,0.55)'
-        }))
-      }
-      if (isAttack) {
-        g.appendChild(svgEl('rect', { x:0, y:0, width:TILE, height:TILE,
-          fill:'none', stroke:'rgba(220,50,30,0.8)', 'stroke-width':3 }))
-      }
-
-      // Water wave lines
-      if (isWater) {
-        for (let i=1; i<4; i++) {
-          const wy = i * (TILE/4)
-          const wave = svgEl('path', {
-            d:`M 4 ${wy} Q ${TILE*0.3} ${wy-5} ${TILE/2} ${wy} Q ${TILE*0.7} ${wy+5} ${TILE-4} ${wy}`,
-            stroke:'rgba(255,255,255,0.18)', 'stroke-width':1.5, fill:'none'
-          })
-          g.appendChild(wave)
-        }
-      }
-
-      // Piece
-      const piece = pieces.find(p=>p.r===r&&p.c===c)
-      if (piece) {
-        const def   = UNITS[piece.key]
-        const color = piece.owner === 'player' ? 'w' : 'b'
-        const sid   = color + FEN_CH[def.type]
-        const scale = TILE / 45  // sprite is ~40px, add a touch of padding
-        const offset = (TILE - TILE*0.9) / 2
-
-        // Shadow
-        g.appendChild(svgEl('ellipse', {
-          cx:TILE/2, cy:TILE-5, rx:TILE*0.3, ry:4,
-          fill:'rgba(0,0,0,0.25)'
-        }))
-
-        // Piece via <use> referencing the cached sprite
-        const use = svgEl('use', {
-          href: `#piece-${sid}`,
-          x: offset, y: offset,
-          width: TILE*0.9, height: TILE*0.9,
-        })
-        // Glow for selected piece's owner
-        if (isSelected) {
-          use.setAttribute('filter', 'url(#piece-glow)')
-        }
-        g.appendChild(use)
-      }
-
-      // Click handler
-      g.addEventListener('click', () => {
-        if (boardState.onSquareClick) boardState.onSquareClick(r, c)
-      })
-
-      svg.appendChild(g)
-    }
-  }
-
-  // Coordinate labels along edges (file letters bottom, rank numbers left)
-  // Only for rectangular maps (compact)
-  if (map.id === 'compact') {
-    const files = 'abcdefghijklmnopqrstuvwxyz'
-    for (let c=0; c<cols; c++) {
-      const lbl = svgEl('text', { x: c*TILE+TILE/2, y: H-3,
-        'text-anchor':'middle', class:'coord' })
-      lbl.textContent = files[c]
-      svg.appendChild(lbl)
-    }
-    for (let r=0; r<rows; r++) {
-      const lbl = svgEl('text', { x:4, y: r*TILE+TILE/2+4,
-        'text-anchor':'start', class:'coord' })
-      lbl.textContent = rows - r
-      svg.appendChild(lbl)
-    }
-  }
-}
-
-// ── Inline sprite injection (synchronous, no fetch needed) ──
-function ensureSpriteDefs(svg) {
-  let defs = svg.querySelector('defs')
-  if (!defs) { defs = svgEl('defs'); svg.insertBefore(defs, svg.firstChild) }
-
-  // Glow filter for selected pieces
-  if (!defs.querySelector('#piece-glow')) {
-    const filter = svgEl('filter', { id:'piece-glow', x:'-20%', y:'-20%', width:'140%', height:'140%' })
-    const fe = svgEl('feDropShadow', { dx:0, dy:0, stdDeviation:3, 'flood-color':'#f6c747', 'flood-opacity':0.9 })
-    filter.appendChild(fe); defs.appendChild(filter)
-  }
-
-  // Inject all piece symbols — parse from inline strings, import into SVG namespace
-  if (!defs.querySelector('#piece-wp')) {
-    const parser = new DOMParser()
-    Object.values(PIECE_SYMBOLS).forEach(symStr => {
-      const doc = parser.parseFromString(
-        `<svg xmlns="http://www.w3.org/2000/svg">${symStr}</svg>`, 'image/svg+xml'
-      )
-      const sym = doc.querySelector('symbol')
-      if (sym) defs.appendChild(document.importNode(sym, true))
-    })
-  }
-}
-
-// ═══════════════════════════════════════════════════════════
-// GAME STATE
-// ═══════════════════════════════════════════════════════════
-const G = {
-  playerSp:null, aiSp:null, playerDraft:[], aiDraft:[],
-  map:null,
-  pieces:[],        // { id, key, r, c, owner }
-  turn:'player', aiThinking:false, aiTimer:null,
-  selR:null, selC:null,
-  legalMoves:[], legalAttacks:[],
-  capturedByPlayer:[], capturedByAi:[],
-  history:[],
-}
-let draftList = []
-
-// ═══════════════════════════════════════════════════════════
-// NAVIGATION
-// ═══════════════════════════════════════════════════════════
-function show(id) {
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'))
-  document.getElementById('screen-'+id).classList.add('active')
-  if (id==='map')     renderMapScreen()
-  if (id==='species') renderSpeciesScreen()
-  if (id==='draft')   renderDraftScreen()
-}
-
-// ═══════════════════════════════════════════════════════════
-// MAP SCREEN
-// ═══════════════════════════════════════════════════════════
-function renderMapScreen() {
-  const grid = document.getElementById('map-grid')
-  grid.innerHTML = ''
-  MAPS.forEach(m => {
-    const card = document.createElement('div')
-    card.className = 'map-card'
-    card.innerHTML = `
-      <div class="mc-icon">${m.icon}</div>
-      <h3>${m.name}</h3>
-      <p>${m.desc}</p>
-      <div style="line-height:0;border:1px solid rgba(184,134,11,0.2);border-radius:3px;display:inline-block;overflow:hidden;">
-        ${miniMapSVG(m)}
-      </div>
-    `
-    card.onclick = () => { G.map = m; show('species') }
-    grid.appendChild(card)
-  })
-}
-
-function miniMapSVG(m) {
-  const s = 4
-  const W = m.cols*s, H = m.rows*s
-  let svg = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`
-  for (let r=0;r<m.rows;r++) for (let c=0;c<m.cols;c++) {
-    const cell = m.grid[r][c]
-    if (cell===null) continue
-    const light = (r+c)%2===0
-    let fill = light ? '#f0d9b5' : '#b58863'
-    if (cell==='w') fill = light ? '#3a78b5' : '#2d5f8f'
-    svg += `<rect x="${c*s}" y="${r*s}" width="${s}" height="${s}" fill="${fill}"/>`
-  }
-  return svg + '</svg>'
-}
-
-// ═══════════════════════════════════════════════════════════
-// SPECIES SCREEN
-// ═══════════════════════════════════════════════════════════
-function renderSpeciesScreen() {
-  const grid = document.getElementById('species-grid')
-  grid.innerHTML = ''
-  Object.values(SP).forEach(sp => {
-    const info = SP_INFO[sp]
-    const card = document.createElement('div')
-    card.className = 'species-card'
-    card.style.borderColor = info.accent+'40'
-    card.innerHTML = `
-      <div class="sp-emoji">${info.emoji}</div>
-      <h3 style="color:${info.accent}">${info.label}</h3>
-      <p class="sp-desc">${info.desc}</p>
-      <div class="sp-roster">
-        ${SP_UNITS[sp].map(k=>`<div class="sp-unit">${UNITS[k].name} · ${UNITS[k].cost}XP</div>`).join('')}
-      </div>
-    `
-    card.onmouseenter = () => { card.style.borderColor=info.accent; card.style.background=info.accent+'18' }
-    card.onmouseleave = () => { card.style.borderColor=info.accent+'40'; card.style.background='' }
-    card.onclick = () => {
-      G.playerSp = sp
-      const others = Object.values(SP).filter(s=>s!==sp)
-      G.aiSp = others[Math.floor(Math.random()*others.length)]
-      show('draft')
-    }
-    grid.appendChild(card)
-  })
-}
-
-// ═══════════════════════════════════════════════════════════
-// DRAFT SCREEN
-// ═══════════════════════════════════════════════════════════
-function renderDraftScreen() {
-  draftList = []
-  const pi=SP_INFO[G.playerSp], ai=SP_INFO[G.aiSp]
-  document.getElementById('draft-sub').textContent=`${pi.emoji} ${pi.label} vs ${ai.emoji} ${ai.label} (AI)`
-  G.aiDraft = buildAiDraft(G.aiSp)
-  document.getElementById('ai-prev-title').textContent=`AI TEAM — ${ai.emoji} ${ai.label}`
-  document.getElementById('ai-prev-list').innerHTML=G.aiDraft.map(k=>`<div class="ai-line">${UNITS[k].name} · ${UNITS[k].cost}XP</div>`).join('')
-  refreshDraft()
-}
-
-function refreshDraft() {
-  const spent=draftList.reduce((s,k)=>s+UNITS[k].cost,0), left=75-spent
-  const el=document.getElementById('xp-left')
-  el.textContent=left; el.className='xp-num '+(left<10?'low':'ok')
-  document.getElementById('draft-count').textContent=draftList.length
-  const pi=SP_INFO[G.playerSp]
-
-  document.getElementById('draft-avail').innerHTML=SP_UNITS[G.playerSp].map(k=>{
-    const d=UNITS[k], can=left>=d.cost
-    return `<div class="unit-row">
-      <div><span class="unit-name">${d.name}</span><span class="unit-tag">${d.type}</span></div>
-      <div style="display:flex;align-items:center;gap:7px;">
-        <span class="unit-cost" style="color:${pi.accent}">${d.cost}XP</span>
-        <button class="btn sm" data-add="${k}" ${can?'':'disabled'}>+</button>
-      </div>
-    </div>`
-  }).join('')
-  document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{draftList.push(b.dataset.add);refreshDraft()})
-
-  document.getElementById('draft-team').innerHTML=draftList.length===0
-    ?'<div style="color:var(--muted);font-style:italic;font-size:13px;padding:6px 0">No units drafted yet</div>'
-    :draftList.map((k,i)=>{const d=UNITS[k];return`<div class="unit-row">
-      <span class="unit-name">${d.name}</span>
-      <div style="display:flex;align-items:center;gap:7px;">
-        <span class="unit-cost" style="color:${pi.accent}">${d.cost}XP</span>
-        <button class="btn sm" data-rm="${i}">×</button>
-      </div>
-    </div>`}).join('')
-  document.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{draftList.splice(+b.dataset.rm,1);refreshDraft()})
-
-  const hasK=draftList.some(k=>UNITS[k].type===PT.K)
-  const hasP=draftList.some(k=>UNITS[k].type===PT.P)
-  document.getElementById('draft-warns').innerHTML=[
-    !hasK?'<div class="draft-warn">⚠ Must include a King unit</div>':'',
-    !hasP?'<div class="draft-warn">⚠ Must include at least one Pawn</div>':'',
-  ].join('')
-  document.getElementById('begin-btn').disabled=!(hasK&&hasP&&left>=0)
-}
-
-function buildAiDraft(sp,budget=75) {
-  const avail=SP_UNITS[sp],draft=[]; let xp=budget
-  const take=k=>{draft.push(k);xp-=UNITS[k].cost}
-  const pick=type=>avail.find(k=>UNITS[k].type===type&&!draft.includes(k))
-  const kk=pick(PT.K); if(kk)take(kk)
-  const pk=pick(PT.P); if(pk&&xp>=UNITS[pk].cost)take(pk)
-  for(const t of[PT.Q,PT.B,PT.N,PT.C]){const k=pick(t);if(k&&xp>=UNITS[k].cost)take(k)}
-  while(xp>=2){const p2=avail.find(k=>UNITS[k].type===PT.P&&UNITS[k].cost<=xp);if(!p2)break;take(p2)}
-  return draft
-}
-
-// ═══════════════════════════════════════════════════════════
-// BATTLE SETUP
-// ═══════════════════════════════════════════════════════════
-document.getElementById('begin-btn').onclick = () => {
-  G.playerDraft=[...draftList]
-  G.capturedByPlayer=[]; G.capturedByAi=[]; G.history=[]
-  G.turn='player'; G.aiThinking=false; G.selR=null; G.selC=null
-  G.legalMoves=[]; G.legalAttacks=[]
-  G.pieces = buildStarting()
-  show('battle')
-  drawBoard()
-  updateUI()
-}
-
-function buildStarting() {
-  const pieces=[]; let id=0
-  const { grid, rows, cols } = G.map
-
-  // Find the top-most and bottom-most valid row ranges
-  // Player spawns from bottom, AI from top — find first/last complete rows with >=6 cells
-  const validRows = []
-  for (let r=0;r<rows;r++) {
-    const count = grid[r].filter(c=>c!==null).length
-    if (count >= 6) validRows.push(r)
-  }
-  const topRows    = validRows.slice(0, 2)   // AI back rank + pawn rank
-  const bottomRows = validRows.slice(-2).reverse() // player back rank + pawn rank
-
-  // Get playable columns for a given row (non-null cells)
-  const playCols = r => grid[r].map((_,c)=>c).filter(c=>grid[r][c]!==null)
-
-  const BACK = [PT.C,PT.N,PT.B,PT.Q,PT.K,PT.B,PT.N,PT.C]
-  const pickUnit=(draft,type,used)=>draft.find(k=>UNITS[k].type===type&&!used.has(k))
-
-  const placeRank = (draft, row, isPawn, owner) => {
-    const cols = playCols(row).slice(0, 8)
-    if (isPawn) {
-      cols.forEach(c => {
-        const k = draft.find(k=>UNITS[k].type===PT.P)
-        if (k) pieces.push({id:id++,key:k,r:row,c,owner})
-      })
-    } else {
-      const used=new Set()
-      BACK.forEach((type,i) => {
-        if (i>=cols.length) return
-        const k=pickUnit(draft,type,used)
-        if (k){used.add(k); pieces.push({id:id++,key:k,r:row,c:cols[i],owner})}
-      })
-    }
-  }
-
-  // Player: bottomRows[0]=back rank, bottomRows[1]=pawns
-  if (bottomRows[0]!==undefined) placeRank(G.playerDraft, bottomRows[0], false, 'player')
-  if (bottomRows[1]!==undefined) placeRank(G.playerDraft, bottomRows[1], true,  'player')
-  // AI: topRows[0]=back rank, topRows[1]=pawns
-  if (topRows[0]!==undefined) placeRank(G.aiDraft, topRows[0], false, 'ai')
-  if (topRows[1]!==undefined) placeRank(G.aiDraft, topRows[1], true,  'ai')
-
-  return pieces
-}
-
-// ═══════════════════════════════════════════════════════════
-// DRAW BOARD (calls SVG renderer)
-// ═══════════════════════════════════════════════════════════
-function drawBoard() {
-  renderBoard(
-    G.map, G.pieces,
-    G.selR, G.selC,
-    G.legalMoves, G.legalAttacks,
-    handleSquareClick
-  )
-}
-
-// ═══════════════════════════════════════════════════════════
-// INTERACTION
-// ═══════════════════════════════════════════════════════════
-function handleSquareClick(r, c) {
-  if (G.turn!=='player'||G.aiThinking) return
-
-  // If clicked a legal move/attack square while something selected
-  const isLegal  = G.legalMoves.some(([lr,lc])=>lr===r&&lc===c)
-  const isAttack = G.legalAttacks.some(([ar,ac])=>ar===r&&ac===c)
-  if ((isLegal||isAttack) && G.selR!==null) {
-    applyMove('player', G.selR, G.selC, r, c)
-    return
-  }
-
-  // Select a player piece
-  const piece = G.pieces.find(p=>p.r===r&&p.c===c&&p.owner==='player')
-  if (piece) {
-    const {moves,attacks} = getLegal(piece)
-    G.selR=r; G.selC=c; G.legalMoves=moves; G.legalAttacks=attacks
-    showSelected(piece)
-  } else {
-    G.selR=null; G.selC=null; G.legalMoves=[]; G.legalAttacks=[]
-    document.getElementById('sel-info').innerHTML='<span style="color:var(--muted);font-style:italic;font-size:13px;">Click a piece</span>'
-  }
-  drawBoard()
-}
-
-// ═══════════════════════════════════════════════════════════
-// APPLY MOVE
-// ═══════════════════════════════════════════════════════════
-function applyMove(owner, fr, fc, tr, tc) {
-  const piece = G.pieces.find(p=>p.r===fr&&p.c===fc&&p.owner===owner)
-  if (!piece) return
-
-  const captured = G.pieces.find(p=>p.r===tr&&p.c===tc&&p.owner!==owner)
-  if (captured) {
-    if (owner==='player') G.capturedByPlayer.push(captured.key)
-    else G.capturedByAi.push(captured.key)
-    G.pieces = G.pieces.filter(p=>p.id!==captured.id)
-  }
-
-  piece.r=tr; piece.c=tc
-
-  addLog(`${owner==='player'?'You':'AI'}: ${UNITS[piece.key].name} (${fr},${fc})→(${tr},${tc})${captured?' ✕':''}`)
-
-  const opp = owner==='player'?'ai':'player'
-  if (!G.pieces.some(p=>p.owner===opp&&UNITS[p.key].type===PT.K)) {
-    G.selR=null; G.selC=null; G.legalMoves=[]; G.legalAttacks=[]
-    drawBoard()
-    return endGame(owner)
-  }
-
-  G.selR=null; G.selC=null; G.legalMoves=[]; G.legalAttacks=[]
-
-  if (owner==='player') {
-    G.turn='ai'; G.aiThinking=true
-    updateUI(); drawBoard()
-    G.aiTimer = setTimeout(runAi, 650+Math.random()*750)
-  } else {
-    G.turn='player'; G.aiThinking=false
-    updateUI(); drawBoard()
-  }
-}
-
-
-// ═══════════════════════════════════════════════════════════
-// AI TURN
-// ═══════════════════════════════════════════════════════════
-function runAi() {
-  const action=pickAiMove()
-  if (!action) return endGame('player')
-  applyMove('ai', action.piece.r, action.piece.c, action.tr, action.tc)
-}
-
-function pickAiMove() {
-  let best=null, bestScore=-Infinity
-  const playerKing=G.pieces.find(p=>p.owner==='player'&&UNITS[p.key].type===PT.K)
-  G.pieces.filter(p=>p.owner==='ai').forEach(piece=>{
-    const {moves,attacks}=getLegal(piece)
-    attacks.forEach(([tr,tc])=>{
-      const t=G.pieces.find(p=>p.r===tr&&p.c===tc&&p.owner==='player')
-      const score=100+(t?UNITS[t.key].cost:5)
-      if(score>bestScore){bestScore=score;best={piece,tr,tc}}
-    })
-    moves.forEach(([tr,tc])=>{
-      const [kr,kc]=playerKing?[playerKing.r,playerKing.c]:[Math.floor(G.map.rows/2),Math.floor(G.map.cols/2)]
-      const score=50-(Math.abs(tr-kr)+Math.abs(tc-kc))
-      if(score>bestScore){bestScore=score;best={piece,tr,tc}}
-    })
-  })
-  return best
-}
-
-// ═══════════════════════════════════════════════════════════
-// MOVEMENT ENGINE
-// ═══════════════════════════════════════════════════════════
-function getLegal(piece) {
-  const {key,r:row,c:col,owner}=piece
-  const def=UNITS[key]
-  const moves=[],attacks=[]
-  const {grid,rows,cols}=G.map
-
-  const RD=[[0,1],[0,-1],[1,0],[-1,0]]
-  const BD=[[1,1],[1,-1],[-1,1],[-1,-1]]
-  const AD=[...RD,...BD]
-
-  const onBoard=(r,c)=>r>=0&&r<rows&&c>=0&&c<cols
-  const cell=(r,c)=>grid[r]?.[c]
-  const isVoid=(r,c)=>cell(r,c)===null||cell(r,c)===undefined
-  const isWater=(r,c)=>cell(r,c)==='w'
-  const pieceAt=(r,c)=>G.pieces.find(p=>p.r===r&&p.c===c)
-  const friendly=(r,c)=>{const p=pieceAt(r,c);return p&&p.owner===owner}
-  const enemy=(r,c)=>{const p=pieceAt(r,c);return p&&p.owner!==owner}
-
-  function slide(dirs,jump=false,waterBlock=false,moveOnly=false,atkOnly=false){
-    dirs.forEach(([dr,dc])=>{
-      let r=row+dr,c=col+dc,gapped=false
-      while(onBoard(r,c)&&!isVoid(r,c)){
-        if(isWater(r,c)){if(waterBlock)break;r+=dr;c+=dc;continue}
-        const occ=pieceAt(r,c)
-        if(occ){
-          if(!gapped||jump){if(occ.owner!==owner&&!moveOnly)attacks.push([r,c])}
-          if(!jump)break;gapped=true
-        } else {if(!gapped&&!atkOnly)moves.push([r,c])}
-        r+=dr;c+=dc
-      }
-    })
-  }
-
-  function cannon(dirs){
-    dirs.forEach(([dr,dc])=>{
-      let r=row+dr,c=col+dc,screen=false
-      while(onBoard(r,c)&&!isVoid(r,c)){
-        const occ=pieceAt(r,c)
-        if(!screen){if(occ)screen=true;else if(!isWater(r,c))moves.push([r,c])}
-        else{if(occ){if(occ.owner!==owner)attacks.push([r,c]);break}}
-        r+=dr;c+=dc
-      }
-    })
-  }
-
-  function knightJumps(){
-    [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr,dc])=>{
-      const r=row+dr,c=col+dc
-      if(!onBoard(r,c)||isVoid(r,c)||friendly(r,c))return
-      if(enemy(r,c))attacks.push([r,c]);else moves.push([r,c])
-    })
-  }
-
-  switch(def.type){
-    case PT.P:
-      AD.forEach(([dr,dc])=>{
-        const r=row+dr,c=col+dc
-        if(!onBoard(r,c)||isVoid(r,c)||isWater(r,c))return
-        const occ=pieceAt(r,c)
-        if(!occ)moves.push([r,c])
-        else if(occ.owner!==owner&&Math.abs(dr)+Math.abs(dc)===2)attacks.push([r,c])
-      })
-      if(def.cannon==='pawn')cannon(RD)
-      break
-    case PT.C:
-      if(def.cannon==='castle'){
-        RD.forEach(([dr,dc])=>{const r=row+dr,c=col+dc;if(!onBoard(r,c)||isVoid(r,c)||isWater(r,c)||friendly(r,c))return;if(enemy(r,c))attacks.push([r,c]);else moves.push([r,c])})
-        cannon(RD)
-      } else {
-        RD.forEach(([dr,dc])=>{const r=row+dr,c=col+dc;if(!onBoard(r,c)||isVoid(r,c)||isWater(r,c)||friendly(r,c))return;if(enemy(r,c))attacks.push([r,c]);else moves.push([r,c])})
-        slide(RD,false,false,false,true)
-      }
-      break
-    case PT.N: knightJumps(); break
-    case PT.B:
-      if(key==='archer'){slide(BD,false,false,true);slide(BD,true,false,false,true)}
-      else if(key==='wraith'){slide(BD,true,false,true);slide(BD,false,false,false,true)}
-      else slide(BD,false,['fire_elem','troll'].includes(key))
-      break
-    case PT.Q:
-      if(key==='wizard'){slide(RD);slide(BD,false,false,false,true)}
-      else if(key==='vampire'){slide(BD);slide(RD,false,false,false,true)}
-      else slide(AD,false,['demonics','shaman'].includes(key))
-      break
-    case PT.K:
-      AD.forEach(([dr,dc])=>{const r=row+dr,c=col+dc;if(!onBoard(r,c)||isVoid(r,c)||isWater(r,c)||friendly(r,c))return;if(enemy(r,c))attacks.push([r,c]);else moves.push([r,c])})
-      if(key==='princess')slide(BD,false,false,true)
-      if(key==='warlock')slide(BD,false,false,false,true)
-      if(['red_dragon','warlord'].includes(key)){
-        [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr,dc])=>{
-          const r=row+dr,c=col+dc;if(onBoard(r,c)&&!isVoid(r,c)&&enemy(r,c))attacks.push([r,c])
-        })
-      }
-      break
-  }
-
-  const dedup=arr=>[...new Map(arr.map(([r,c])=>[`${r},${c}`,[r,c]])).values()].filter(([r,c])=>!friendly(r,c))
-  return{moves:dedup(moves),attacks:dedup(attacks)}
-}
-
-// ═══════════════════════════════════════════════════════════
-// UI UPDATES
-// ═══════════════════════════════════════════════════════════
-function updateUI() {
-  const pi=SP_INFO[G.playerSp], ai=SP_INFO[G.aiSp]
-  const tp=document.getElementById('turn-panel')
-  tp.style.borderColor=G.turn==='player'?'#16a34a':'#dc2626'
-  document.getElementById('t-emoji').textContent=G.aiThinking?'⏳':G.turn==='player'?pi.emoji:ai.emoji
-  const tl=document.getElementById('t-label')
-  tl.textContent=G.aiThinking?'AI thinking…':G.turn==='player'?'Your turn':"AI's turn"
-  tl.style.color=G.turn==='player'?'#16a34a':'#dc2626'
-  document.getElementById('p-label').textContent=`YOU — ${pi.label.toUpperCase()}`
-  document.getElementById('a-label').textContent=`AI — ${ai.label.toUpperCase()}`
-  document.getElementById('p-pieces').textContent=`Pieces: ${G.pieces.filter(p=>p.owner==='player').length}`
-  document.getElementById('a-pieces').textContent=`Pieces: ${G.pieces.filter(p=>p.owner==='ai').length}`
-  document.getElementById('p-cap').textContent=G.capturedByPlayer.length
-    ?'Captured: '+G.capturedByPlayer.map(k=>UNITS[k].name).join(', ')
-    :'Captured: none'
-  document.getElementById('a-cap').textContent=G.capturedByAi.length
-    ?'Lost: '+G.capturedByAi.map(k=>UNITS[k].name).join(', ')
-    :'Lost: none'
-}
-
-function showSelected(p){
-  const d=UNITS[p.key],{moves,attacks}=getLegal(p)
-  document.getElementById('sel-info').innerHTML=
-    `<div class="sel-name">${d.name}</div>
-     <div class="sel-meta">${d.type} · ${d.cost}XP</div>
-     <div class="sel-meta" style="margin-top:4px;">${moves.length} moves · ${attacks.length} attacks</div>`
-}
-
-function addLog(text){
-  G.history.push(text)
-  const el=document.getElementById('h-list')
-  const d=document.createElement('div')
-  d.className='h-entry';d.textContent=text
-  el.insertBefore(d,el.firstChild)
-}
-
-// ═══════════════════════════════════════════════════════════
-// END GAME
-// ═══════════════════════════════════════════════════════════
-function endGame(winner){
-  if(G.aiTimer)clearTimeout(G.aiTimer)
-  G.aiThinking=false
-  const pw=winner==='player'
-  const pi=SP_INFO[G.playerSp],ai=SP_INFO[G.aiSp]
-  document.getElementById('end-icon').textContent=pw?'👑':'💀'
-  document.getElementById('end-title').textContent=pw?'VICTORY':'DEFEAT'
-  document.getElementById('end-title').style.color=pw?'#b8860b':'#dc2626'
-  document.getElementById('end-sub').textContent=pw
-    ?`${pi.label} triumph over the ${ai.label}!`
-    :`The ${ai.label} have conquered!`
-  document.getElementById('end-stats').innerHTML=[
-    ['Pieces remaining',G.pieces.filter(p=>p.owner==='player').length],
-    ['Units captured',G.capturedByPlayer.length],
-    ['Units lost',G.capturedByAi.length],
-    ['Moves made',G.history.length],
-  ].map(([l,v])=>`<div class="end-stat"><div class="end-val">${v}</div><div class="end-lbl">${l}</div></div>`).join('')
-  setTimeout(()=>show('end'),900)
-}
-
-// ═══════════════════════════════════════════════════════════
-// BUTTON WIRING
-// ═══════════════════════════════════════════════════════════
-document.getElementById('btn-play').onclick       = ()=>show('map')
-document.getElementById('map-back').onclick       = ()=>show('home')
-document.getElementById('species-back').onclick   = ()=>show('map')
-document.getElementById('draft-back').onclick     = ()=>show('species')
-document.getElementById('forfeit-btn').onclick    = ()=>{if(G.aiTimer)clearTimeout(G.aiTimer);G.aiThinking=false;endGame('ai')}
-document.getElementById('play-again-btn').onclick = ()=>{
-  if(G.aiTimer)clearTimeout(G.aiTimer)
-  Object.assign(G,{playerSp:null,aiSp:null,playerDraft:[],aiDraft:[],map:null,pieces:[],
-    turn:'player',aiThinking:false,aiTimer:null,selR:null,selC:null,
-    legalMoves:[],legalAttacks:[],capturedByPlayer:[],capturedByAi:[],history:[]})
-  show('home')
-}
-</script>
+<script src="js/data.js"></script>
+<script src="js/board-renderer.js"></script>
+<script src="js/state.js"></script>
+<script src="js/screens.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/battle.js"></script>
+<script src="js/battle-draw.js"></script>
+<script src="js/ui.js"></script>
 </body>
 </html>
