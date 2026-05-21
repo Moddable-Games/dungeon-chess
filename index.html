@@ -256,6 +256,7 @@
     <div class="place-btn-row">
       <button class="btn sm" id="place-back">← Back</button>
       <button class="btn sm" id="place-reset">↺ Reset</button>
+      <button class="btn sm" id="place-auto">Auto</button>
     </div>
   </div>
 
@@ -331,6 +332,7 @@
     <div class="info-panel info-panel--log">
       <h4>MOVE LOG</h4>
       <div class="h-scroll" id="h-list"></div>
+      <button class="btn sm btn-undo" id="undo-btn" disabled>↩ Undo</button>
     </div>
   </div>
 </section>
@@ -349,7 +351,12 @@
       <div class="divider"></div>
       <p class="end-sub" id="end-sub"></p>
       <div class="end-stats" id="end-stats"></div>
-      <button class="btn primary btn-play-again" id="play-again-btn">↩ RETURN TO DUNGEON</button>
+      <div class="end-pieces" id="end-pieces"></div>
+      <div class="end-btn-row">
+        <button class="btn primary btn-play-again" id="play-again-btn">↩ NEW GAME</button>
+        <button class="btn btn-rematch" id="rematch-btn">⚔ REMATCH</button>
+        <button class="btn btn-rematch" id="rematch-same-btn">⚔ SAME TEAM</button>
+      </div>
     </div>
   </div>
 </section>

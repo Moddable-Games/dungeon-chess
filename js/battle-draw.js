@@ -2,6 +2,9 @@
 // ═══════════════════════════════════════════════════════════
 // DRAW BOARD (calls SVG renderer)
 // ═══════════════════════════════════════════════════════════
+const G_undoStack = []
+let G_lastMove = null
+
 let _lastTile = null
 function drawBoard(excludePieceId) {
   if (G.map) computeTile(G.map)
@@ -14,7 +17,8 @@ function drawBoard(excludePieceId) {
     G.map, piecesToDraw,
     G.selR, G.selC,
     G.legalMoves, G.legalAttacks,
-    handleSquareClick
+    handleSquareClick,
+    G_lastMove
   )
 }
 
@@ -219,23 +223,28 @@ function applyMove(owner, fr, fc, tr, tc) {
   G.aiThinking = true
 
   animateMove(piece, fr, fc, tr, tc, isCapture, () => {
-    // Apply capture
+    G_undoStack.push({
+      pieceId: piece.id, fr, fc, tr, tc,
+      capturedPiece: captured ? { ...captured } : null,
+      owner
+    })
+    G_lastMove = { fr, fc, tr, tc }
+
     if (captured) {
       if (owner === 'player') G.capturedByPlayer.push(captured.key)
       else G.capturedByAi.push(captured.key)
       G.pieces = G.pieces.filter(p => p.id !== captured.id)
     }
 
-    // Update piece position
     piece.r = tr; piece.c = tc
 
-    // Log
     const ownerLabel = owner === 'player' ? SP_INFO[G.playerSp].emoji + ' You'
       : owner === 'ai' ? SP_INFO[G.aiSp].emoji + ' AI'
       : owner === 'ai2' ? SP_INFO[G.ai2Sp].emoji + ' AI2'
       : SP_INFO[G.ai3Sp].emoji + ' AI3'
+    const coord = `${String.fromCharCode(97+fc)}${fr+1}→${String.fromCharCode(97+tc)}${tr+1}`
     const captureLabel = captured ? ` ✕ ${UNITS[captured.key].name}` : ''
-    addLog(`${ownerLabel}: ${UNITS[piece.key].name}${captureLabel}`)
+    addLog(`${ownerLabel}: ${UNITS[piece.key].name} ${coord}${captureLabel}`)
 
     // Check win condition
     const allOwners = G.numPlayers === 4 ? ['player', 'ai', 'ai2', 'ai3'] : ['player', 'ai']

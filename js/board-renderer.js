@@ -364,7 +364,7 @@ function renderBoardStatic(map) {
   }
 }
 
-function renderBoard(map, pieces, selectedR, selectedC, legalMoves, legalAttacks, onSquareClick) {
+function renderBoard(map, pieces, selectedR, selectedC, legalMoves, legalAttacks, onSquareClick, lastMove) {
   boardState = { map, selectedR, selectedC, legalMoves, legalAttacks, onSquareClick }
 
   const svg = document.getElementById('dungeon-board')
@@ -393,9 +393,10 @@ function renderBoard(map, pieces, selectedR, selectedC, legalMoves, legalAttacks
       const isLegal = legalMoves.some(([lr, lc]) => lr === r && lc === c)
       const isAttack = legalAttacks.some(([ar, ac]) => ar === r && ac === c)
       const piece = pieces.find(p => p.r === r && p.c === c)
+      const isLastFrom = lastMove && lastMove.fr === r && lastMove.fc === c
+      const isLastTo = lastMove && lastMove.tr === r && lastMove.tc === c
 
-      // Skip squares with nothing dynamic
-      if (!isSelected && !isLegal && !isAttack && !piece) continue
+      if (!isSelected && !isLegal && !isAttack && !piece && !isLastFrom && !isLastTo) continue
 
       const g = svgEl('g', {
         class: 'sq' + (isSelected ? ' selected' : ''),
@@ -404,6 +405,12 @@ function renderBoard(map, pieces, selectedR, selectedC, legalMoves, legalAttacks
         style: 'cursor:pointer'
       })
 
+      // Last move highlight
+      if (isLastFrom || isLastTo) {
+        g.appendChild(svgEl('rect', { x:1, y:1, width:TILE-2, height:TILE-2,
+          fill: isLastTo ? 'rgba(176,141,45,0.12)' : 'rgba(176,141,45,0.06)',
+          stroke:'rgba(176,141,45,0.35)', 'stroke-width':1, 'pointer-events':'none' }))
+      }
       // Highlight overlays
       if (isSelected) {
         g.appendChild(svgEl('rect', { x: 1, y: 1, width: TILE - 2, height: TILE - 2,

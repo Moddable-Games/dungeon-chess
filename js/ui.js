@@ -48,6 +48,7 @@ function addLog(text){
   const d=document.createElement('div')
   d.className='h-entry';d.textContent=text
   el.insertBefore(d,el.firstChild)
+  document.getElementById('undo-btn').disabled = G.history.length < 2 || G.turn !== 'player'
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -66,12 +67,28 @@ function endGame(winner){
   document.getElementById('end-sub').textContent=pw
     ?`${pi.emoji} ${pi.label} triumph!`
     :`${winnerInfo.emoji} ${winnerInfo.label} have conquered!`
+
+  const mvp = G.capturedByPlayer.length
+    ? G.capturedByPlayer.reduce((best, k) => UNITS[k].cost > UNITS[best].cost ? k : best)
+    : null
+
   document.getElementById('end-stats').innerHTML=[
-    ['Pieces remaining',G.pieces.filter(p=>p.owner==='player').length],
-    ['Units captured',G.capturedByPlayer.length],
-    ['Units lost',G.capturedByAi.length],
-    ['Moves made',G.history.length],
-  ].map(([l,v])=>`<div class="end-stat"><div class="end-val">${v}</div><div class="end-lbl">${l}</div></div>`).join('')
+    ['Turns', Math.ceil(G.history.length / 2)],
+    ['Captured', G.capturedByPlayer.length],
+    ['Lost', G.capturedByAi.length],
+    ['MVP Capture', mvp ? UNITS[mvp].name : '—'],
+  ].map(([l,v])=>`<div class="end-stat"><div class="end-val${typeof v==='string'?' end-val--text':''}">${v}</div><div class="end-lbl">${l}</div></div>`).join('')
+
+  const surviving = G.pieces.filter(p => p.owner === 'player').map(p => UNITS[p.key].name)
+  const lost = G.capturedByAi.map(k => UNITS[k].name)
+  let piecesHtml = ''
+  if (surviving.length) {
+    piecesHtml += `<div>Surviving: <div class="end-pieces-row">${surviving.map(n=>`<span class="end-piece-tag end-piece-tag--alive">${n}</span>`).join('')}</div></div>`
+  }
+  if (lost.length) {
+    piecesHtml += `<div>Lost: <div class="end-pieces-row">${lost.map(n=>`<span class="end-piece-tag end-piece-tag--dead">${n}</span>`).join('')}</div></div>`
+  }
+  document.getElementById('end-pieces').innerHTML = piecesHtml
   setTimeout(()=>show('end'),900)
 }
 
@@ -424,6 +441,7 @@ document.getElementById('confirm-place-btn').onclick = () => {
   updateUI()
 }
 document.getElementById('place-back').onclick = () => show('draft')
+document.getElementById('place-auto').onclick = () => autoPlace()
 document.getElementById('place-reset').onclick = () => {
   PL.placementPieces.forEach(p => p.placed = false)
   PL.placedSquares = {}
@@ -456,12 +474,67 @@ document.getElementById('forfeit-btn').onclick = () => {
   , aiOwners[0])
   endGame(winner)
 }
+document.getElementById('undo-btn').onclick = () => {
+  if (G.turn !== 'player' || G_undoStack.length < 2) return
+  for (let i = 0; i < 2; i++) {
+    const move = G_undoStack.pop()
+    if (!move) break
+    const piece = G.pieces.find(p => p.id === move.pieceId)
+    if (piece) { piece.r = move.fr; piece.c = move.fc }
+    if (move.capturedPiece) {
+      G.pieces.push(move.capturedPiece)
+      if (move.owner === 'player') G.capturedByPlayer.pop()
+      else G.capturedByAi.pop()
+    }
+    G.history.pop()
+  }
+  G_lastMove = G_undoStack.length ? { fr: G_undoStack[G_undoStack.length-1].fr, fc: G_undoStack[G_undoStack.length-1].fc, tr: G_undoStack[G_undoStack.length-1].tr, tc: G_undoStack[G_undoStack.length-1].tc } : null
+  G.turn = 'player'; G.aiThinking = false
+  G.selR = null; G.selC = null; G.legalMoves = []; G.legalAttacks = []
+  const el = document.getElementById('h-list')
+  el.innerHTML = ''
+  G.history.forEach(text => { const d = document.createElement('div'); d.className='h-entry'; d.textContent=text; el.insertBefore(d, el.firstChild) })
+  document.getElementById('undo-btn').disabled = G_undoStack.length < 2
+  drawBoard(); updateUI()
+}
+
 document.getElementById('play-again-btn').onclick = ()=>{
   if(G.aiTimer)clearTimeout(G.aiTimer)
+  G_undoStack.length = 0; G_lastMove = null
   Object.assign(G,{numPlayers:2,playerSp:null,aiSp:null,ai2Sp:null,ai3Sp:null,playerDraft:[],aiDraft:[],ai2Draft:[],ai3Draft:[],map:null,pieces:[],
     turn:'player',aiThinking:false,aiTimer:null,selR:null,selC:null,
     legalMoves:[],legalAttacks:[],capturedByPlayer:[],capturedByAi:[],history:[]})
   Object.assign(PL,{selectedTrayIdx:null,placedSquares:{},placementPieces:[],spawnRows:[]})
   invalidateStaticBoard()
   show('home')
+}
+
+document.getElementById('rematch-btn').onclick = ()=>{
+  if(G.aiTimer)clearTimeout(G.aiTimer)
+  G_undoStack.length = 0; G_lastMove = null
+  const savedMap = G.map, savedSp = G.playerSp, savedAiSp = G.aiSp
+  const savedNum = G.numPlayers, savedAi2 = G.ai2Sp, savedAi3 = G.ai3Sp
+  Object.assign(G,{pieces:[],turn:'player',aiThinking:false,aiTimer:null,selR:null,selC:null,
+    legalMoves:[],legalAttacks:[],capturedByPlayer:[],capturedByAi:[],history:[],
+    playerDraft:[],aiDraft:[],ai2Draft:[],ai3Draft:[]})
+  Object.assign(PL,{selectedTrayIdx:null,placedSquares:{},placementPieces:[],spawnRows:[]})
+  G.map = savedMap; G.playerSp = savedSp; G.aiSp = savedAiSp
+  G.numPlayers = savedNum; G.ai2Sp = savedAi2; G.ai3Sp = savedAi3
+  invalidateStaticBoard()
+  show('draft')
+}
+
+document.getElementById('rematch-same-btn').onclick = ()=>{
+  if(G.aiTimer)clearTimeout(G.aiTimer)
+  G_undoStack.length = 0; G_lastMove = null
+  const savedDraft = [...G.playerDraft], savedAiDraft = [...G.aiDraft]
+  const savedAi2Draft = G.ai2Draft ? [...G.ai2Draft] : []
+  const savedAi3Draft = G.ai3Draft ? [...G.ai3Draft] : []
+  Object.assign(G,{pieces:[],turn:'player',aiThinking:false,aiTimer:null,selR:null,selC:null,
+    legalMoves:[],legalAttacks:[],capturedByPlayer:[],capturedByAi:[],history:[]})
+  Object.assign(PL,{selectedTrayIdx:null,placedSquares:{},placementPieces:[],spawnRows:[]})
+  G.playerDraft = savedDraft; G.aiDraft = savedAiDraft
+  G.ai2Draft = savedAi2Draft; G.ai3Draft = savedAi3Draft
+  invalidateStaticBoard()
+  show('place')
 }

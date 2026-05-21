@@ -445,11 +445,22 @@ h1,h2,h3,h4 { font-family:'Cinzel',serif; }
   to   { opacity:1; transform:scale(1) translateY(0); }
 }
 .end-sub { font-size:18px; font-style:italic; color:var(--muted); margin:1rem 0; }
-.end-stats { display:flex; gap:18px; margin-bottom:2rem; flex-wrap:wrap; justify-content:center; }
+.end-stats { display:flex; gap:14px; margin-bottom:1.5rem; flex-wrap:wrap; justify-content:center; }
 .end-stat { background:rgba(30,30,42,0.7); border:1px solid var(--border); border-radius:8px;
-  padding:.9rem 1.4rem; min-width:95px; }
-.end-val { font-family:'Cinzel',serif; font-size:28px; font-weight:600; }
-.end-lbl { font-size:13px; color:var(--muted); margin-top:2px; }
+  padding:.7rem 1.2rem; min-width:85px; }
+.end-val { font-family:'Cinzel',serif; font-size:24px; font-weight:600; }
+.end-val--text { font-size:14px; }
+.end-lbl { font-size:11px; color:var(--muted); margin-top:2px; }
+.end-pieces { margin-bottom:1.5rem; font-size:12px; color:var(--muted); line-height:1.8; }
+.end-pieces-row { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top:4px; }
+.end-piece-tag { background:rgba(30,30,42,0.6); border:1px solid rgba(255,255,255,0.08);
+  border-radius:4px; padding:2px 8px; font-size:11px; }
+.end-piece-tag--alive { border-color:rgba(39,174,96,0.3); color:#27ae60; }
+.end-piece-tag--dead { border-color:rgba(220,38,38,0.2); color:#dc2626; opacity:0.7; }
+.end-btn-row { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+.end-btn-row .btn { flex:1; min-width:120px; }
+.btn-rematch { font-size:12px; padding:10px 16px; letter-spacing:1.5px; }
+.btn-undo { margin-top:6px; width:100%; font-size:10px; padding:4px 8px; }
 
 
 /* ── PLACEMENT ── */
@@ -464,8 +475,11 @@ h1,h2,h3,h4 { font-family:'Cinzel',serif; }
 .place-header h2 { font-size:18px; color:var(--gold); letter-spacing:2px; }
 .place-sub { font-size:12px; color:var(--muted); font-style:italic; margin-top:2px; }
 .tray-list { margin-top:4px; }
-.place-team-list { font-size:12px; color:var(--muted); margin-top:4px; }
-.place-ai-list { font-size:12px; color:var(--muted); }
+.place-team-list { font-size:12px; color:var(--muted); margin-top:4px; max-height:180px; overflow-y:auto; }
+.place-ai-list { font-size:12px; color:var(--muted); max-height:180px; overflow-y:auto; }
+.place-panel-label { font-family:'Cinzel',serif; font-size:10px; letter-spacing:1.5px; color:var(--gold); margin:6px 0 3px; }
+.place-panel-unit { padding:2px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.place-panel-unit span { color:var(--muted); opacity:0.7; }
 .place-tray h3 { font-size:11px; letter-spacing:2px; color:var(--muted); margin-bottom:10px; }
 .tray-piece {
   display:flex; align-items:center; gap:10px; padding:8px 10px; margin-bottom:6px;

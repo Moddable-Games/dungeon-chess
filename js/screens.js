@@ -63,6 +63,61 @@ function renderPlacementScreen() {
   renderPlacementBoard()
   drawPlaceSurroundOnce()
   document.getElementById('confirm-place-btn').disabled = true
+  populatePlacePanels()
+}
+
+function populatePlacePanels() {
+  const pi = SP_INFO[G.playerSp]
+  const teamList = document.getElementById('place-team-list')
+  teamList.innerHTML = `<div class="place-panel-label">${pi.emoji} ${pi.label}</div>` +
+    G.playerDraft.map(k => {
+      const u = UNITS[k]
+      return `<div class="place-panel-unit">${u.name} <span>${u.type} · ${u.cost}XP</span></div>`
+    }).join('')
+
+  const aiList = document.getElementById('place-ai-list')
+  const aiSections = [{ sp: G.aiSp, draft: G.aiDraft, label: 'AI' }]
+  if (G.numPlayers === 4) {
+    aiSections.push({ sp: G.ai2Sp, draft: G.ai2Draft, label: 'AI 2' })
+    aiSections.push({ sp: G.ai3Sp, draft: G.ai3Draft, label: 'AI 3' })
+  }
+  aiList.innerHTML = aiSections.map(({ sp, draft, label }) => {
+    const info = SP_INFO[sp]
+    return `<div class="place-panel-label">${info.emoji} ${info.label}</div>` +
+      draft.map(k => {
+        const u = UNITS[k]
+        return `<div class="place-panel-unit">${u.name} <span>${u.type}</span></div>`
+      }).join('')
+  }).join('')
+}
+
+function autoPlace() {
+  const { grid } = G.map
+  const validSquares = []
+  PL.spawnRows.forEach(r => {
+    grid[r].forEach((cell, c) => {
+      if (cell !== null && cell !== 'w' && !PL.placedSquares[`${r},${c}`]) {
+        validSquares.push({ r, c })
+      }
+    })
+  })
+  for (let i = validSquares.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[validSquares[i], validSquares[j]] = [validSquares[j], validSquares[i]]
+  }
+  PL.placementPieces.forEach((p, idx) => {
+    if (p.placed) return
+    const sq = validSquares.shift()
+    if (!sq) return
+    PL.placedSquares[`${sq.r},${sq.c}`] = { idx, key: p.key }
+    p.placed = true
+  })
+  PL.selectedTrayIdx = null
+  document.getElementById('confirm-place-btn').disabled = !PL.placementPieces.every(p => p.placed)
+  if (G.map) computeTile(G.map)
+  renderTray()
+  renderPlacementBoard()
+  updatePlaceHint()
 }
 
 function placeAiPieces(aiRows, draft=G.aiDraft, owner='ai') {
