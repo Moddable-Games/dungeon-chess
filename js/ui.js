@@ -15,6 +15,11 @@ function updateUI() {
     : G.turn==='player' ? 'Your turn' : "AI's turn"
   tl.style.color = inCheck ? '#f59e0b'
     : G.turn==='player' ? '#16a34a' : '#dc2626'
+  // Announce turn changes for screen readers
+  if (typeof kbAnnounce === 'function') {
+    if (inCheck) kbAnnounce('Warning: your king is in check!')
+    else if (G.turn === 'player' && !G.aiThinking) kbAnnounce('Your turn')
+  }
   const pi2=SP_INFO[G.playerSp], ai2i=SP_INFO[G.aiSp]
   document.getElementById('p-label').textContent=`${pi2.emoji} YOU`
   document.getElementById('a-label').textContent=`${ai2i.emoji} AI${G.numPlayers===4?' 1':''}`
@@ -57,13 +62,21 @@ function addLog(text){
 function endGame(winner){
   if(G.aiTimer)clearTimeout(G.aiTimer)
   G.aiThinking=false
+  // Announce game result for screen readers
+  if (typeof kbAnnounce === 'function') {
+    kbAnnounce(winner === 'player' ? 'Victory! You won the battle.' : 'Defeat. The enemy has conquered.')
+  }
   const pw=winner==='player'
   const pi=SP_INFO[G.playerSp]
   const winnerSp = winner==='player'?G.playerSp:winner==='ai'?G.aiSp:winner==='ai2'?G.ai2Sp:G.ai3Sp
   const winnerInfo = SP_INFO[winnerSp]
+
+  const endEl = document.querySelector('.stone-frame--end')
+  endEl.classList.remove('end-victory','end-defeat')
+  endEl.classList.add(pw ? 'end-victory' : 'end-defeat')
+
   document.getElementById('end-icon').textContent=pw?'👑':'💀'
   document.getElementById('end-title').textContent=pw?'VICTORY':'DEFEAT'
-  document.getElementById('end-title').style.color=pw?'#B08D2D':'#dc2626'
   document.getElementById('end-sub').textContent=pw
     ?`${pi.emoji} ${pi.label} triumph!`
     :`${winnerInfo.emoji} ${winnerInfo.label} have conquered!`
@@ -71,22 +84,27 @@ function endGame(winner){
   const mvp = G.capturedByPlayer.length
     ? G.capturedByPlayer.reduce((best, k) => UNITS[k].cost > UNITS[best].cost ? k : best)
     : null
+  const survivors = G.pieces.filter(p => p.owner === 'player')
+  const bestSurvivor = survivors.length
+    ? survivors.reduce((best, p) => UNITS[p.key].cost > UNITS[best.key].cost ? p : best)
+    : null
 
   document.getElementById('end-stats').innerHTML=[
     ['Turns', Math.ceil(G.history.length / 2)],
     ['Captured', G.capturedByPlayer.length],
     ['Lost', G.capturedByAi.length],
-    ['MVP Capture', mvp ? UNITS[mvp].name : '—'],
+    ['MVP Kill', mvp ? UNITS[mvp].name : '—'],
+    ['Top Survivor', bestSurvivor ? UNITS[bestSurvivor.key].name : '—'],
   ].map(([l,v])=>`<div class="end-stat"><div class="end-val${typeof v==='string'?' end-val--text':''}">${v}</div><div class="end-lbl">${l}</div></div>`).join('')
 
-  const surviving = G.pieces.filter(p => p.owner === 'player').map(p => UNITS[p.key].name)
+  const surviving = survivors.map(p => UNITS[p.key].name)
   const lost = G.capturedByAi.map(k => UNITS[k].name)
   let piecesHtml = ''
   if (surviving.length) {
-    piecesHtml += `<div>Surviving: <div class="end-pieces-row">${surviving.map(n=>`<span class="end-piece-tag end-piece-tag--alive">${n}</span>`).join('')}</div></div>`
+    piecesHtml += `<div>Surviving: <div class="end-pieces-row">${surviving.map((n,i)=>`<span class="end-piece-tag end-piece-tag--alive" style="--i:${i}">${n}</span>`).join('')}</div></div>`
   }
   if (lost.length) {
-    piecesHtml += `<div>Lost: <div class="end-pieces-row">${lost.map(n=>`<span class="end-piece-tag end-piece-tag--dead">${n}</span>`).join('')}</div></div>`
+    piecesHtml += `<div>Lost: <div class="end-pieces-row">${lost.map((n,i)=>`<span class="end-piece-tag end-piece-tag--dead" style="--i:${i}">${n}</span>`).join('')}</div></div>`
   }
   document.getElementById('end-pieces').innerHTML = piecesHtml
   setTimeout(()=>show('end'),900)
@@ -538,3 +556,12 @@ document.getElementById('rematch-same-btn').onclick = ()=>{
   invalidateStaticBoard()
   show('place')
 }
+
+// ═══════════════════════════════════════════════════════════
+// ACCESSIBILITY INIT
+// ═══════════════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  kbInit()
+  kbEnsureLiveRegion()
+  ttInit()
+})
