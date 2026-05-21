@@ -1,6 +1,6 @@
-# PRD: Moddable Chess — Online Game (v0.1)
+# PRD: Dungeon Chess — Online Game (v0.1)
 
-**Product:** Moddable Chess Web App  
+**Product:** Dungeon Chess Web App  
 **Scope:** Dungeon Chess Battles — Phase 1  
 **Platform:** Desktop Web Browser  
 **Multiplayer:** Solo vs AI (Phase 1) → Online Multiplayer (Phase 2)  
@@ -11,7 +11,7 @@
 
 ## 1. Overview
 
-Moddable Chess is a tabletop game by Moddable Games that reimagines chess as an asymmetric dungeon crawler. This PRD covers the design and development of the official online implementation, starting with **Dungeon Chess Battles** — the 2–4 player skirmish mode — with a solo-vs-AI experience shipping first.
+Dungeon Chess is a tabletop game by Moddable Games that reimagines chess as an asymmetric dungeon crawler. This PRD covers the design and development of the official online implementation, starting with **Dungeon Chess Battles** — the 2–4 player skirmish mode — with a solo-vs-AI experience shipping first.
 
 The web app must faithfully represent the physical game's modular board system, XP-based team drafting, and asymmetric unit abilities, while delivering a polished, accessible browser experience.
 

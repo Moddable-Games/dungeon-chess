@@ -62,7 +62,7 @@ function endGame(winner){
   const winnerInfo = SP_INFO[winnerSp]
   document.getElementById('end-icon').textContent=pw?'👑':'💀'
   document.getElementById('end-title').textContent=pw?'VICTORY':'DEFEAT'
-  document.getElementById('end-title').style.color=pw?'#b8860b':'#dc2626'
+  document.getElementById('end-title').style.color=pw?'#B08D2D':'#dc2626'
   document.getElementById('end-sub').textContent=pw
     ?`${pi.emoji} ${pi.label} triumph!`
     :`${winnerInfo.emoji} ${winnerInfo.label} have conquered!`
@@ -438,6 +438,7 @@ document.getElementById('place-reset').onclick = () => {
 window.addEventListener('load', ()=>{ const hc=document.getElementById('home-canvas'); if(hc) renderAtmosphereCanvas(hc) })
 
 document.getElementById('btn-play').onclick       = ()=>show('players')
+document.getElementById('btn-play-bottom').onclick = ()=>show('players')
 document.getElementById('players-back').onclick   = ()=>show('home')
 document.getElementById('pick-2p').onclick        = ()=>{ G.numPlayers=2; show('map') }
 document.getElementById('pick-4p').onclick        = ()=>{ G.numPlayers=4; G.map=MAPS[2]; show('species') }

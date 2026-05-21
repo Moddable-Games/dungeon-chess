@@ -3,39 +3,167 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Moddable Chess — Dungeon Battles</title>
+<title>Dungeon Chess — Asymmetrical Skirmishes & Dungeon Crawling</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="assets/favicon-512.png">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<!-- HOME -->
+<!-- HOME / LANDING -->
 <section id="screen-home" class="screen active">
   <canvas id="home-canvas" class="bg-canvas"></canvas>
-  <div class="home-wrapper">
-    <div class="stone-frame">
-      <div class="torch-corner torch-corner--tl"></div>
-      <div class="torch-corner torch-corner--tr"></div>
-      <div class="torch-corner torch-corner--bl"></div>
-      <div class="torch-corner torch-corner--br"></div>
 
-      <div class="home-sword">⚔</div>
-      <h1 class="home-title">MODDABLE CHESS</h1>
-      <p class="home-sub">Dungeon Crawler Battles</p>
-      <div class="divider"></div>
+  <div class="landing">
 
-      <div class="faction-row">
-        <span title="Humans" class="faction-icon--human">⚔️</span>
-        <span title="Undead" class="faction-icon--undead">💀</span>
-        <span title="Redskins" class="faction-icon--redskin">👹</span>
-        <span title="Greenskins" class="faction-icon--greenskin">🐲</span>
+    <!-- HERO -->
+    <div class="landing__hero">
+      <div class="landing__hero-inner">
+        <img src="assets/logo-gold.png" alt="Dungeon Chess" class="landing__logo">
+        <p class="landing__tagline">Asymmetrical Skirmishes &amp; Dungeon Crawling</p>
+        <div class="landing__hero-ctas">
+          <button class="btn primary btn-play landing__cta-play" id="btn-play">PLAY NOW</button>
+          <a href="#landing-concept" class="btn landing__cta-learn">Learn More</a>
+        </div>
+        <p class="landing__stage">Pre-Alpha &middot; Solo vs AI &middot; Free to Play</p>
       </div>
-
-      <p class="home-desc">Draft your warband, explore the dungeon, and crush your enemies. Every species fights differently — choose wisely.</p>
-
-      <button class="btn primary btn-play" id="btn-play">⚔ ENTER THE DUNGEON</button>
-      <p class="version-tag">Phase 1 — Solo vs AI · v0.1</p>
+      <div class="landing__scroll-hint" aria-hidden="true"></div>
     </div>
+
+    <!-- CONCEPT -->
+    <div class="landing__section" id="landing-concept">
+      <div class="landing__section-inner">
+        <h2 class="landing__heading">Not Your Grandfather's Chess</h2>
+        <div class="landing__rule"></div>
+        <div class="landing__concept-grid">
+          <div class="landing__concept-card">
+            <div class="landing__concept-icon" aria-hidden="true"></div>
+            <h3>Asymmetric Factions</h3>
+            <p>Four races with radically different abilities. Wraiths phase through walls. Kobolds launch cannon attacks. No two armies play the same.</p>
+          </div>
+          <div class="landing__concept-card">
+            <div class="landing__concept-icon landing__concept-icon--map" aria-hidden="true"></div>
+            <h3>Dungeon Boards</h3>
+            <p>Forget the 8x8 grid. Fight across modular dungeon sections with water hazards, locked doors, portals, and treasure chests.</p>
+          </div>
+          <div class="landing__concept-card">
+            <div class="landing__concept-icon landing__concept-icon--xp" aria-hidden="true"></div>
+            <h3>Draft Your Warband</h3>
+            <p>Spend 75 XP to recruit your army. Every unit costs different XP. Every draft creates a unique force with distinct tactical options.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SPECIES -->
+    <div class="landing__section landing__section--dark">
+      <div class="landing__section-inner">
+        <h2 class="landing__heading">Choose Your Faction</h2>
+        <div class="landing__rule"></div>
+        <div class="landing__species-grid">
+          <div class="landing__species-card landing__species-card--human">
+            <div class="landing__species-emoji">&#9876;&#65039;</div>
+            <h3>Humans</h3>
+            <p class="landing__species-style">Balanced &amp; Versatile</p>
+            <p>Heroes, archers, and a wizard. Jack of all trades with no critical weakness.</p>
+          </div>
+          <div class="landing__species-card landing__species-card--undead">
+            <div class="landing__species-emoji">&#128128;</div>
+            <h3>Undead</h3>
+            <p class="landing__species-style">Movement Trickery</p>
+            <p>Wraiths cross gaps. Vampires glide diagonally. Warlocks wield dark magic.</p>
+          </div>
+          <div class="landing__species-card landing__species-card--redskin">
+            <div class="landing__species-emoji">&#128121;</div>
+            <h3>Redskins</h3>
+            <p class="landing__species-style">Raw Firepower</p>
+            <p>Kobold cannons, iron golems, and a dragon king. Devastating ranged attacks.</p>
+          </div>
+          <div class="landing__species-card landing__species-card--greenskin">
+            <div class="landing__species-emoji">&#128050;</div>
+            <h3>Greenskins</h3>
+            <p class="landing__species-style">Brute Force</p>
+            <p>Goblin swarms, ogre cannons, and troll muscle. Overwhelm through sheer power.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <div class="landing__section">
+      <div class="landing__section-inner">
+        <h2 class="landing__heading">How It Works</h2>
+        <div class="landing__rule"></div>
+        <div class="landing__steps">
+          <div class="landing__step">
+            <div class="landing__step-num">I</div>
+            <h3>Pick Your Map</h3>
+            <p>Compact arena or sprawling dungeon cross. Each layout demands different tactics.</p>
+          </div>
+          <div class="landing__step">
+            <div class="landing__step-num">II</div>
+            <h3>Choose Your Species</h3>
+            <p>Each faction has unique units with abilities that change how you approach the board.</p>
+          </div>
+          <div class="landing__step">
+            <div class="landing__step-num">III</div>
+            <h3>Draft Your Team</h3>
+            <p>Spend your 75 XP budget wisely. Mix heavy-hitters with cheap fodder or go all-in on elites.</p>
+          </div>
+          <div class="landing__step">
+            <div class="landing__step-num">IV</div>
+            <h3>Deploy Your Forces</h3>
+            <p>Place your pieces in your spawn zone. Positioning matters before the first move.</p>
+          </div>
+          <div class="landing__step">
+            <div class="landing__step-num">V</div>
+            <h3>Battle</h3>
+            <p>Turn-based combat. Capture the enemy king. Use terrain, abilities, and cunning to win.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEATURES -->
+    <div class="landing__section landing__section--dark">
+      <div class="landing__section-inner">
+        <h2 class="landing__heading">Features</h2>
+        <div class="landing__rule"></div>
+        <div class="landing__features-grid">
+          <div class="landing__feature">
+            <h3>Animated Dungeon Board</h3>
+            <p>Stone textures, flickering torchlight, floating embers, and water caustics bring the dungeon to life.</p>
+          </div>
+          <div class="landing__feature">
+            <h3>Unique Unit Abilities</h3>
+            <p>Every piece has special rules. Archers attack across gaps. Fire Elementals can't cross water. Knights leap walls.</p>
+          </div>
+          <div class="landing__feature">
+            <h3>Modular Map System</h3>
+            <p>26 board sections create endless combinations. 2-player skirmishes or 4-player free-for-alls.</p>
+          </div>
+          <div class="landing__feature">
+            <h3>AI Opponent</h3>
+            <p>A heuristic AI that respects all unit abilities, terrain constraints, and draft rules. Challenging from your first game.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINAL CTA -->
+    <div class="landing__section landing__section--cta">
+      <div class="landing__section-inner">
+        <img src="assets/logo-gold.png" alt="Dungeon Chess" class="landing__cta-logo">
+        <h2 class="landing__heading">Enter the Dungeon</h2>
+        <p class="landing__cta-sub">Free to play. No account required. Jump straight in.</p>
+        <button class="btn primary btn-play landing__cta-final" id="btn-play-bottom">PLAY NOW</button>
+        <a href="https://moddable.games" class="landing__footer-link" target="_blank" rel="noopener">
+          <img src="assets/moddable-games-logo.png" alt="Moddable Games" class="landing__footer-logo">
+        </a>
+      </div>
+    </div>
+
   </div>
 </section>
 

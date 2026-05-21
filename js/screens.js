@@ -170,11 +170,11 @@ function renderPlacementBoard() {
         if (isEmpty && selectedPiece) {
           // Clickable target
           g.appendChild(svgEl('rect', { x:0, y:0, width:TILE, height:TILE,
-            fill:'rgba(184,134,11,0.25)', stroke:'rgba(184,134,11,0.6)', 'stroke-width':2 }))
+            fill:'rgba(176,141,45,0.25)', stroke:'rgba(176,141,45,0.6)', 'stroke-width':2 }))
         } else if (!selectedPiece) {
           // Show spawn zone faintly even when nothing selected
           g.appendChild(svgEl('rect', { x:0, y:0, width:TILE, height:TILE,
-            fill:'rgba(184,134,11,0.08)' }))
+            fill:'rgba(176,141,45,0.08)' }))
         }
       }
 

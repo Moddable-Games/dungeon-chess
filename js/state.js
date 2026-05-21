@@ -53,6 +53,7 @@ function show(id) {
   if (id==='home') {
     const hc = document.getElementById('home-canvas')
     if (hc) renderAtmosphereCanvas(hc)
+    document.getElementById('screen-home').scrollTop = 0
   }
   if (id==='end') {
     const ec = document.getElementById('end-canvas')
@@ -78,7 +79,7 @@ function renderMapScreen() {
       <div class="mc-icon">${m.icon}</div>
       <h3>${m.name}</h3>
       <p>${m.desc}</p>
-      <div style="line-height:0;border:1px solid rgba(184,134,11,0.2);border-radius:3px;display:inline-block;overflow:hidden;">
+      <div style="line-height:0;border:1px solid rgba(176,141,45,0.2);border-radius:3px;display:inline-block;overflow:hidden;">
         ${miniMapSVG(m)}
       </div>
     `
@@ -94,13 +95,13 @@ function miniMapSVG(m) {
   let svg = `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">`
 
   // Cavern wall background — dark stone
-  svg += `<rect width="${W}" height="${H}" fill="#1a0f06"/>`
+  svg += `<rect width="${W}" height="${H}" fill="#12121C"/>`
 
   // Wall gradient suggestion — darker toward centre
   svg += `<defs>
     <radialGradient id="mg" cx="50%" cy="50%" r="70%">
-      <stop offset="0%" stop-color="#3a2010" stop-opacity="0.8"/>
-      <stop offset="100%" stop-color="#0a0602" stop-opacity="0.4"/>
+      <stop offset="0%" stop-color="#2a2a38" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#0a0a12" stop-opacity="0.4"/>
     </radialGradient>
   </defs>`
   svg += `<rect width="${W}" height="${H}" fill="url(#mg)"/>`

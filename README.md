@@ -6,20 +6,20 @@
 
 <h1 align="center">
   <br>
-  MODDABLE CHESS
+  DUNGEON CHESS
   <br>
-  <sub>Dungeon Crawler Battles</sub>
+  <sub>Asymmetrical Skirmishes & Dungeon Crawling</sub>
 </h1>
 
 <p align="center">
-  <em>Chess reimagined as an asymmetric dungeon crawler.<br>Draft your warband. Explore the dungeon. Crush your enemies.</em>
+  <em>Asymmetrical skirmishes & dungeon crawling.<br>Draft your warband. Explore the dungeon. Crush your enemies.</em>
 </p>
 
 ---
 
 ## The Game
 
-Moddable Chess takes the timeless mechanics of chess and drops them into a dark, modular dungeon. Four fantasy species clash on interconnected board sections filled with water hazards, locked doors, and arcane portals.
+Dungeon Chess takes the timeless mechanics of chess and drops them into a dark, modular dungeon. Four fantasy species clash on interconnected board sections filled with water hazards, locked doors, and arcane portals.
 
 Every species fights differently. Every battle plays out on a different map. Every team is drafted fresh from a shared XP budget.
 
@@ -53,7 +53,7 @@ Static HTML/CSS/JS — no build step, no dependencies.
 python3 -m http.server 8000
 
 # Or just open index.html from your local server
-open http://localhost/MODDABLE/moddable-chess/index.html
+open http://localhost/MODDABLE/dungeon-chess/index.html
 ```
 
 ---
@@ -61,7 +61,7 @@ open http://localhost/MODDABLE/moddable-chess/index.html
 ## Project Structure
 
 ```
-moddable-chess/
+dungeon-chess/
 ├── index.html              HTML shell — screens and layout
 ├── css/
 │   └── style.css           All styles, animations, transitions
@@ -110,6 +110,15 @@ Pure client-side JavaScript. No frameworks, no build tools, no runtime dependenc
 - **State:** Plain JS objects, single-page app with screen switching
 - **AI:** In-browser heuristic (capture > advance > protect)
 - **Performance:** Static terrain layer cached, dynamic pieces rebuilt per move, canvas surround cached to offscreen bitmap
+
+---
+
+## Changelog
+
+| Date | Change |
+|------|--------|
+| 2026-05-21 | Rebrand to "Dungeon Chess" — new colour palette, logo, landing page, brand-aligned typography |
+| 2026-05-19 | Initial release — 4 species, 3 maps, solo vs AI, animated dungeon board |
 
 ---
 

@@ -81,7 +81,7 @@ const SP_UNITS = {
   [SP.G]: ['goblin','ogre','orc','troll','shaman','warlord'],
 }
 const SP_INFO = {
-  [SP.H]: { label:'Humans',     accent:'#b8860b', emoji:'⚔️',  desc:'Heroes, knights & archers. Balanced and versatile.' },
+  [SP.H]: { label:'Humans',     accent:'#B08D2D', emoji:'⚔️',  desc:'Heroes, knights & archers. Balanced and versatile.' },
   [SP.U]: { label:'Undead',     accent:'#7c3aed', emoji:'💀',  desc:'Skeletons & vampires. Masters of movement across gaps.' },
   [SP.R]: { label:'Redskins',   accent:'#c0392b', emoji:'👹',  desc:'Kobolds & iron golems. Cannon attacks and fire power.' },
   [SP.G]: { label:'Greenskins', accent:'#16a34a', emoji:'🐲',  desc:'Goblins, ogres & trolls. Brute force and cannon attacks.' },

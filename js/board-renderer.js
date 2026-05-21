@@ -11,8 +11,8 @@ function svgEl(tag, attrs={}) {
 }
 
 // Colours
-const SQ_LIGHT  = '#4a3728'
-const SQ_DARK   = '#251a10'
+const SQ_LIGHT  = '#2a2a38'
+const SQ_DARK   = '#1a1a26'
 const SQ_WATER  = '#0f2f52'
 const SQ_WATER2 = '#081e35'  // water dark checker
 const VOID_FILL = 'none'
@@ -94,7 +94,7 @@ function drawLantern(svg, cx, cy, col, flickClass, delay=0) {
   // Top-down lantern: small glowing dot seen from above
   // Lantern body — dark ring with glowing centre
   svg.appendChild(svgEl('circle', { cx, cy, r:6,
-    fill:'none', stroke:'#78350f', 'stroke-width':1.5, style:'pointer-events:none' }))
+    fill:'none', stroke:'#3A3A4A', 'stroke-width':1.5, style:'pointer-events:none' }))
   svg.appendChild(svgEl('circle', { cx, cy, r:5,
     fill:`rgba(${col.glow},0.20)`, style:'pointer-events:none' }))
 
@@ -651,7 +651,7 @@ function drawDungeonSurround(canvasEl, map) {
   }
 
   // ── 0. Background ─────────────────────────────────────────────────────
-  ctx.fillStyle='#020100'; ctx.fillRect(0,0,fullW,fullH)
+  ctx.fillStyle='#0a0a12'; ctx.fillRect(0,0,fullW,fullH)
 
   // ── 1. Compute deep corners ──────────────────────────────────────────
   function extendPast(screenCorner, boardCorner, dist) {
@@ -926,7 +926,7 @@ function drawDungeonSurround(canvasEl, map) {
 
       ctx.strokeStyle='rgba(0,0,0,0.65)'; ctx.lineWidth=bwCur*1.4
       ctx.beginPath(); ctx.moveTo(barB2[0],barB2[1]); ctx.lineTo(barT2[0],barT2[1]); ctx.stroke()
-      ctx.strokeStyle='#16100a'; ctx.lineWidth=bwCur
+      ctx.strokeStyle='#12121C'; ctx.lineWidth=bwCur
       ctx.beginPath(); ctx.moveTo(barB2[0],barB2[1]); ctx.lineTo(barT2[0],barT2[1]); ctx.stroke()
       // Highlight on leading edge
       const perp = isHorizWall
@@ -947,7 +947,7 @@ function drawDungeonSurround(canvasEl, map) {
       const cw = Math.max(0.8, bwB * (1-(1-topW/botW)*ct) * 0.85)
       ctx.strokeStyle='rgba(0,0,0,0.55)'; ctx.lineWidth=cw*1.4
       ctx.beginPath(); ctx.moveTo(cL[0],cL[1]); ctx.lineTo(cR[0],cR[1]); ctx.stroke()
-      ctx.strokeStyle='#14100a'; ctx.lineWidth=cw
+      ctx.strokeStyle='#12121C'; ctx.lineWidth=cw
       ctx.beginPath(); ctx.moveTo(cL[0],cL[1]); ctx.lineTo(cR[0],cR[1]); ctx.stroke()
     }
 
@@ -1276,7 +1276,7 @@ function ensureSpriteDefs(svg) {
   // Glow filter for selected pieces
   if (!defs.querySelector('#piece-glow')) {
     const filter = svgEl('filter', { id:'piece-glow', x:'-20%', y:'-20%', width:'140%', height:'140%' })
-    const fe = svgEl('feDropShadow', { dx:0, dy:0, stdDeviation:3, 'flood-color':'#f6c747', 'flood-opacity':0.9 })
+    const fe = svgEl('feDropShadow', { dx:0, dy:0, stdDeviation:3, 'flood-color':'#c9a83e', 'flood-opacity':0.9 })
     filter.appendChild(fe); defs.appendChild(filter)
   }
 
@@ -1284,7 +1284,7 @@ function ensureSpriteDefs(svg) {
   if (!defs.querySelector('#lantern-glow')) {
     const f = svgEl('filter', { id:'lantern-glow', x:'-100%', y:'-100%', width:'300%', height:'300%' })
     const blur = svgEl('feGaussianBlur', { stdDeviation:'6', result:'blur' })
-    const flood = svgEl('feFlood', { 'flood-color':'#f59e0b', 'flood-opacity':'0.35', result:'color' })
+    const flood = svgEl('feFlood', { 'flood-color':'#B08D2D', 'flood-opacity':'0.35', result:'color' })
     const comp = svgEl('feComposite', { in:'color', in2:'blur', operator:'in', result:'glow' })
     const merge = svgEl('feMerge')
     const m1 = svgEl('feMergeNode', { in:'glow' })
