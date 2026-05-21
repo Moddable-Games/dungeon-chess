@@ -117,6 +117,11 @@ Pure client-side JavaScript. No frameworks, no build tools, no runtime dependenc
 
 | Date | Change |
 |------|--------|
+| 2026-05-21 | Undo, last-move highlight, auto-place, enhanced end screen with animations |
+| 2026-05-21 | Keyboard navigation, unit tooltips, screen reader accessibility |
+| 2026-05-21 | Post-game replay with transport controls and auto-play |
+| 2026-05-21 | Turn order selection (player first / AI first / random) |
+| 2026-05-21 | Master ruleset document (docs/RULESET.md) |
 | 2026-05-21 | Rebrand to "Dungeon Chess" — new colour palette, logo, landing page, brand-aligned typography |
 | 2026-05-19 | Initial release — 4 species, 3 maps, solo vs AI, animated dungeon board |
 
