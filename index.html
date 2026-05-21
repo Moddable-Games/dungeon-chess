@@ -357,6 +357,31 @@
         <button class="btn btn-rematch" id="rematch-btn">⚔ REMATCH</button>
         <button class="btn btn-rematch" id="rematch-same-btn">⚔ SAME TEAM</button>
       </div>
+      <button class="btn sm btn-replay" id="replay-btn">▶ REPLAY GAME</button>
+    </div>
+  </div>
+</section>
+
+<!-- REPLAY -->
+<section id="screen-replay" class="screen">
+  <div class="replay-layout">
+    <div class="replay-board">
+      <canvas id="replay-canvas" class="bg-canvas-replay"></canvas>
+      <canvas id="replay-lights" class="bg-canvas-replay"></canvas>
+      <svg id="replay-svg" class="dungeon-board"></svg>
+    </div>
+    <div class="replay-sidebar">
+      <h3 class="replay-title">GAME REPLAY</h3>
+      <div class="replay-controls">
+        <button class="btn sm" id="rp-start" title="Start">⏮</button>
+        <button class="btn sm" id="rp-back" title="Back">⏪</button>
+        <button class="btn sm rp-play-btn" id="rp-play" title="Play/Pause">▶</button>
+        <button class="btn sm" id="rp-fwd" title="Forward">⏩</button>
+        <button class="btn sm" id="rp-end" title="End">⏭</button>
+      </div>
+      <div class="rp-counter" id="rp-counter">0 / 0</div>
+      <div class="replay-log" id="rp-log"></div>
+      <button class="btn sm" id="rp-exit">← Back to Results</button>
     </div>
   </div>
 </section>
@@ -368,6 +393,7 @@
 <script src="js/engine.js"></script>
 <script src="js/battle.js"></script>
 <script src="js/battle-draw.js"></script>
+<script src="js/replay.js"></script>
 <script src="js/aria.js"></script>
 <script src="js/keyboard.js"></script>
 <script src="js/tooltip.js"></script>

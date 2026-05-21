@@ -62,6 +62,13 @@ function show(id) {
   if (id==='species') renderSpeciesScreen()
   if (id==='draft')   renderDraftScreen()
   if (id==='place')   renderPlacementScreen()
+  if (id !== 'replay') {
+    const rc = document.getElementById('replay-canvas')
+    const rl = document.getElementById('replay-lights')
+    if (rc) { rc.width = 1; rc.height = 1 }
+    if (rl) { rl.width = 1; rl.height = 1 }
+  }
+  if (id==='replay' && typeof rpBuildLog === 'function') rpBuildLog()
   if (id==='battle' && typeof ttInit === 'function') ttInit()
   // canvas surround drawn after drawBoard() in confirm-place-btn handler
 }

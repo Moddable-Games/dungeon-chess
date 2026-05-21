@@ -248,8 +248,8 @@ function drawFloorDetails(g, r, c, isLight) {
 let _staticLayerBuilt = false
 let _staticLayerMap = null
 
-function renderBoardStatic(map) {
-  const svg = document.getElementById('dungeon-board')
+function renderBoardStatic(map, svgId) {
+  const svg = document.getElementById(svgId || 'dungeon-board')
   svg.innerHTML = ''
   _staticLayerBuilt = true
   _staticLayerMap = map
@@ -366,14 +366,15 @@ function renderBoardStatic(map) {
   }
 }
 
-function renderBoard(map, pieces, selectedR, selectedC, legalMoves, legalAttacks, onSquareClick, lastMove) {
+function renderBoard(map, pieces, selectedR, selectedC, legalMoves, legalAttacks, onSquareClick, lastMove, svgId) {
   boardState = { map, selectedR, selectedC, legalMoves, legalAttacks, onSquareClick }
 
-  const svg = document.getElementById('dungeon-board')
+  const targetId = svgId || 'dungeon-board'
+  const svg = document.getElementById(targetId)
 
   // Build static layer once per battle (or on TILE size change)
-  if (!_staticLayerBuilt || _staticLayerMap !== map) {
-    renderBoardStatic(map)
+  if (!_staticLayerBuilt || _staticLayerMap !== map || svgId) {
+    renderBoardStatic(map, targetId)
   }
 
   // Remove previous dynamic layer

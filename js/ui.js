@@ -449,6 +449,7 @@ document.getElementById('confirm-place-btn').onclick = () => {
   G.capturedByPlayer=[]; G.capturedByAi=[]; G.history=[]
   G.turn='player'; G.aiThinking=false; G.selR=null; G.selC=null
   G.legalMoves=[]; G.legalAttacks=[]
+  if (typeof rpSaveInitial === 'function') rpSaveInitial()
   show('battle')
   drawBoard()
   // Draw canvas surround after SVG is sized
@@ -556,6 +557,17 @@ document.getElementById('rematch-same-btn').onclick = ()=>{
   invalidateStaticBoard()
   show('place')
 }
+
+// ═══════════════════════════════════════════════════════════
+// REPLAY CONTROLS
+// ═══════════════════════════════════════════════════════════
+document.getElementById('replay-btn').onclick = () => rpStart()
+document.getElementById('rp-start').onclick = () => rpGoToStart()
+document.getElementById('rp-back').onclick = () => rpStepBack()
+document.getElementById('rp-fwd').onclick = () => rpStepForward()
+document.getElementById('rp-end').onclick = () => rpGoToEnd()
+document.getElementById('rp-play').onclick = () => rpTogglePlay()
+document.getElementById('rp-exit').onclick = () => { rpPause(); show('end') }
 
 // ═══════════════════════════════════════════════════════════
 // ACCESSIBILITY INIT
