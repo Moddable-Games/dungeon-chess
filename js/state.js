@@ -62,6 +62,7 @@ function show(id) {
   if (id==='species') renderSpeciesScreen()
   if (id==='draft')   renderDraftScreen()
   if (id==='place')   renderPlacementScreen()
+  if (id==='battle' && typeof ttInit === 'function') ttInit()
   // canvas surround drawn after drawBoard() in confirm-place-btn handler
 }
 

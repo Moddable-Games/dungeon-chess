@@ -291,7 +291,7 @@
 <!-- BATTLE -->
 <section id="screen-battle" class="screen">
   <div class="b-left">
-    <div class="info-panel turn-panel" id="turn-panel">
+    <div class="info-panel turn-panel" id="turn-panel" tabindex="0" aria-live="polite">
       <h4>CURRENT TURN</h4>
       <div class="t-emoji" id="t-emoji">⚔</div>
       <div class="t-label" id="t-label">Your turn</div>
@@ -319,17 +319,17 @@
   <div class="b-centre">
     <div id="board-wrap" class="board-wrap">
       <canvas id="dungeon-canvas" class="board-canvas"></canvas>
-      <svg id="dungeon-board" xmlns="http://www.w3.org/2000/svg" class="board-svg"></svg>
+      <svg id="dungeon-board" xmlns="http://www.w3.org/2000/svg" class="board-svg" tabindex="0" aria-label="Game board - use arrow keys to navigate, Enter to select"></svg>
       <canvas id="dungeon-lights" class="board-lights"></canvas>
     </div>
   </div>
 
   <div class="b-right">
-    <div class="info-panel info-panel--selected">
+    <div class="info-panel info-panel--selected" tabindex="0" aria-label="Selected piece info">
       <h4>SELECTED</h4>
       <div id="sel-info" class="sel-info">Click a piece</div>
     </div>
-    <div class="info-panel info-panel--log">
+    <div class="info-panel info-panel--log" tabindex="0" aria-label="Move history log">
       <h4>MOVE LOG</h4>
       <div class="h-scroll" id="h-list"></div>
       <button class="btn sm btn-undo" id="undo-btn" disabled>↩ Undo</button>
@@ -368,6 +368,9 @@
 <script src="js/engine.js"></script>
 <script src="js/battle.js"></script>
 <script src="js/battle-draw.js"></script>
+<script src="js/aria.js"></script>
+<script src="js/keyboard.js"></script>
+<script src="js/tooltip.js"></script>
 <script src="js/ui.js"></script>
 </body>
 </html>

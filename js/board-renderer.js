@@ -261,6 +261,8 @@ function renderBoardStatic(map) {
   svg.setAttribute('width', fullW)
   svg.setAttribute('height', fullH)
   svg.setAttribute('viewBox', `${-WALL} ${-WALL} ${fullW} ${fullH}`)
+  svg.setAttribute('role', 'grid')
+  svg.setAttribute('aria-label', 'Dungeon Chess game board')
 
   ensureSpriteDefs(svg)
 
@@ -472,6 +474,9 @@ function renderBoard(map, pieces, selectedR, selectedC, legalMoves, legalAttacks
   }
 
   svg.appendChild(dynG)
+
+  // Keyboard cursor overlay
+  if (typeof kbRenderCursor === 'function') kbRenderCursor(svg, map)
 
   // Clickable overlay — transparent rects for squares without dynamic content
   // Use event delegation on the SVG instead
