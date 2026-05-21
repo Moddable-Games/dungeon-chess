@@ -447,17 +447,23 @@ document.getElementById('confirm-place-btn').onclick = () => {
     G.pieces.push({ id: id++, key, r, c, owner: 'player' })
   })
   G.capturedByPlayer=[]; G.capturedByAi=[]; G.history=[]
-  G.turn='player'; G.aiThinking=false; G.selR=null; G.selC=null
+  const orderVal = document.querySelector('[name="turn-order"]:checked').value
+  const firstTurn = orderVal === 'random'
+    ? (Math.random() < 0.5 ? 'player' : 'ai') : orderVal
+  G.turn = firstTurn; G.aiThinking = false; G.selR=null; G.selC=null
   G.legalMoves=[]; G.legalAttacks=[]
   if (typeof rpSaveInitial === 'function') rpSaveInitial()
   show('battle')
   drawBoard()
-  // Draw canvas surround after SVG is sized
   const bCanvas2 = document.getElementById('dungeon-canvas')
   if (bCanvas2 && G.map) drawDungeonSurround(bCanvas2, G.map)
   const bLights2 = document.getElementById('dungeon-lights')
   if (bLights2 && G.map) startLightAnimation(bLights2, G.map, TILE*2.2)
   updateUI()
+  if (firstTurn !== 'player') {
+    G.aiThinking = true
+    G.aiTimer = setTimeout(runAi, 600 + Math.random() * 400)
+  }
 }
 document.getElementById('place-back').onclick = () => show('draft')
 document.getElementById('place-auto').onclick = () => autoPlace()
