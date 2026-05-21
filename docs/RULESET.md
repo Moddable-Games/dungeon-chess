@@ -1,6 +1,6 @@
 # Dungeon Chess — Complete Ruleset
 
-**Version:** 0.1 (as implemented May 2026)  
+**Version:** 0.1 (as implemented 2026-05-21)  
 **Source of truth for:** game mechanics, unit abilities, movement rules, win conditions, drafting, maps
 
 ---
