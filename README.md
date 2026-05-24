@@ -122,6 +122,9 @@ Pure client-side JavaScript. No frameworks, no build tools, no runtime dependenc
 - Replace engine.js with MCE consumption — all movement logic now delegated to Moddable Chess Engine
 - Add mce-bridge.js: registers 22 unit types, creates MCE game state, syncs pieces
 - MCE gains: multi-player ownership model (pieceData-based), terrain-aware slides, cannon/gapped-slide primitives
+- Fix 4-player AI: now targets nearest enemy king instead of only player
+- Self-host Google Fonts (Cinzel, Crimson Text) — no external CDN dependency
+- Lock board tile size during battle to prevent log-induced layout shifts
 
 #### 2026-05-21
 - Undo, last-move highlight, auto-place, enhanced end screen with animations
