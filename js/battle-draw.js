@@ -300,19 +300,21 @@ function runAi() {
 
 function pickAiMove(owner = 'ai') {
   let best = null, bestScore = -Infinity
-  const playerKing = G.pieces.find(p => p.owner === 'player' && UNITS[p.key].type === PT.K)
+  const enemyKings = G.pieces.filter(p => p.owner !== owner && UNITS[p.key].type === PT.K)
   G.pieces.filter(p => p.owner === owner).forEach(piece => {
     const { moves: rawMoves, attacks: rawAttacks } = getLegal(piece)
     const moves = rawMoves.filter(([tr, tc]) => !wouldLeaveInCheck(piece, tr, tc))
     const attacks = rawAttacks.filter(([tr, tc]) => !wouldLeaveInCheck(piece, tr, tc))
     attacks.forEach(([tr, tc]) => {
-      const t = G.pieces.find(p => p.r === tr && p.c === tc && p.owner === 'player')
+      const t = G.pieces.find(p => p.r === tr && p.c === tc && p.owner !== owner)
       const score = 100 + (t ? UNITS[t.key].cost : 5)
       if (score > bestScore) { bestScore = score; best = { piece, tr, tc } }
     })
     moves.forEach(([tr, tc]) => {
-      const [kr, kc] = playerKing ? [playerKing.r, playerKing.c] : [Math.floor(G.map.rows / 2), Math.floor(G.map.cols / 2)]
-      const score = 50 - (Math.abs(tr - kr) + Math.abs(tc - kc))
+      let minDist = Infinity
+      enemyKings.forEach(k => { const d = Math.abs(tr - k.r) + Math.abs(tc - k.c); if (d < minDist) minDist = d })
+      if (minDist === Infinity) minDist = Math.abs(tr - Math.floor(G.map.rows / 2)) + Math.abs(tc - Math.floor(G.map.cols / 2))
+      const score = 50 - minDist
       if (score > bestScore) { bestScore = score; best = { piece, tr, tc } }
     })
   })
