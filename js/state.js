@@ -7,7 +7,8 @@ const G = {
   playerSp:null, aiSp:null, ai2Sp:null, ai3Sp:null,
   playerDraft:[], aiDraft:[], ai2Draft:[], ai3Draft:[],
   map:null,
-  pieces:[],        // { id, key, r, c, owner }
+  pieces:[],        // derived from MCE state: { id, key, r, c, owner }
+  mceGame:null,     // MCE game object — source of truth for board state
   turn:'player', aiThinking:false, aiTimer:null,
   selR:null, selC:null,
   legalMoves:[], legalAttacks:[],

@@ -452,9 +452,16 @@ document.getElementById('confirm-place-btn').onclick = () => {
     ? (Math.random() < 0.5 ? 'player' : 'ai') : orderVal
   G.turn = firstTurn; G.aiThinking = false; G.selR=null; G.selC=null
   G.legalMoves=[]; G.legalAttacks=[]
+  // Initialize MCE game state
+  DungeonMCE.registerAllUnits()
+  const players = G.numPlayers === 4 ? ['player','ai','ai2','ai3'] : ['player','ai']
+  G.mceGame = DungeonMCE.createDungeonGame(G.map, G.pieces, players)
+  G.mceGame.turn = firstTurn
+  G.mceGame.turnIndex = G.mceGame.players.indexOf(firstTurn)
   if (typeof rpSaveInitial === 'function') rpSaveInitial()
   show('battle')
   drawBoard()
+  lockTileSize()
   const bCanvas2 = document.getElementById('dungeon-canvas')
   if (bCanvas2 && G.map) drawDungeonSurround(bCanvas2, G.map)
   const bLights2 = document.getElementById('dungeon-lights')
@@ -504,17 +511,16 @@ document.getElementById('undo-btn').onclick = () => {
   for (let i = 0; i < 2; i++) {
     const move = G_undoStack.pop()
     if (!move) break
-    const piece = G.pieces.find(p => p.id === move.pieceId)
-    if (piece) { piece.r = move.fr; piece.c = move.fc }
+    if (move.mceUndo) MCE.unmakeMove(G.mceGame, move.mceUndo)
     if (move.capturedPiece) {
-      G.pieces.push(move.capturedPiece)
       if (move.owner === 'player') G.capturedByPlayer.pop()
       else G.capturedByAi.pop()
     }
     G.history.pop()
   }
+  G.pieces = DungeonMCE.syncPiecesFromMCE(G.mceGame)
+  G.turn = G.mceGame.turn; G.aiThinking = false
   G_lastMove = G_undoStack.length ? { fr: G_undoStack[G_undoStack.length-1].fr, fc: G_undoStack[G_undoStack.length-1].fc, tr: G_undoStack[G_undoStack.length-1].tr, tc: G_undoStack[G_undoStack.length-1].tc } : null
-  G.turn = 'player'; G.aiThinking = false
   G.selR = null; G.selC = null; G.legalMoves = []; G.legalAttacks = []
   const el = document.getElementById('h-list')
   el.innerHTML = ''
@@ -526,11 +532,11 @@ document.getElementById('undo-btn').onclick = () => {
 document.getElementById('play-again-btn').onclick = ()=>{
   if(G.aiTimer)clearTimeout(G.aiTimer)
   G_undoStack.length = 0; G_lastMove = null
-  Object.assign(G,{numPlayers:2,playerSp:null,aiSp:null,ai2Sp:null,ai3Sp:null,playerDraft:[],aiDraft:[],ai2Draft:[],ai3Draft:[],map:null,pieces:[],
+  Object.assign(G,{numPlayers:2,playerSp:null,aiSp:null,ai2Sp:null,ai3Sp:null,playerDraft:[],aiDraft:[],ai2Draft:[],ai3Draft:[],map:null,pieces:[],mceGame:null,
     turn:'player',aiThinking:false,aiTimer:null,selR:null,selC:null,
     legalMoves:[],legalAttacks:[],capturedByPlayer:[],capturedByAi:[],history:[]})
   Object.assign(PL,{selectedTrayIdx:null,placedSquares:{},placementPieces:[],spawnRows:[]})
-  invalidateStaticBoard()
+  unlockTileSize(); invalidateStaticBoard()
   show('home')
 }
 
@@ -539,13 +545,13 @@ document.getElementById('rematch-btn').onclick = ()=>{
   G_undoStack.length = 0; G_lastMove = null
   const savedMap = G.map, savedSp = G.playerSp, savedAiSp = G.aiSp
   const savedNum = G.numPlayers, savedAi2 = G.ai2Sp, savedAi3 = G.ai3Sp
-  Object.assign(G,{pieces:[],turn:'player',aiThinking:false,aiTimer:null,selR:null,selC:null,
+  Object.assign(G,{pieces:[],mceGame:null,turn:'player',aiThinking:false,aiTimer:null,selR:null,selC:null,
     legalMoves:[],legalAttacks:[],capturedByPlayer:[],capturedByAi:[],history:[],
     playerDraft:[],aiDraft:[],ai2Draft:[],ai3Draft:[]})
   Object.assign(PL,{selectedTrayIdx:null,placedSquares:{},placementPieces:[],spawnRows:[]})
   G.map = savedMap; G.playerSp = savedSp; G.aiSp = savedAiSp
   G.numPlayers = savedNum; G.ai2Sp = savedAi2; G.ai3Sp = savedAi3
-  invalidateStaticBoard()
+  unlockTileSize(); invalidateStaticBoard()
   show('draft')
 }
 
@@ -555,12 +561,12 @@ document.getElementById('rematch-same-btn').onclick = ()=>{
   const savedDraft = [...G.playerDraft], savedAiDraft = [...G.aiDraft]
   const savedAi2Draft = G.ai2Draft ? [...G.ai2Draft] : []
   const savedAi3Draft = G.ai3Draft ? [...G.ai3Draft] : []
-  Object.assign(G,{pieces:[],turn:'player',aiThinking:false,aiTimer:null,selR:null,selC:null,
+  Object.assign(G,{pieces:[],mceGame:null,turn:'player',aiThinking:false,aiTimer:null,selR:null,selC:null,
     legalMoves:[],legalAttacks:[],capturedByPlayer:[],capturedByAi:[],history:[]})
   Object.assign(PL,{selectedTrayIdx:null,placedSquares:{},placementPieces:[],spawnRows:[]})
   G.playerDraft = savedDraft; G.aiDraft = savedAiDraft
   G.ai2Draft = savedAi2Draft; G.ai3Draft = savedAi3Draft
-  invalidateStaticBoard()
+  unlockTileSize(); invalidateStaticBoard()
   show('place')
 }
 

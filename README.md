@@ -69,13 +69,15 @@ dungeon-chess/
 │   ├── data.js             Sprites, units, species, map definitions
 │   ├── board-renderer.js   SVG board, dungeon surround, floor details
 │   ├── state.js            Game state, navigation, draft/species screens
+│   ├── mce-bridge.js       MCE integration — unit registration, game creation, state sync
 │   ├── screens.js          Deployment/placement screen
-│   ├── engine.js           Movement rules, check detection
+│   ├── engine.js           Movement API (thin wrapper over MCE)
 │   ├── battle.js           Battle setup, AI piece placement
 │   ├── battle-draw.js      Board drawing, move animation, AI turns
 │   └── ui.js               UI updates, light animation, event wiring
 └── docs/
-    └── PRD_v0.1.md         Product requirements document
+    ├── PRD_v0.1.md         Product requirements document
+    └── RULESET.md          Master ruleset
 ```
 
 ---
@@ -106,8 +108,9 @@ See [open issues](https://github.com/Moddable-Games/moddable-chess/issues) for d
 
 Pure client-side JavaScript. No frameworks, no build tools, no runtime dependencies.
 
+- **Engine:** [Moddable Chess Engine](https://github.com/Moddable-Games/moddable-chess) — shared engine with custom piece registration, multi-player ownership, terrain awareness
 - **Rendering:** SVG board + HTML5 Canvas surround/lighting
-- **State:** Plain JS objects, single-page app with screen switching
+- **State:** MCE owns board state; UI derives piece arrays for rendering
 - **AI:** In-browser heuristic (capture > advance > protect)
 - **Performance:** Static terrain layer cached, dynamic pieces rebuilt per move, canvas surround cached to offscreen bitmap
 
@@ -115,15 +118,21 @@ Pure client-side JavaScript. No frameworks, no build tools, no runtime dependenc
 
 ## Changelog
 
-| Date | Change |
-|------|--------|
-| 2026-05-21 | Undo, last-move highlight, auto-place, enhanced end screen with animations |
-| 2026-05-21 | Keyboard navigation, unit tooltips, screen reader accessibility |
-| 2026-05-21 | Post-game replay with transport controls and auto-play |
-| 2026-05-21 | Turn order selection (player first / AI first / random) |
-| 2026-05-21 | Master ruleset document (docs/RULESET.md) |
-| 2026-05-21 | Rebrand to "Dungeon Chess" — new colour palette, logo, landing page, brand-aligned typography |
-| 2026-05-19 | Initial release — 4 species, 3 maps, solo vs AI, animated dungeon board |
+#### 2026-05-24
+- Replace engine.js with MCE consumption — all movement logic now delegated to Moddable Chess Engine
+- Add mce-bridge.js: registers 22 unit types, creates MCE game state, syncs pieces
+- MCE gains: multi-player ownership model (pieceData-based), terrain-aware slides, cannon/gapped-slide primitives
+
+#### 2026-05-21
+- Undo, last-move highlight, auto-place, enhanced end screen with animations
+- Keyboard navigation, unit tooltips, screen reader accessibility
+- Post-game replay with transport controls and auto-play
+- Turn order selection (player first / AI first / random)
+- Master ruleset document (docs/RULESET.md)
+- Rebrand to "Dungeon Chess" — new colour palette, logo, landing page, brand-aligned typography
+
+#### 2026-05-19
+- Initial release — 4 species, 3 maps, solo vs AI, animated dungeon board
 
 ---
 

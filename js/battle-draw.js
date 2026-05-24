@@ -6,8 +6,11 @@ const G_undoStack = []
 let G_lastMove = null
 
 let _lastTile = null
+let _tileLocked = false
+function lockTileSize() { _tileLocked = true }
+function unlockTileSize() { _tileLocked = false }
 function drawBoard(excludePieceId) {
-  if (G.map) computeTile(G.map)
+  if (G.map && !_tileLocked) computeTile(G.map)
   if (_lastTile !== null && _lastTile !== TILE) invalidateStaticBoard()
   _lastTile = TILE
   const piecesToDraw = excludePieceId
@@ -219,24 +222,28 @@ function applyMove(owner, fr, fc, tr, tc) {
   const captured = G.pieces.find(p => p.r === tr && p.c === tc && p.owner !== owner)
   const isCapture = !!captured
 
-  // Disable interaction during animation
   G.aiThinking = true
 
   animateMove(piece, fr, fc, tr, tc, isCapture, () => {
+    // Execute move in MCE
+    const mceMove = DungeonMCE.findMCEMove(G.mceGame, fr, fc, tr, tc)
+    const mceUndo = mceMove ? MCE.makeMove(G.mceGame, mceMove) : null
+
     G_undoStack.push({
       pieceId: piece.id, fr, fc, tr, tc,
       capturedPiece: captured ? { ...captured } : null,
-      owner
+      owner,
+      mceUndo
     })
     G_lastMove = { fr, fc, tr, tc }
 
     if (captured) {
       if (owner === 'player') G.capturedByPlayer.push(captured.key)
       else G.capturedByAi.push(captured.key)
-      G.pieces = G.pieces.filter(p => p.id !== captured.id)
     }
 
-    piece.r = tr; piece.c = tc
+    // Sync pieces from MCE state
+    G.pieces = DungeonMCE.syncPiecesFromMCE(G.mceGame)
 
     const ownerLabel = owner === 'player' ? SP_INFO[G.playerSp].emoji + ' You'
       : owner === 'ai' ? SP_INFO[G.aiSp].emoji + ' AI'
@@ -246,34 +253,27 @@ function applyMove(owner, fr, fc, tr, tc) {
     const captureLabel = captured ? ` ✕ ${UNITS[captured.key].name}` : ''
     addLog(`${ownerLabel}: ${UNITS[piece.key].name} ${coord}${captureLabel}`)
 
-    // Check win condition
-    const allOwners = G.numPlayers === 4 ? ['player', 'ai', 'ai2', 'ai3'] : ['player', 'ai']
-    const surviving = allOwners.filter(o => G.pieces.some(p => p.owner === o && UNITS[p.key].type === PT.K))
-    if (surviving.length === 1) {
+    // Check win condition via MCE
+    const status = MCE.getStatus(G.mceGame)
+    if (status && status.startsWith && status.startsWith('win-')) {
+      const winner = status.substring(4)
       G.selR = null; G.selC = null; G.legalMoves = []; G.legalAttacks = []
       G.aiThinking = false
       drawBoard()
       if (isCapture) flashCapture(tr, tc)
-      return endGame(surviving[0])
+      return endGame(winner)
     }
 
     G.selR = null; G.selC = null; G.legalMoves = []; G.legalAttacks = []
+    G.turn = G.mceGame.turn
 
-    if (owner === 'player') {
-      G.turn = 'ai'; G.aiThinking = true; updateUI(); drawBoard()
+    if (G.turn === 'player') {
+      G.aiThinking = false; updateUI(); drawBoard()
       if (isCapture) flashCapture(tr, tc)
-      G.aiTimer = setTimeout(runAi, 500 + Math.random() * 500)
-    } else if (owner === 'ai' && G.numPlayers === 4) {
-      G.turn = 'ai2'; G.aiThinking = true; updateUI(); drawBoard()
-      if (isCapture) flashCapture(tr, tc)
-      G.aiTimer = setTimeout(runAi, 500 + Math.random() * 500)
-    } else if (owner === 'ai2') {
-      G.turn = 'ai3'; G.aiThinking = true; updateUI(); drawBoard()
-      if (isCapture) flashCapture(tr, tc)
-      G.aiTimer = setTimeout(runAi, 500 + Math.random() * 500)
     } else {
-      G.turn = 'player'; G.aiThinking = false; updateUI(); drawBoard()
+      G.aiThinking = true; updateUI(); drawBoard()
       if (isCapture) flashCapture(tr, tc)
+      G.aiTimer = setTimeout(runAi, 500 + Math.random() * 500)
     }
   })
 }
@@ -286,9 +286,13 @@ function runAi() {
   const owner = G.turn
   const action = pickAiMove(owner)
   if (!action) {
-    if (owner === 'ai' && G.numPlayers === 4) { G.turn = 'ai2'; G.aiTimer = setTimeout(runAi, 400) }
-    else if (owner === 'ai2') { G.turn = 'ai3'; G.aiTimer = setTimeout(runAi, 400) }
-    else { G.turn = 'player'; G.aiThinking = false; updateUI(); drawBoard() }
+    MCE.advanceTurn(G.mceGame)
+    G.turn = G.mceGame.turn
+    if (G.turn !== 'player') {
+      G.aiTimer = setTimeout(runAi, 400)
+    } else {
+      G.aiThinking = false; updateUI(); drawBoard()
+    }
     return
   }
   applyMove(owner, action.piece.r, action.piece.c, action.tr, action.tc)
