@@ -126,6 +126,10 @@ Pure client-side JavaScript. No frameworks, no build tools, no runtime dependenc
 - Display version in footer for deployment verification
 
 #### 2026-05-25
+- **Go live** — repo public, deployed at dungeon.moddable.games via GitHub Pages
+- **All 11 special abilities implemented** — Skeleton fragile, Reaper water-walk, Orc flexible, Iron Golem cannon-proof, Tomb phase-fire, Ogre intimidate, Demonics explosion, Troll thick-skinned, Salamander hit-and-run, Shaman hex
+- **XP rebalance** — costs updated across all 24 units per rulebook
+- **In-game rules screen** — accessible from landing page and battle screen
 - Fix pawn captures — pawns now capture in all adjacent directions, not just diagonals
 - Rename "species" → "factions" in all user-facing text (synced with moddable-rules)
 - Rewrite unit tooltip descriptions with full ability detail
@@ -133,8 +137,11 @@ Pure client-side JavaScript. No frameworks, no build tools, no runtime dependenc
 - Add responsive breakpoints (960/600/400px) for game screens
 - Add touch-action:manipulation on board SVG
 - Add MCE engine credit link in landing page footer
-- Remove inline styles from JS-generated HTML, use CSS classes
-- Add version/cache-busting system (version.txt + bump.sh)
+- Extract appendPieceTint helper, deduplicate tint logic
+- Vendor MCE engine files with pull-mce.sh sync script
+- Fix board click registration — transparent hit targets on empty squares
+- Fix duplicate event listener accumulation causing lag
+- Version 1.1.0
 
 #### 2026-05-24
 - Replace engine.js with MCE consumption — all movement logic now delegated to Moddable Chess Engine
