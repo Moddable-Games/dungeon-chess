@@ -476,29 +476,32 @@ function renderBoard(map, pieces, selectedR, selectedC, legalMoves, legalAttacks
   // Keyboard cursor overlay
   if (typeof kbRenderCursor === 'function') kbRenderCursor(svg, map)
 
-  // Clickable overlay — transparent rects for squares without dynamic content
-  // Use event delegation on the SVG instead
-  svg.addEventListener('pointerup', (e) => {
-    const sq = e.target.closest('[data-r]') || e.target.closest('.sq')
-    if (!sq) {
-      const pt = svg.createSVGPoint()
-      pt.x = e.clientX
-      pt.y = e.clientY
-      const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse())
-      const WALL = TILE * 2.2
-      const clickR = Math.floor((svgPt.y - WALL) / TILE)
-      const clickC = Math.floor((svgPt.x - WALL) / TILE)
-      if (clickR >= 0 && clickR < rows && clickC >= 0 && clickC < cols && grid[clickR][clickC] !== null) {
-        if (boardState.onSquareClick) boardState.onSquareClick(clickR, clickC)
+  // Attach click handler once per SVG element
+  if (!svg._boardClickBound) {
+    svg._boardClickBound = true
+    svg.addEventListener('pointerup', (e) => {
+      const sq = e.target.closest('[data-r]') || e.target.closest('.sq')
+      if (!sq) {
+        const pt = svg.createSVGPoint()
+        pt.x = e.clientX
+        pt.y = e.clientY
+        const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse())
+        const WALL = TILE * 2.2
+        const { rows: bRows, cols: bCols, grid: bGrid } = boardState.map
+        const clickR = Math.floor((svgPt.y - WALL) / TILE)
+        const clickC = Math.floor((svgPt.x - WALL) / TILE)
+        if (clickR >= 0 && clickR < bRows && clickC >= 0 && clickC < bCols && bGrid[clickR][clickC] !== null) {
+          if (boardState.onSquareClick) boardState.onSquareClick(clickR, clickC)
+        }
+        return
       }
-      return
-    }
-    const r2 = parseInt(sq.getAttribute('data-r'))
-    const c2 = parseInt(sq.getAttribute('data-c'))
-    if (!isNaN(r2) && !isNaN(c2) && boardState.onSquareClick) {
-      boardState.onSquareClick(r2, c2)
-    }
-  })
+      const r2 = parseInt(sq.getAttribute('data-r'))
+      const c2 = parseInt(sq.getAttribute('data-c'))
+      if (!isNaN(r2) && !isNaN(c2) && boardState.onSquareClick) {
+        boardState.onSquareClick(r2, c2)
+      }
+    })
+  }
 }
 
 function invalidateStaticBoard() {
