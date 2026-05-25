@@ -48,9 +48,7 @@ function pawnGenMoves(g, sq, side, withCannon) {
     const tp = g.board[target];
     if (tp && MCE.isFriendly(target, side, g)) continue;
     if (tp && MCE.isEnemy(target, side, g)) {
-      if (Math.abs(dr) + Math.abs(dc) === 2) {
-        moves.push({ from: sq, to: target, flag: 'capture' });
-      }
+      moves.push({ from: sq, to: target, flag: 'capture' });
     } else if (!tp) {
       moves.push({ from: sq, to: target, flag: null });
     }
@@ -62,8 +60,7 @@ function pawnGenMoves(g, sq, side, withCannon) {
 function pawnAttacks(g, from, target) {
   const [fr, fc] = MCE.rc(from, g);
   const [tr, tc] = MCE.rc(target, g);
-  const dr = tr - fr, dc = tc - fc;
-  if (Math.abs(dr) === 1 && Math.abs(dc) === 1) return true;
+  if (Math.abs(tr - fr) <= 1 && Math.abs(tc - fc) <= 1 && (tr !== fr || tc !== fc)) return true;
   return cannonReaches(g, from, target, RD);
 }
 
@@ -132,7 +129,7 @@ unitHandlers.hero = unitHandlers.skeleton = {
   attacks(g, from, target) {
     const [fr, fc] = MCE.rc(from, g);
     const [tr, tc] = MCE.rc(target, g);
-    return Math.abs(tr - fr) === 1 && Math.abs(tc - fc) === 1;
+    return Math.abs(tr - fr) <= 1 && Math.abs(tc - fc) <= 1 && (tr !== fr || tc !== fc);
   }
 };
 

@@ -97,14 +97,30 @@ function ttHide() {
 }
 
 const TT_ABILITIES = {
-  hero:'1 sq forward', skeleton:'1 sq forward', kobold:'Cannon fwd', goblin:'Cannon fwd',
-  stronghold:'Slides straight', tomb:'Slides straight', iron_golem:'Slides + cannon',
-  ogre:'Slides + cannon', knight_h:'L-shape leap', reaper:'L-shape leap',
-  salamander:'L-shape leap', orc:'L-shape leap', archer:'Diagonal, ignores gaps',
-  wraith:'Diagonal, crosses gaps', fire_elem:'Diagonal, blocked by water',
-  troll:'Diagonal', wizard:'All directions', vampire:'All directions',
-  demonics:'All directions', shaman:'All directions', princess:'1 sq any',
-  warlock:'1 sq any', red_dragon:'1 sq any', warlord:'1 sq any',
+  hero: 'Moves & attacks 1 sq any direction',
+  skeleton: 'Moves & attacks 1 sq any direction',
+  kobold: 'Pawn + cannon attack (rook lines)',
+  goblin: 'Pawn + cannon attack (rook lines)',
+  stronghold: 'Steps 1 orthogonal; attacks along rook lines',
+  tomb: 'Steps 1 orthogonal; attacks along rook lines',
+  iron_golem: 'Steps 1 orthogonal + cannon attack (rook lines)',
+  ogre: 'Steps 1 orthogonal + cannon attack (rook lines)',
+  knight_h: 'L-shape jump, leaps over pieces',
+  reaper: 'L-shape jump, leaps over pieces',
+  salamander: 'L-shape jump, leaps over pieces',
+  orc: 'L-shape jump, leaps over pieces',
+  archer: 'Diagonal slide; attacks across gaps, can\'t move across',
+  wraith: 'Diagonal slide; moves across gaps, can\'t attack across',
+  fire_elem: 'Diagonal slide; blocked by water',
+  troll: 'Diagonal slide; blocked by water',
+  wizard: 'Moves as rook; attacks as bishop',
+  vampire: 'Moves as bishop; attacks as rook',
+  demonics: 'Queen slide; can\'t attack across water',
+  shaman: 'Queen slide; can\'t attack across water',
+  princess: 'King step + bishop slide (move only)',
+  warlock: 'King step + bishop attack (ranged)',
+  red_dragon: 'King step + knight attack (ranged)',
+  warlord: 'King step + knight attack (ranged)',
 }
 function ttGetAbilities(unitKey) { return TT_ABILITIES[unitKey] || '' }
 

@@ -7,15 +7,15 @@
 
 ## 1. Overview
 
-Dungeon Chess is an asymmetric turn-based strategy game played on modular dungeon boards. Players draft teams from fantasy species using an XP budget, deploy them on the board, and battle until one side's King is captured.
+Dungeon Chess is an asymmetric turn-based strategy game played on modular dungeon boards. Players draft teams from fantasy factions using an XP budget, deploy them on the board, and battle until one side's King is captured.
 
 ---
 
-## 2. Species
+## 2. Factions
 
-Four playable species, each with a distinct roster of 6 unit types:
+Four playable factions, each with a distinct roster of 6 unit types:
 
-| Colour | Species | Playstyle |
+| Colour | Faction | Playstyle |
 |--------|---------|-----------|
 | White | Humans | Balanced — ranged attacks, bishop movement on King |
 | Black | Undead | Movement trickery — gap-crossing, diagonal gliding |
@@ -26,7 +26,7 @@ Four playable species, each with a distinct roster of 6 unit types:
 
 ## 3. Units
 
-Each unit maps to a chess piece type. All units within a type share base movement but have species-specific abilities.
+Each unit maps to a chess piece type. All units within a type share base movement but have faction-specific abilities.
 
 ### 3.1 Piece Types
 
@@ -41,7 +41,7 @@ Each unit maps to a chess piece type. All units within a type share base movemen
 
 ### 3.2 Full Unit Table
 
-| Unit | Species | Type | Cost | Special Abilities |
+| Unit | Faction | Type | Cost | Special Abilities |
 |------|---------|------|------|-------------------|
 | Hero | Human | Pawn | 2 XP | Standard pawn |
 | Skeleton | Undead | Pawn | 2 XP | Standard pawn |
@@ -88,7 +88,7 @@ Each unit maps to a chess piece type. All units within a type share base movemen
 - Kings move 1 square in any of the 8 directions.
 
 **Slide (unlimited range along a line):**
-- Bishops slide diagonally until blocked by a piece, void, or water (species-dependent).
+- Bishops slide diagonally until blocked by a piece, void, or water (faction-dependent).
 - Queens slide in all 8 directions until blocked.
 - Rook-line sliding is used for Castle attacks (not movement).
 - A sliding piece stops when it hits any piece (cannot pass through).
@@ -151,9 +151,9 @@ Each player has **75 XP** to spend on their team.
 
 ### 6.3 Draft Process
 
-1. Player sees their species' unit roster with costs.
+1. Player sees their faction's unit roster with costs.
 2. Add/remove units freely until budget is met and constraints satisfied.
-3. AI auto-drafts a valid team from its species using the same 75 XP budget.
+3. AI auto-drafts a valid team from its faction using the same 75 XP budget.
 4. AI draft is visible to the player before battle begins.
 
 ---

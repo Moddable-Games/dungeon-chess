@@ -19,13 +19,13 @@
 
 ## The Game
 
-Dungeon Chess takes the timeless mechanics of chess and drops them into a dark, modular dungeon. Four fantasy species clash on interconnected board sections filled with water hazards, locked doors, and arcane portals.
+Dungeon Chess takes the timeless mechanics of chess and drops them into a dark, modular dungeon. Four fantasy factions clash on interconnected board sections filled with water hazards, locked doors, and arcane portals.
 
-Every species fights differently. Every battle plays out on a different map. Every team is drafted fresh from a shared XP budget.
+Every faction fights differently. Every battle plays out on a different map. Every team is drafted fresh from a shared XP budget.
 
-### Species
+### Factions
 
-| | Species | Style |
+| | Faction | Style |
 |---|---------|-------|
 | **White** | Humans | Balanced — heroes, archers, and a wizard |
 | **Black** | Undead | Movement trickery — wraiths cross gaps, vampires glide |
@@ -36,7 +36,7 @@ Every species fights differently. Every battle plays out on a different map. Eve
 
 ```
 1. Pick your map        →  Compact arena or sprawling dungeon cross
-2. Choose your species  →  Each has unique unit abilities
+2. Choose your faction  →  Each has unique unit abilities
 3. Draft your team      →  75 XP budget, mix units and cards
 4. Deploy your forces   →  Place pieces in your spawn zone
 5. Battle               →  Turn-based combat, capture the enemy king
@@ -69,9 +69,9 @@ dungeon-chess/
 │   ├── fonts.css           Self-hosted font declarations
 │   └── style.css           All styles, animations, transitions
 ├── js/
-│   ├── data.js             Sprites, units, species, map definitions
+│   ├── data.js             Sprites, units, factions, map definitions
 │   ├── board-renderer.js   SVG board, dungeon surround, floor details
-│   ├── state.js            Game state, navigation, draft/species screens
+│   ├── state.js            Game state, navigation, draft/faction screens
 │   ├── mce-bridge.js       MCE integration — unit registration, game creation, state sync
 │   ├── screens.js          Deployment/placement screen
 │   ├── engine.js           Movement API (thin wrapper over MCE)
@@ -87,7 +87,7 @@ dungeon-chess/
 
 ## Features (Phase 1)
 
-- **4 playable species** with distinct unit rosters and abilities
+- **4 playable factions** with distinct unit rosters and abilities
 - **3 battle maps** — compact, two-player cross, four-player cross
 - **XP-based drafting** — build your team within a 75 XP budget
 - **Solo vs AI** — heuristic opponent that respects all game rules
@@ -142,7 +142,7 @@ Pure client-side JavaScript. No frameworks, no build tools, no runtime dependenc
 - Rebrand to "Dungeon Chess" — new colour palette, logo, landing page, brand-aligned typography
 
 #### 2026-05-19
-- Initial release — 4 species, 3 maps, solo vs AI, animated dungeon board
+- Initial release — 4 factions, 3 maps, solo vs AI, animated dungeon board
 
 ---
 
