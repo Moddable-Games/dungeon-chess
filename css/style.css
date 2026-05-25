@@ -742,3 +742,178 @@ h1,h2,h3,h4 { font-family:'Cinzel',serif; }
   outline-offset: 2px;
 }
 .site-version { position:fixed; bottom:4px; right:8px; font-size:11px; color:var(--muted); opacity:0.6; pointer-events:none; }
+
+/* ── RULES SCREEN ── */
+#screen-rules.active { display:block; overflow-y:auto; }
+.rules-screen { max-width:760px; padding-bottom:4rem; }
+
+.rules-section {
+  margin-bottom:2.5rem;
+  padding-bottom:2rem;
+  border-bottom:1px solid rgba(176,141,45,0.15);
+}
+.rules-section:last-of-type { border-bottom:none; }
+
+.rules-heading {
+  font-size:18px;
+  color:var(--gold);
+  letter-spacing:2px;
+  margin-bottom:1rem;
+}
+
+.rules-text {
+  font-size:15px;
+  line-height:1.8;
+  color:var(--parchment2);
+}
+.rules-note {
+  margin-top:0.75rem;
+  font-size:13px;
+  color:var(--muted);
+  font-style:italic;
+}
+
+.rules-list {
+  list-style:none;
+  padding:0;
+}
+.rules-list li {
+  font-size:14px;
+  line-height:1.8;
+  color:var(--parchment2);
+  padding:0.25rem 0 0.25rem 1.25rem;
+  position:relative;
+}
+.rules-list li::before {
+  content:'';
+  position:absolute;
+  left:0;
+  top:0.65em;
+  width:6px;
+  height:6px;
+  background:var(--gold);
+  border-radius:1px;
+  transform:rotate(45deg);
+}
+
+/* Terrain cards */
+.rules-terrain-grid {
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.rules-terrain-card {
+  display:flex;
+  align-items:flex-start;
+  gap:14px;
+  padding:0.75rem 1rem;
+  background:rgba(30,30,42,0.5);
+  border:1px solid rgba(176,141,45,0.1);
+  border-radius:6px;
+}
+.rules-terrain-card h4 {
+  font-size:13px;
+  color:var(--parchment);
+  letter-spacing:1px;
+  margin-bottom:0.25rem;
+}
+.rules-terrain-card p {
+  font-size:13px;
+  line-height:1.7;
+  color:var(--muted);
+}
+.rules-terrain-swatch {
+  flex-shrink:0;
+  width:32px;
+  height:32px;
+  border-radius:4px;
+  border:1px solid rgba(255,255,255,0.1);
+}
+.rules-terrain-swatch--floor { background:#4a3728; }
+.rules-terrain-swatch--water { background:var(--sq-water); }
+.rules-terrain-swatch--void { background:#0a0a12; border-style:dashed; }
+
+/* Unit reference table */
+.rules-faction-group {
+  margin-bottom:1.5rem;
+}
+.rules-faction-title {
+  font-size:14px;
+  letter-spacing:1.5px;
+  margin-bottom:0.75rem;
+  padding-bottom:0.5rem;
+  border-bottom:1px solid rgba(176,141,45,0.2);
+}
+.rules-faction-title--human { color:#B08D2D; }
+.rules-faction-title--undead { color:#7c3aed; }
+.rules-faction-title--redskin { color:#c0392b; }
+.rules-faction-title--greenskin { color:#16a34a; }
+
+.rules-unit-table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+.rules-unit-table th {
+  text-align:left;
+  font-family:'Cinzel',serif;
+  font-size:11px;
+  letter-spacing:1px;
+  color:var(--muted);
+  padding:0.4rem 0.6rem;
+  border-bottom:1px solid rgba(176,141,45,0.2);
+}
+.rules-unit-table td {
+  padding:0.4rem 0.6rem;
+  color:var(--parchment2);
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  vertical-align:top;
+}
+.rules-unit-table tr:last-child td { border-bottom:none; }
+.rules-unit-table .rules-unit-name {
+  color:var(--parchment);
+  font-weight:600;
+  white-space:nowrap;
+}
+.rules-unit-table .rules-unit-cost {
+  color:var(--gold);
+  white-space:nowrap;
+}
+.rules-unit-table .rules-unit-ability {
+  color:var(--muted);
+  font-style:italic;
+  font-size:12px;
+}
+
+/* Rules footer */
+.rules-footer {
+  text-align:center;
+  padding-top:1.5rem;
+}
+.rules-footer p {
+  font-size:13px;
+  color:var(--muted);
+}
+.rules-footer a {
+  color:var(--gold);
+  text-decoration:none;
+  border-bottom:1px solid rgba(176,141,45,0.3);
+  transition:border-color 0.3s ease;
+}
+.rules-footer a:hover { border-color:var(--gold); }
+
+/* Rules button on landing */
+.landing__cta-rules {
+  font-size:13px;
+  padding:14px 32px;
+  letter-spacing:2px;
+}
+
+/* Rules responsive */
+@media(max-width:600px) {
+  .rules-screen { padding-left:1rem; padding-right:1rem; }
+  .rules-unit-table { font-size:12px; }
+  .rules-unit-table th,
+  .rules-unit-table td { padding:0.3rem 0.4rem; }
+  .rules-terrain-card { padding:0.5rem 0.75rem; }
+}

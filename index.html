@@ -25,6 +25,7 @@
         <p class="landing__tagline">Asymmetrical Skirmishes &amp; Dungeon Crawling</p>
         <div class="landing__hero-ctas">
           <button class="btn primary btn-play landing__cta-play" id="btn-play">PLAY NOW</button>
+          <button class="btn landing__cta-rules" id="btn-rules">RULES</button>
           <a href="#landing-concept" class="btn landing__cta-learn">Learn More</a>
         </div>
         <p class="landing__stage">Pre-Alpha &middot; Solo vs AI &middot; Free to Play</p>
@@ -323,6 +324,7 @@
         Water
       </div>
     </div>
+    <button class="btn sm" id="battle-rules-btn">? Rules</button>
     <button class="btn sm danger" id="forfeit-btn">⚑ Forfeit</button>
   </div>
 
@@ -392,6 +394,79 @@
       <div class="rp-counter" id="rp-counter">0 / 0</div>
       <div class="replay-log" id="rp-log"></div>
       <button class="btn sm" id="rp-exit">← Back to Results</button>
+    </div>
+  </div>
+</section>
+
+<!-- RULES -->
+<section id="screen-rules" class="screen">
+  <div class="screen-inner rules-screen">
+    <div class="back-row"><button class="btn sm" id="rules-back">← Back</button></div>
+    <div class="screen-header"><h2>RULES &amp; REFERENCE</h2><p>Quick reference for Dungeon Chess</p></div>
+
+    <div class="rules-section">
+      <h3 class="rules-heading">How to Win</h3>
+      <p class="rules-text">Capture the enemy King. The game ends immediately when a King is taken. In 4-player games, eliminated players' pieces are removed; the last King standing wins.</p>
+    </div>
+
+    <div class="rules-section">
+      <h3 class="rules-heading">Terrain</h3>
+      <div class="rules-terrain-grid">
+        <div class="rules-terrain-card">
+          <div class="rules-terrain-swatch rules-terrain-swatch--floor"></div>
+          <div>
+            <h4>Floor</h4>
+            <p>Standard passable squares. No restrictions.</p>
+          </div>
+        </div>
+        <div class="rules-terrain-card">
+          <div class="rules-terrain-swatch rules-terrain-swatch--water"></div>
+          <div>
+            <h4>Water</h4>
+            <p>Most units cannot step on water. Knights leap over it but cannot land on it (except Reaper). Cannon lines skip water. Blocks diagonal slides for Fire Elem., Troll, Demonics, and Shaman.</p>
+          </div>
+        </div>
+        <div class="rules-terrain-card">
+          <div class="rules-terrain-swatch rules-terrain-swatch--void"></div>
+          <div>
+            <h4>Void</h4>
+            <p>Off-board squares that form the dungeon corridors. Cannot be entered by any unit. Blocks all slides.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rules-section">
+      <h3 class="rules-heading">Movement Basics</h3>
+      <ul class="rules-list">
+        <li>Each turn you move OR attack with one unit.</li>
+        <li><strong>Pawns:</strong> 1 square in any direction (8-way). Attack diagonally only.</li>
+        <li><strong>Castles:</strong> 1 square orthogonally. Attack via adjacent capture or rook slide.</li>
+        <li><strong>Knights:</strong> L-shaped jump (2+1). Leaps over all pieces and terrain.</li>
+        <li><strong>Bishops:</strong> Diagonal slide (any distance). Blocked by pieces and voids.</li>
+        <li><strong>Queens:</strong> Full slide in all 8 directions (varies by faction).</li>
+        <li><strong>Kings:</strong> 1 square in any direction, plus a faction-specific bonus ability.</li>
+      </ul>
+      <p class="rules-text rules-note">Some units have split move/attack patterns (e.g. Wizard moves as Rook but attacks in all directions).</p>
+    </div>
+
+    <div class="rules-section">
+      <h3 class="rules-heading">Cannon Mechanic</h3>
+      <p class="rules-text">Kobolds, Goblins, Iron Golems, and Ogres can fire cannon attacks along rook lines (straight orthogonal). The cannon must pass over exactly <strong>one piece</strong> (the "screen") between itself and the target. The screen can be friendly or enemy. Without a screen, the cannon cannot fire. Water is transparent to cannon lines.</p>
+    </div>
+
+    <div class="rules-section">
+      <h3 class="rules-heading">Drafting</h3>
+      <p class="rules-text">Before battle, spend <strong>75 XP</strong> to recruit your army. Must include exactly 1 King and at least 1 Pawn. Duplicates allowed. No maximum team size.</p>
+    </div>
+
+    <div class="rules-section">
+      <h3 class="rules-heading">Unit Reference</h3>
+      <div id="rules-unit-table"></div>
+    </div>
+
+    <div class="rules-footer">
+      <p>Full rules at <a href="https://rules.moddable.games" target="_blank" rel="noopener">rules.moddable.games</a></p>
     </div>
   </div>
 </section>

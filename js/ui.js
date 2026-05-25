@@ -573,6 +573,74 @@ document.getElementById('rematch-same-btn').onclick = ()=>{
 }
 
 // ═══════════════════════════════════════════════════════════
+// RULES SCREEN
+// ═══════════════════════════════════════════════════════════
+let rulesReturnScreen = 'home'
+
+document.getElementById('btn-rules').onclick = () => { rulesReturnScreen = 'home'; show('rules') }
+document.getElementById('battle-rules-btn').onclick = () => { rulesReturnScreen = 'battle'; show('rules') }
+document.getElementById('rules-back').onclick = () => show(rulesReturnScreen)
+
+function renderRulesUnitTable() {
+  const container = document.getElementById('rules-unit-table')
+  if (!container) return
+
+  const UNIT_ABILITIES = {
+    hero: null,
+    stronghold: null,
+    knight_h: null,
+    archer: 'Piercing: attacks through 1 piece',
+    wizard: 'Split: moves as Rook, attacks all directions',
+    princess: 'Mobile: diagonal slide for repositioning (no capture)',
+    skeleton: 'Fragile: any adjacent enemy can capture it',
+    tomb: 'Phase fire: rook attacks pass through 1 friendly piece',
+    reaper: 'Water-walk: can land on water squares',
+    wraith: 'Phase: slides through friendly pieces',
+    vampire: 'Split: moves as Bishop, attacks all directions',
+    warlock: 'Ranged: attacks at distance via diagonal slide',
+    kobold: 'Cannon: ranged orthogonal attack over a screen',
+    iron_golem: 'Cannon + Cannon-proof: immune to enemy cannons',
+    salamander: 'Hit-and-run: move 1 extra square after capturing',
+    fire_elem: 'Water weakness: water blocks slide entirely',
+    demonics: 'Volatile: explodes on death, destroying adjacent enemies',
+    red_dragon: 'Ranged: attacks via L-shaped knight leap',
+    goblin: 'Cannon: ranged orthogonal attack over a screen',
+    ogre: 'Cannon + Intimidate: adjacent enemy Pawns cannot attack',
+    orc: 'Flexible: can also move 2 squares orthogonally',
+    troll: 'Thick-skinned: survives first capture (pushed back)',
+    shaman: 'Hex: once per game, immobilise 1 visible enemy for 2 turns',
+    warlord: 'Ranged: attacks via L-shaped knight leap',
+  }
+
+  const factions = [
+    { sp: SP.H, label: 'Humans', css: 'human' },
+    { sp: SP.U, label: 'Undead', css: 'undead' },
+    { sp: SP.R, label: 'Redskins', css: 'redskin' },
+    { sp: SP.G, label: 'Greenskins', css: 'greenskin' },
+  ]
+
+  let html = ''
+  factions.forEach(f => {
+    html += `<div class="rules-faction-group">`
+    html += `<h4 class="rules-faction-title rules-faction-title--${f.css}">${SP_INFO[f.sp].emoji} ${f.label}</h4>`
+    html += `<table class="rules-unit-table"><thead><tr><th>Unit</th><th>Role</th><th>Cost</th><th>Ability</th></tr></thead><tbody>`
+    SP_UNITS[f.sp].forEach(key => {
+      const u = UNITS[key]
+      const ability = UNIT_ABILITIES[key] || '—'
+      html += `<tr>`
+      html += `<td class="rules-unit-name">${u.name}</td>`
+      html += `<td>${u.type}</td>`
+      html += `<td class="rules-unit-cost">${u.cost} XP</td>`
+      html += `<td class="rules-unit-ability">${ability}</td>`
+      html += `</tr>`
+    })
+    html += `</tbody></table></div>`
+  })
+
+  container.innerHTML = html
+}
+
+// ═══════════════════════════════════════════════════════════
 // REPLAY CONTROLS
 // ═══════════════════════════════════════════════════════════
 document.getElementById('replay-btn').onclick = () => rpStart()
