@@ -318,6 +318,7 @@ function applyMove(owner, fr, fc, tr, tc) {
 
     G.selR = null; G.selC = null; G.legalMoves = []; G.legalAttacks = []
     G.turn = G.mceGame.turn
+    tickHexCounters()
 
     if (G.turn === 'player') {
       G.aiThinking = false; updateUI(); drawBoard()
@@ -331,11 +332,46 @@ function applyMove(owner, fr, fc, tr, tc) {
 }
 
 
+function tickHexCounters() {
+  if (!G.hexImmobilised) return;
+  for (const id of Object.keys(G.hexImmobilised)) {
+    G.hexImmobilised[id]--;
+    if (G.hexImmobilised[id] <= 0) delete G.hexImmobilised[id];
+  }
+}
+
+function aiTryHex(owner) {
+  if (!G.hexUsed || !G.hexImmobilised) return false;
+  const shamans = G.pieces.filter(p => p.key === 'shaman' && p.owner === owner && !G.hexUsed[p.id]);
+  if (!shamans.length) return false;
+  const enemies = G.pieces.filter(p => p.owner !== owner);
+  if (!enemies.length) return false;
+  const target = enemies.reduce((best, e) => UNITS[e.key].cost > UNITS[best.key].cost ? e : best);
+  if (target.key === 'princess' || target.key === 'warlock' || target.key === 'red_dragon' || target.key === 'warlord') return false;
+  const shaman = shamans[0];
+  G.hexUsed[shaman.id] = true;
+  G.hexImmobilised[target.id] = 2;
+  addLog(`${SP_INFO[owner === 'ai' ? G.aiSp : owner === 'ai2' ? G.ai2Sp : G.ai3Sp].emoji} Shaman hexes ${UNITS[target.key].name}!`);
+  MCE.advanceTurn(G.mceGame);
+  G.turn = G.mceGame.turn;
+  tickHexCounters();
+  return true;
+}
+
 // ═══════════════════════════════════════════════════════════
 // AI TURN
 // ═══════════════════════════════════════════════════════════
 function runAi() {
   const owner = G.turn
+  // AI considers hex (25% chance if available, to add variety)
+  if (Math.random() < 0.25 && aiTryHex(owner)) {
+    if (G.turn !== 'player') {
+      G.aiTimer = setTimeout(runAi, 500 + Math.random() * 500)
+    } else {
+      G.aiThinking = false; updateUI(); drawBoard()
+    }
+    return
+  }
   const action = pickAiMove(owner)
   if (!action) {
     MCE.advanceTurn(G.mceGame)

@@ -14,6 +14,8 @@ function registerAllUnits() {
     genMoves(g, sq, side) {
       const pd = g.pieceData[sq];
       if (!pd) return [];
+      // Shaman hex: immobilised pieces cannot move
+      if (typeof G !== 'undefined' && G.hexImmobilised && G.hexImmobilised[pd.id]) return [];
       const handler = unitHandlers[pd.key];
       if (!handler) return [];
       const moves = handler.genMoves(g, sq, side);
