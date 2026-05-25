@@ -408,6 +408,9 @@ function renderBoard(map, pieces, selectedR, selectedC, legalMoves, legalAttacks
         style: 'cursor:pointer'
       })
 
+      // Invisible hit target so clicks register on empty squares
+      g.appendChild(svgEl('rect', { x:0, y:0, width:TILE, height:TILE, fill:'transparent' }))
+
       // Last move highlight
       if (isLastFrom || isLastTo) {
         g.appendChild(svgEl('rect', { x:1, y:1, width:TILE-2, height:TILE-2,
