@@ -125,6 +125,17 @@ Pure client-side JavaScript. No frameworks, no build tools, no runtime dependenc
 - Add version/cache-busting system: version.txt, bump.sh, query strings on all CSS/JS
 - Display version in footer for deployment verification
 
+#### 2026-05-25
+- Fix pawn captures — pawns now capture in all adjacent directions, not just diagonals
+- Rename "species" → "factions" in all user-facing text (synced with moddable-rules)
+- Rewrite unit tooltip descriptions with full ability detail
+- Fix mobile touch targeting — use SVG CTM instead of getBoundingClientRect
+- Add responsive breakpoints (960/600/400px) for game screens
+- Add touch-action:manipulation on board SVG
+- Add MCE engine credit link in landing page footer
+- Remove inline styles from JS-generated HTML, use CSS classes
+- Add version/cache-busting system (version.txt + bump.sh)
+
 #### 2026-05-24
 - Replace engine.js with MCE consumption — all movement logic now delegated to Moddable Chess Engine
 - Add mce-bridge.js: registers 22 unit types, creates MCE game state, syncs pieces
