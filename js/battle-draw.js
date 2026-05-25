@@ -241,9 +241,15 @@ function handleSquareClick(r, c) {
 
   const piece = G.pieces.find(p => p.r === r && p.c === c && p.owner === 'player')
   if (piece) {
-    const { moves, attacks } = getLegal(piece)
-    const safeMoves = moves.filter(([tr, tc]) => !wouldLeaveInCheck(piece, tr, tc))
-    const safeAttacks = attacks.filter(([tr, tc]) => !wouldLeaveInCheck(piece, tr, tc))
+    const sq = MCE.sq(piece.r, piece.c, G.mceGame)
+    const allLegal = MCE.legalMoves(G.mceGame)
+    const pieceLegal = allLegal.filter(m => m.from === sq)
+    const safeMoves = [], safeAttacks = []
+    pieceLegal.forEach(m => {
+      const [mr, mc] = MCE.rc(m.to, G.mceGame)
+      if (m.flag === 'capture' || m.attackOnly) safeAttacks.push([mr, mc])
+      if (!m.attackOnly && m.flag !== 'capture') safeMoves.push([mr, mc])
+    })
     G.selR = r; G.selC = c; G.legalMoves = safeMoves; G.legalAttacks = safeAttacks
     showSelected(piece)
   } else {
