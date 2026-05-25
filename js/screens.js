@@ -159,11 +159,11 @@ function renderTray() {
       (p.placed ? ' placed' : '') +
       (PL.selectedTrayIdx === idx ? ' selected' : '')
     div.innerHTML = `
-      <div style="flex:1;">
+      <div class="tray-piece-info">
         <div class="tray-piece-name">${def.name}</div>
         <div class="tray-piece-type">${def.type} · ${def.cost}XP</div>
       </div>
-      <div style="font-size:11px;color:${p.placed ? '#27ae60' : 'var(--muted)'}">
+      <div class="tray-piece-status${p.placed ? ' tray-piece-status--placed' : ''}">
         ${p.placed ? '✓' : '·'}
       </div>
     `

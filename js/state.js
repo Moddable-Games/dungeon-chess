@@ -88,7 +88,7 @@ function renderMapScreen() {
       <div class="mc-icon">${m.icon}</div>
       <h3>${m.name}</h3>
       <p>${m.desc}</p>
-      <div style="line-height:0;border:1px solid rgba(176,141,45,0.2);border-radius:3px;display:inline-block;overflow:hidden;">
+      <div class="map-card-preview">
         ${miniMapSVG(m)}
       </div>
     `
@@ -148,17 +148,15 @@ function renderSpeciesScreen() {
     const info = SP_INFO[sp]
     const card = document.createElement('div')
     card.className = 'species-card'
-    card.style.borderColor = info.accent+'40'
+    card.style.setProperty('--sp-accent', info.accent)
     card.innerHTML = `
       <div class="sp-emoji">${info.emoji}</div>
-      <h3 style="color:${info.accent}">${info.label}</h3>
+      <h3 class="sp-label">${info.label}</h3>
       <p class="sp-desc">${info.desc}</p>
       <div class="sp-roster">
         ${SP_UNITS[sp].map(k=>`<div class="sp-unit">${UNITS[k].name} · ${UNITS[k].cost}XP</div>`).join('')}
       </div>
     `
-    card.onmouseenter = () => { card.style.borderColor=info.accent; card.style.background=info.accent+'18' }
-    card.onmouseleave = () => { card.style.borderColor=info.accent+'40'; card.style.background='' }
     card.onclick = () => {
       G.playerSp = sp
       const others = Object.values(SP).filter(s=>s!==sp)
@@ -178,6 +176,7 @@ function renderSpeciesScreen() {
 function renderDraftScreen() {
   draftList = []
   const pi=SP_INFO[G.playerSp], ai=SP_INFO[G.aiSp]
+  document.getElementById('screen-draft').style.setProperty('--sp-accent', pi.accent)
   const draftSub = G.numPlayers===4
     ? `${pi.emoji} ${pi.label} vs ${ai.emoji} ${ai.label} · ${SP_INFO[G.ai2Sp]?.emoji||''} ${SP_INFO[G.ai2Sp]?.label||''} · ${SP_INFO[G.ai3Sp]?.emoji||''} ${SP_INFO[G.ai3Sp]?.label||''}`
     : `${pi.emoji} ${pi.label} vs ${ai.emoji} ${ai.label} (AI)`
@@ -213,8 +212,8 @@ function refreshDraft() {
     const d=UNITS[k], can=left>=d.cost
     return `<div class="unit-row">
       <div><span class="unit-name">${d.name}</span><span class="unit-tag">${d.type}</span></div>
-      <div style="display:flex;align-items:center;gap:7px;">
-        <span class="unit-cost" style="color:${pi.accent}">${d.cost}XP</span>
+      <div class="unit-row-actions">
+        <span class="unit-cost">${d.cost}XP</span>
         <button class="btn sm" data-add="${k}" ${can?'':'disabled'}>+</button>
       </div>
     </div>`
@@ -222,11 +221,11 @@ function refreshDraft() {
   document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{draftList.push(b.dataset.add);refreshDraft()})
 
   document.getElementById('draft-team').innerHTML=draftList.length===0
-    ?'<div style="color:var(--muted);font-style:italic;font-size:13px;padding:6px 0">No units drafted yet</div>'
+    ?'<div class="draft-empty">No units drafted yet</div>'
     :draftList.map((k,i)=>{const d=UNITS[k];return`<div class="unit-row">
       <span class="unit-name">${d.name}</span>
-      <div style="display:flex;align-items:center;gap:7px;">
-        <span class="unit-cost" style="color:${pi.accent}">${d.cost}XP</span>
+      <div class="unit-row-actions">
+        <span class="unit-cost">${d.cost}XP</span>
         <button class="btn sm" data-rm="${i}">×</button>
       </div>
     </div>`}).join('')

@@ -6,15 +6,17 @@
 function updateUI() {
   const pi=SP_INFO[G.playerSp], ai=SP_INFO[G.aiSp]
   const tp=document.getElementById('turn-panel')
-  tp.style.borderColor=G.turn==='player'?'#16a34a':'#dc2626'
+  tp.classList.toggle('turn-panel--player', G.turn==='player')
+  tp.classList.toggle('turn-panel--enemy', G.turn!=='player')
   document.getElementById('t-emoji').textContent=G.aiThinking?'⏳':G.turn==='player'?pi.emoji:ai.emoji
   const tl=document.getElementById('t-label')
   const inCheck = G.turn==='player' && isInCheck('player')
   tl.textContent = G.aiThinking ? 'AI thinking…'
     : inCheck ? '⚠ Your king is in check!'
     : G.turn==='player' ? 'Your turn' : "AI's turn"
-  tl.style.color = inCheck ? '#f59e0b'
-    : G.turn==='player' ? '#16a34a' : '#dc2626'
+  tl.classList.toggle('t-label--check', inCheck)
+  tl.classList.toggle('t-label--player', !inCheck && G.turn==='player')
+  tl.classList.toggle('t-label--enemy', !inCheck && G.turn!=='player')
   // Announce turn changes for screen readers
   if (typeof kbAnnounce === 'function') {
     if (inCheck) kbAnnounce('Warning: your king is in check!')
@@ -43,8 +45,8 @@ function showSelected(p){
   document.getElementById('sel-info').innerHTML=
     `<div class="sel-name">${d.name}</div>
      <div class="sel-meta">${d.type} · ${d.cost}XP</div>
-     <div class="sel-meta" style="margin-top:4px;color:#16a34a;">${safeMoves.length} moves</div>
-     <div class="sel-meta" style="color:#dc2626;">${safeAttacks.length} attacks</div>`
+     <div class="sel-meta sel-meta--moves">${safeMoves.length} moves</div>
+     <div class="sel-meta sel-meta--attacks">${safeAttacks.length} attacks</div>`
 }
 
 function addLog(text){
