@@ -464,10 +464,7 @@ function renderBoard(map, pieces, selectedR, selectedC, legalMoves, legalAttacks
         const use = svgEl('use', { href: `#piece-${sid}`, x: offset, y: offset, width: sz, height: sz })
         if (isSelected) use.setAttribute('filter', 'url(#piece-glow)')
         g.appendChild(use)
-        const tintCol = SP_PIECE_COLOR[ownerSp]
-        if (tintCol) {
-          g.appendChild(svgEl('rect', { x: offset, y: offset, width: sz, height: sz, fill: tintCol, style: 'pointer-events:none;mix-blend-mode:multiply' }))
-        }
+        appendPieceTint(g, ownerSp, offset, sz)
       }
 
       dynG.appendChild(g)

@@ -29,6 +29,16 @@ const SP_PIECE_COLOR = {
   [SP.G]: 'rgba(40,140,30,0.55)',
 }
 
+function appendPieceTint(parent, ownerSp, offset, sz) {
+  const col = SP_PIECE_COLOR[ownerSp];
+  if (col) {
+    parent.appendChild(svgEl('rect', {
+      x: offset, y: offset, width: sz, height: sz,
+      fill: col, style: 'pointer-events:none;mix-blend-mode:multiply'
+    }));
+  }
+}
+
 // ═══════════════════════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════════════════════

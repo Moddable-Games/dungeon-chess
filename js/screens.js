@@ -272,8 +272,7 @@ function renderPlacementBoard() {
         g.appendChild(svgEl('ellipse', { cx:TILE/2, cy:TILE-5, rx:TILE*0.3, ry:4, fill:'rgba(0,0,0,0.2)' }))
         const aiUse = svgEl('use', { href:`#piece-${sid}`, x:offset, y:offset, width:sz, height:sz })
         g.appendChild(aiUse)
-        const aiTint = SP_PIECE_COLOR[aiSp2]
-        if (aiTint) g.appendChild(svgEl('rect',{x:offset,y:offset,width:sz,height:sz,fill:aiTint,style:'pointer-events:none;mix-blend-mode:multiply'}))
+        appendPieceTint(g, aiSp2, offset, sz)
       }
 
       // Player pieces with correct species colour
@@ -286,9 +285,7 @@ function renderPlacementBoard() {
         const use = svgEl('use', { href:`#piece-${sid}`, x:offset, y:offset, width:sz, height:sz })
         use.setAttribute('filter','url(#piece-glow)')
         g.appendChild(use)
-        // Colour tint for red/green species
-        const tint = SP_PIECE_COLOR[G.playerSp]
-        if (tint) g.appendChild(svgEl('rect',{x:offset,y:offset,width:sz,height:sz,fill:tint,style:'pointer-events:none;mix-blend-mode:multiply'}))
+        appendPieceTint(g, G.playerSp, offset, sz)
         // Click to unplace
         g.addEventListener('click', () => handlePlacementClick(r, c))
       } else if (isSpawn && !isWater && selectedPiece) {

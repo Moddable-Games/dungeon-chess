@@ -66,14 +66,7 @@ function animateMove(piece, fr, fc, tr, tc, isCapture, callback) {
   const use = svgEl('use', { href: `#piece-${sid}`, x: offset, y: offset, width: sz, height: sz })
   anim.appendChild(use)
 
-  // Tint
-  const tintCol = SP_PIECE_COLOR[ownerSp]
-  if (tintCol) {
-    anim.appendChild(svgEl('rect', {
-      x: offset, y: offset, width: sz, height: sz,
-      fill: tintCol, style: 'pointer-events:none;mix-blend-mode:multiply'
-    }))
-  }
+  appendPieceTint(anim, ownerSp, offset, sz)
 
   anim.setAttribute('transform', `translate(${fromX},${fromY})`)
   svg.appendChild(anim)
