@@ -741,6 +741,8 @@ h1,h2,h3,h4 { font-family:'Cinzel',serif; }
   outline: 2px solid var(--gold);
   outline-offset: 2px;
 }
+.btn-hex { margin-top:6px; border-color:#7c3aed; color:#c4b5fd; }
+.btn-hex:hover { background:rgba(124,58,237,0.2); box-shadow:0 0 12px rgba(124,58,237,0.3); }
 .site-version { position:fixed; bottom:4px; right:8px; font-size:11px; color:var(--muted); opacity:0.6; pointer-events:none; }
 
 /* ── RULES SCREEN ── */

@@ -184,6 +184,54 @@ function flashCapture(tr, tc) {
 function handleSquareClick(r, c) {
   if (G.turn !== 'player' || G.aiThinking) return
 
+  // Shaman hex targeting mode
+  if (G.hexTargeting) {
+    const target = G.pieces.find(p => p.r === r && p.c === c && p.owner !== 'player')
+    if (target) {
+      G.hexUsed[G.hexTargeting] = true
+      G.hexImmobilised[target.id] = 2
+      addLog(`⚡ Shaman hexes ${UNITS[target.key].name}!`)
+      G.hexTargeting = null
+      G.selR = null; G.selC = null; G.legalMoves = []; G.legalAttacks = []
+      MCE.advanceTurn(G.mceGame)
+      G.turn = G.mceGame.turn
+      tickHexCounters()
+      document.getElementById('sel-info').innerHTML = '<span class="sel-info">Click a piece</span>'
+      if (G.turn !== 'player') {
+        G.aiThinking = true; updateUI(); drawBoard()
+        G.aiTimer = setTimeout(runAi, 500 + Math.random() * 500)
+      } else {
+        updateUI(); drawBoard()
+      }
+    }
+    return
+  }
+
+  // Salamander retreat mode
+  if (G.salamanderRetreat) {
+    const valid = G.legalMoves.some(([lr, lc]) => lr === r && lc === c)
+    if (valid) {
+      const sal = G.salamanderRetreat
+      const fromSq = MCE.sq(sal.r, sal.c, G.mceGame)
+      const toSq = MCE.sq(r, c, G.mceGame)
+      G.mceGame.board[fromSq] = null
+      G.mceGame.pieceData[toSq] = G.mceGame.pieceData[fromSq]
+      G.mceGame.pieceData[fromSq] = null
+      G.mceGame.board[toSq] = 'X'
+      addLog(`Salamander retreats to ${String.fromCharCode(97+c)}${r+1}`)
+      G.salamanderRetreat = null
+      G.selR = null; G.selC = null; G.legalMoves = []; G.legalAttacks = []
+      G.pieces = DungeonMCE.syncPiecesFromMCE(G.mceGame)
+      if (G.turn !== 'player') {
+        G.aiThinking = true; updateUI(); drawBoard()
+        G.aiTimer = setTimeout(runAi, 500 + Math.random() * 500)
+      } else {
+        updateUI(); drawBoard()
+      }
+    }
+    return
+  }
+
   const isLegal = G.legalMoves.some(([lr, lc]) => lr === r && lc === c)
   const isAttack = G.legalAttacks.some(([ar, ac]) => ar === r && ac === c)
   if ((isLegal || isAttack) && G.selR !== null) {
@@ -269,28 +317,43 @@ function applyMove(owner, fr, fc, tr, tc) {
       }
     }
 
-    // Salamander hit-and-run: after capture, move 1 square to safest adjacent
+    // Salamander hit-and-run: after capture, retreat 1 square
     if (captured && piece.key === 'salamander') {
-      const pSq = MCE.sq(tr, tc, G.mceGame);
-      const [pr, pc] = [tr, tc];
-      let bestSq = null, bestScore = -Infinity;
+      const retreatOptions = [];
       for (const [dr, dc] of [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]) {
-        const nr = pr + dr, nc = pc + dc;
+        const nr = tr + dr, nc = tc + dc;
         if (!MCE.onBoard(nr, nc, G.mceGame)) continue;
         const adjSq = MCE.sq(nr, nc, G.mceGame);
         const t = MCE.getTerrain(adjSq, G.mceGame);
         if (t === 'w' || t === 2 || t === null) continue;
         if (G.mceGame.board[adjSq]) continue;
-        const score = Math.abs(nr - fr) + Math.abs(nc - fc);
-        if (score > bestScore) { bestScore = score; bestSq = adjSq; }
+        retreatOptions.push([nr, nc]);
       }
-      if (bestSq !== null) {
+      if (retreatOptions.length && owner === 'player') {
+        G.pieces = DungeonMCE.syncPiecesFromMCE(G.mceGame);
+        G.salamanderRetreat = { r: tr, c: tc, id: piece.id };
+        G.legalMoves = retreatOptions; G.legalAttacks = [];
+        G.selR = tr; G.selC = tc;
+        G.aiThinking = false;
+        document.getElementById('sel-info').innerHTML =
+          `<div class="sel-name">Salamander Retreat</div>
+           <div class="sel-meta">Click an adjacent square to retreat to</div>`;
+        drawBoard();
+        if (isCapture) flashCapture(tr, tc);
+        return;
+      } else if (retreatOptions.length) {
+        // AI auto-picks safest
+        const best = retreatOptions.reduce((b, [nr, nc]) => {
+          const score = Math.abs(nr - fr) + Math.abs(nc - fc);
+          return score > b.score ? { r: nr, c: nc, score } : b;
+        }, { r: retreatOptions[0][0], c: retreatOptions[0][1], score: -1 });
+        const pSq = MCE.sq(tr, tc, G.mceGame);
+        const toSq = MCE.sq(best.r, best.c, G.mceGame);
         G.mceGame.board[pSq] = null;
-        G.mceGame.pieceData[bestSq] = G.mceGame.pieceData[pSq];
+        G.mceGame.pieceData[toSq] = G.mceGame.pieceData[pSq];
         G.mceGame.pieceData[pSq] = null;
-        G.mceGame.board[bestSq] = 'X';
-        const [lr, lc] = MCE.rc(bestSq, G.mceGame);
-        addLog(`Salamander retreats to ${String.fromCharCode(97+lc)}${lr+1}`);
+        G.mceGame.board[toSq] = 'X';
+        addLog(`Salamander retreats to ${String.fromCharCode(97+best.c)}${best.r+1}`);
       }
     }
 

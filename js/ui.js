@@ -41,12 +41,36 @@ function showSelected(p){
   const {moves,attacks}=getLegal(p)
   const safeMoves=moves.filter(([tr,tc])=>!wouldLeaveInCheck(p,tr,tc))
   const safeAttacks=attacks.filter(([tr,tc])=>!wouldLeaveInCheck(p,tr,tc))
-  const spInfo=SP_INFO[p.owner==='player'?G.playerSp:G.aiSp]
+  let hexBtn = ''
+  if (p.key === 'shaman' && p.owner === 'player' && G.hexUsed && !G.hexUsed[p.id]) {
+    hexBtn = `<button class="btn sm btn-hex" onclick="playerHex(${p.id})">⚡ HEX</button>`
+  }
   document.getElementById('sel-info').innerHTML=
     `<div class="sel-name">${d.name}</div>
      <div class="sel-meta">${d.type} · ${d.cost}XP</div>
      <div class="sel-meta sel-meta--moves">${safeMoves.length} moves</div>
-     <div class="sel-meta sel-meta--attacks">${safeAttacks.length} attacks</div>`
+     <div class="sel-meta sel-meta--attacks">${safeAttacks.length} attacks</div>
+     ${hexBtn}`
+}
+
+function playerHex(shamanId) {
+  G.hexTargeting = shamanId
+  G.legalMoves = []
+  G.legalAttacks = G.pieces
+    .filter(p => p.owner !== 'player')
+    .map(p => [p.r, p.c])
+  document.getElementById('sel-info').innerHTML =
+    `<div class="sel-name">Hex Target</div>
+     <div class="sel-meta">Click an enemy to immobilise for 2 turns</div>
+     <button class="btn sm" onclick="cancelHex()">Cancel</button>`
+  drawBoard()
+}
+
+function cancelHex() {
+  G.hexTargeting = null
+  G.selR = null; G.selC = null; G.legalMoves = []; G.legalAttacks = []
+  document.getElementById('sel-info').innerHTML = '<span class="sel-info">Click a piece</span>'
+  drawBoard()
 }
 
 function addLog(text){
