@@ -240,6 +240,24 @@ function applyMove(owner, fr, fc, tr, tc) {
     if (captured) {
       if (owner === 'player') G.capturedByPlayer.push(captured.key)
       else G.capturedByAi.push(captured.key)
+
+      // Demonics volatile: on death, destroy all adjacent enemy pieces
+      if (captured.key === 'demonics') {
+        const [cr, cc] = [tr, tc];
+        const dirs = [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+        dirs.forEach(([dr, dc]) => {
+          const nr = cr + dr, nc = cc + dc;
+          if (!MCE.onBoard(nr, nc, G.mceGame)) return;
+          const adjSq = MCE.sq(nr, nc, G.mceGame);
+          const adjPd = G.mceGame.pieceData[adjSq];
+          if (adjPd && adjPd.owner !== captured.owner) {
+            G.mceGame.board[adjSq] = null;
+            G.mceGame.pieceData[adjSq] = null;
+            if (owner === 'player') G.capturedByPlayer.push(adjPd.key);
+            else G.capturedByAi.push(adjPd.key);
+          }
+        });
+      }
     }
 
     // Sync pieces from MCE state

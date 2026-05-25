@@ -61,9 +61,23 @@ function kingStepAttacks(g, from, target) {
   return Math.abs(tr - fr) <= 1 && Math.abs(tc - fc) <= 1 && (tr !== fr || tc !== fc);
 }
 
+function isIntimidated(g, sq, side) {
+  const [r, c] = MCE.rc(sq, g);
+  for (const [dr, dc] of AD) {
+    const nr = r + dr, nc = c + dc;
+    if (!MCE.onBoard(nr, nc, g)) continue;
+    const adj = MCE.sq(nr, nc, g);
+    if (!g.board[adj] || !MCE.isEnemy(adj, side, g)) continue;
+    const pd = g.pieceData[adj];
+    if (pd && unitHandlers[pd.key] && unitHandlers[pd.key].intimidate) return true;
+  }
+  return false;
+}
+
 function pawnGenMoves(g, sq, side, withCannon) {
   const moves = [];
   const [r, c] = MCE.rc(sq, g);
+  const intimidated = isIntimidated(g, sq, side);
   for (const [dr, dc] of AD) {
     const nr = r + dr, nc = c + dc;
     if (!MCE.onBoard(nr, nc, g)) continue;
@@ -72,16 +86,18 @@ function pawnGenMoves(g, sq, side, withCannon) {
     const tp = g.board[target];
     if (tp && MCE.isFriendly(target, side, g)) continue;
     if (tp && MCE.isEnemy(target, side, g)) {
-      moves.push({ from: sq, to: target, flag: 'capture' });
+      if (!intimidated) moves.push({ from: sq, to: target, flag: 'capture' });
     } else if (!tp) {
       moves.push({ from: sq, to: target, flag: null });
     }
   }
-  if (withCannon) MCE.genCannon(g, sq, r, c, side, RD, moves);
+  if (withCannon && !intimidated) MCE.genCannon(g, sq, r, c, side, RD, moves);
   return moves;
 }
 
 function pawnAttacks(g, from, target) {
+  const side = MCE.pieceOwner(from, g);
+  if (isIntimidated(g, from, side)) return false;
   const [fr, fc] = MCE.rc(from, g);
   const [tr, tc] = MCE.rc(target, g);
   if (Math.abs(tr - fr) <= 1 && Math.abs(tc - fc) <= 1 && (tr !== fr || tc !== fc)) return true;
@@ -177,7 +193,7 @@ unitHandlers.kobold = unitHandlers.goblin = {
 
 // ── CASTLE types ──
 
-unitHandlers.stronghold = unitHandlers.tomb = {
+unitHandlers.stronghold = {
   genMoves(g, sq, side) {
     const moves = [];
     const [r, c] = MCE.rc(sq, g);
@@ -202,7 +218,79 @@ unitHandlers.stronghold = unitHandlers.tomb = {
   }
 };
 
-unitHandlers.iron_golem = unitHandlers.ogre = {
+unitHandlers.tomb = {
+  genMoves(g, sq, side) {
+    const moves = [];
+    const [r, c] = MCE.rc(sq, g);
+    for (const [dr, dc] of RD) {
+      const nr = r + dr, nc = c + dc;
+      if (!MCE.onBoard(nr, nc, g)) continue;
+      const target = MCE.sq(nr, nc, g);
+      if (isWaterAt(g, target)) continue;
+      if (MCE.isFriendly(target, side, g)) continue;
+      const tp = g.board[target];
+      if (tp) moves.push({ from: sq, to: target, flag: 'capture' });
+      else moves.push({ from: sq, to: target, flag: null });
+    }
+    // Tomb phase fire: rook attacks pass through one friendly piece
+    tombPhaseSlides(g, sq, r, c, side, moves);
+    return moves;
+  },
+  attacks(g, from, target) {
+    const [fr, fc] = MCE.rc(from, g);
+    const [tr, tc] = MCE.rc(target, g);
+    if (Math.abs(tr - fr) + Math.abs(tc - fc) === 1) return true;
+    return tombPhaseReaches(g, from, target);
+  }
+};
+
+function tombPhaseSlides(g, sq, r, c, side, moves) {
+  for (const [dr, dc] of RD) {
+    let nr = r + dr, nc = c + dc, phased = false;
+    while (MCE.onBoard(nr, nc, g)) {
+      const target = MCE.sq(nr, nc, g);
+      if (isWaterAt(g, target)) { nr += dr; nc += dc; continue; }
+      const tp = g.board[target];
+      if (tp) {
+        if (MCE.isFriendly(target, side, g)) {
+          if (phased) break;
+          phased = true;
+        } else {
+          moves.push({ from: sq, to: target, flag: 'capture', attackOnly: true });
+          break;
+        }
+      }
+      nr += dr; nc += dc;
+    }
+  }
+}
+
+function tombPhaseReaches(g, from, target) {
+  const [fr, fc] = MCE.rc(from, g);
+  const [tr, tc] = MCE.rc(target, g);
+  const side = MCE.pieceOwner(from, g);
+  for (const [dr, dc] of RD) {
+    let nr = fr + dr, nc = fc + dc, phased = false;
+    while (MCE.onBoard(nr, nc, g)) {
+      const sq = MCE.sq(nr, nc, g);
+      if (isWaterAt(g, sq)) { nr += dr; nc += dc; continue; }
+      if (nr === tr && nc === tc) return true;
+      const tp = g.board[sq];
+      if (tp) {
+        if (MCE.isFriendly(sq, side, g)) {
+          if (phased) break;
+          phased = true;
+        } else {
+          break;
+        }
+      }
+      nr += dr; nc += dc;
+    }
+  }
+  return false;
+}
+
+unitHandlers.iron_golem = {
   genMoves(g, sq, side) {
     const moves = [];
     const [r, c] = MCE.rc(sq, g);
@@ -225,6 +313,32 @@ unitHandlers.iron_golem = unitHandlers.ogre = {
     if (Math.abs(tr - fr) + Math.abs(tc - fc) === 1) return true;
     return cannonReaches(g, from, target, RD);
   }
+};
+
+unitHandlers.ogre = {
+  genMoves(g, sq, side) {
+    const moves = [];
+    const [r, c] = MCE.rc(sq, g);
+    for (const [dr, dc] of RD) {
+      const nr = r + dr, nc = c + dc;
+      if (!MCE.onBoard(nr, nc, g)) continue;
+      const target = MCE.sq(nr, nc, g);
+      if (isWaterAt(g, target)) continue;
+      if (MCE.isFriendly(target, side, g)) continue;
+      const tp = g.board[target];
+      if (tp) moves.push({ from: sq, to: target, flag: 'capture' });
+      else moves.push({ from: sq, to: target, flag: null });
+    }
+    MCE.genCannon(g, sq, r, c, side, RD, moves);
+    return moves;
+  },
+  attacks(g, from, target) {
+    const [fr, fc] = MCE.rc(from, g);
+    const [tr, tc] = MCE.rc(target, g);
+    if (Math.abs(tr - fr) + Math.abs(tc - fc) === 1) return true;
+    return cannonReaches(g, from, target, RD);
+  },
+  intimidate: true
 };
 
 // ── KNIGHT types ──
