@@ -481,16 +481,16 @@ function renderBoard(map, pieces, selectedR, selectedC, legalMoves, legalAttacks
 
   // Clickable overlay — transparent rects for squares without dynamic content
   // Use event delegation on the SVG instead
-  svg.onclick = (e) => {
+  svg.addEventListener('pointerup', (e) => {
     const sq = e.target.closest('[data-r]') || e.target.closest('.sq')
     if (!sq) {
-      // Clicked on terrain — find which square by position
-      const rect = svg.getBoundingClientRect()
+      const pt = svg.createSVGPoint()
+      pt.x = e.clientX
+      pt.y = e.clientY
+      const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse())
       const WALL = TILE * 2.2
-      const svgX = (e.clientX - rect.left) / rect.width * (cols * TILE + WALL * 2) - WALL
-      const svgY = (e.clientY - rect.top) / rect.height * (rows * TILE + WALL * 2) - WALL
-      const clickR = Math.floor(svgY / TILE)
-      const clickC = Math.floor(svgX / TILE)
+      const clickR = Math.floor((svgPt.y - WALL) / TILE)
+      const clickC = Math.floor((svgPt.x - WALL) / TILE)
       if (clickR >= 0 && clickR < rows && clickC >= 0 && clickC < cols && grid[clickR][clickC] !== null) {
         if (boardState.onSquareClick) boardState.onSquareClick(clickR, clickC)
       }
@@ -501,7 +501,7 @@ function renderBoard(map, pieces, selectedR, selectedC, legalMoves, legalAttacks
     if (!isNaN(r2) && !isNaN(c2) && boardState.onSquareClick) {
       boardState.onSquareClick(r2, c2)
     }
-  }
+  })
 }
 
 function invalidateStaticBoard() {
