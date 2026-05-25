@@ -1,5 +1,8 @@
 # Dungeon Chess — Complete Ruleset
 
+> **Canonical rulebook:** [rules.moddable.games/dist/dungeon-chess/](https://rules.moddable.games/dist/dungeon-chess/)  
+> This file is a dev-focused quick reference. The canonical source above has full formatting and is the source of truth.
+
 **Version:** 0.1 (as implemented 2026-05-21)  
 **Source of truth for:** game mechanics, unit abilities, movement rules, win conditions, drafting, maps
 
