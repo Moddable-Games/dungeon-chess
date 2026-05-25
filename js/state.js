@@ -257,9 +257,10 @@ function buildAiDraft(sp,budget=75) {
   const take=k=>{draft.push(k);xp-=UNITS[k].cost}
   const pick=type=>avail.find(k=>UNITS[k].type===type&&!draft.includes(k))
   const kk=pick(PT.K); if(kk)take(kk)
-  const pk=pick(PT.P); if(pk&&xp>=UNITS[pk].cost)take(pk)
+  const pk=avail.find(k=>UNITS[k].type===PT.P); if(pk&&xp>=UNITS[pk].cost)take(pk)
   for(const t of[PT.Q,PT.B,PT.N,PT.C]){const k=pick(t);if(k&&xp>=UNITS[k].cost)take(k)}
-  while(xp>=2){const p2=avail.find(k=>UNITS[k].type===PT.P&&UNITS[k].cost<=xp);if(!p2)break;take(p2)}
+  const pawnKey=avail.find(k=>UNITS[k].type===PT.P)
+  while(pawnKey&&xp>=UNITS[pawnKey].cost){take(pawnKey)}
   return draft
 }
 
