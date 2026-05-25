@@ -686,3 +686,4 @@ h1,h2,h3,h4 { font-family:'Cinzel',serif; }
   outline: 2px solid var(--gold);
   outline-offset: 2px;
 }
+.site-version { position:fixed; bottom:4px; right:8px; font-size:11px; color:var(--muted); opacity:0.6; pointer-events:none; }

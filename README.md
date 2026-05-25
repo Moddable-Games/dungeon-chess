@@ -63,7 +63,10 @@ open http://localhost/MODDABLE/dungeon-chess/index.html
 ```
 dungeon-chess/
 ├── index.html              HTML shell — screens and layout
+├── version.txt             Single-source version string
+├── bump.sh                 Version bump script (propagates to all query strings)
 ├── css/
+│   ├── fonts.css           Self-hosted font declarations
 │   └── style.css           All styles, animations, transitions
 ├── js/
 │   ├── data.js             Sprites, units, species, map definitions
@@ -117,6 +120,10 @@ Pure client-side JavaScript. No frameworks, no build tools, no runtime dependenc
 ---
 
 ## Changelog
+
+#### 2026-05-25
+- Add version/cache-busting system: version.txt, bump.sh, query strings on all CSS/JS
+- Display version in footer for deployment verification
 
 #### 2026-05-24
 - Replace engine.js with MCE consumption — all movement logic now delegated to Moddable Chess Engine
