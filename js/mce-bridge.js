@@ -15,13 +15,37 @@ function registerAllUnits() {
       const pd = g.pieceData[sq];
       if (!pd) return [];
       const handler = unitHandlers[pd.key];
-      return handler ? handler.genMoves(g, sq, side) : [];
+      if (!handler) return [];
+      const moves = handler.genMoves(g, sq, side);
+      // Skeleton fragile: any piece adjacent to a skeleton can capture it
+      const [r, c] = MCE.rc(sq, g);
+      for (const [dr, dc] of AD) {
+        const nr = r + dr, nc = c + dc;
+        if (!MCE.onBoard(nr, nc, g)) continue;
+        const target = MCE.sq(nr, nc, g);
+        if (!g.board[target] || !MCE.isEnemy(target, side, g)) continue;
+        const tpd = g.pieceData[target];
+        if (tpd && unitHandlers[tpd.key] && unitHandlers[tpd.key].fragile) {
+          if (!moves.some(m => m.to === target)) {
+            moves.push({ from: sq, to: target, flag: 'capture' });
+          }
+        }
+      }
+      return moves;
     },
     attacks(g, from, target) {
       const pd = g.pieceData[from];
       if (!pd) return false;
       const handler = unitHandlers[pd.key];
-      return handler ? handler.attacks(g, from, target) : false;
+      if (handler && handler.attacks(g, from, target)) return true;
+      // Skeleton fragile: any adjacent piece attacks it
+      const tpd = g.pieceData[target];
+      if (tpd && unitHandlers[tpd.key] && unitHandlers[tpd.key].fragile) {
+        const [fr, fc] = MCE.rc(from, g);
+        const [tr, tc] = MCE.rc(target, g);
+        if (Math.abs(tr - fr) <= 1 && Math.abs(tc - fc) <= 1) return true;
+      }
+      return false;
     }
   });
 }
@@ -65,6 +89,9 @@ function pawnAttacks(g, from, target) {
 }
 
 function cannonReaches(g, from, target, dirs) {
+  // Iron Golem cannon-proof: cannot be targeted by cannon attacks
+  const tpd = g.pieceData[target];
+  if (tpd && tpd.key === 'iron_golem') return false;
   const [fr, fc] = MCE.rc(from, g);
   for (const [dr, dc] of dirs) {
     let nr = fr + dr, nc = fc + dc, screen = false;
@@ -124,13 +151,23 @@ function gappedSlidesReach(g, from, target, dirs) {
 
 // ── PAWN types ──
 
-unitHandlers.hero = unitHandlers.skeleton = {
+unitHandlers.hero = {
   genMoves(g, sq, side) { return pawnGenMoves(g, sq, side, false); },
   attacks(g, from, target) {
     const [fr, fc] = MCE.rc(from, g);
     const [tr, tc] = MCE.rc(target, g);
     return Math.abs(tr - fr) <= 1 && Math.abs(tc - fc) <= 1 && (tr !== fr || tc !== fc);
   }
+};
+
+unitHandlers.skeleton = {
+  genMoves(g, sq, side) { return pawnGenMoves(g, sq, side, false); },
+  attacks(g, from, target) {
+    const [fr, fc] = MCE.rc(from, g);
+    const [tr, tc] = MCE.rc(target, g);
+    return Math.abs(tr - fr) <= 1 && Math.abs(tc - fc) <= 1 && (tr !== fr || tc !== fc);
+  },
+  fragile: true
 };
 
 unitHandlers.kobold = unitHandlers.goblin = {
@@ -192,7 +229,7 @@ unitHandlers.iron_golem = unitHandlers.ogre = {
 
 // ── KNIGHT types ──
 
-unitHandlers.knight_h = unitHandlers.reaper = unitHandlers.salamander = unitHandlers.orc = {
+unitHandlers.knight_h = unitHandlers.salamander = {
   genMoves(g, sq, side) {
     const moves = [];
     const [r, c] = MCE.rc(sq, g);
@@ -204,6 +241,61 @@ unitHandlers.knight_h = unitHandlers.reaper = unitHandlers.salamander = unitHand
     const [tr, tc] = MCE.rc(target, g);
     const dr = Math.abs(tr - fr), dc = Math.abs(tc - fc);
     return (dr === 2 && dc === 1) || (dr === 1 && dc === 2);
+  }
+};
+
+unitHandlers.reaper = {
+  genMoves(g, sq, side) {
+    const moves = [];
+    const [r, c] = MCE.rc(sq, g);
+    for (const [dr, dc] of KNIGHT) {
+      const nr = r + dr, nc = c + dc;
+      if (!MCE.onBoard(nr, nc, g)) continue;
+      const target = MCE.sq(nr, nc, g);
+      // Reaper water-walk: does NOT skip water squares
+      if (MCE.isFriendly(target, side, g)) continue;
+      const tp = g.board[target];
+      if (tp) moves.push({ from: sq, to: target, flag: 'capture' });
+      else moves.push({ from: sq, to: target, flag: null });
+    }
+    return moves;
+  },
+  attacks(g, from, target) {
+    const [fr, fc] = MCE.rc(from, g);
+    const [tr, tc] = MCE.rc(target, g);
+    const dr = Math.abs(tr - fr), dc = Math.abs(tc - fc);
+    return (dr === 2 && dc === 1) || (dr === 1 && dc === 2);
+  }
+};
+
+unitHandlers.orc = {
+  genMoves(g, sq, side) {
+    const moves = [];
+    const [r, c] = MCE.rc(sq, g);
+    MCE.genJumps(g, sq, r, c, side, KNIGHT, moves);
+    // Orc flexible: also move 2 squares orthogonally
+    for (const [dr, dc] of RD) {
+      const nr = r + dr * 2, nc = c + dc * 2;
+      if (!MCE.onBoard(nr, nc, g)) continue;
+      const mid = MCE.sq(r + dr, c + dc, g);
+      if (isWaterAt(g, mid) || g.board[mid]) continue;
+      const target = MCE.sq(nr, nc, g);
+      if (isWaterAt(g, target)) continue;
+      if (MCE.isFriendly(target, side, g)) continue;
+      const tp = g.board[target];
+      if (tp) moves.push({ from: sq, to: target, flag: 'capture' });
+      else moves.push({ from: sq, to: target, flag: null });
+    }
+    return moves;
+  },
+  attacks(g, from, target) {
+    const [fr, fc] = MCE.rc(from, g);
+    const [tr, tc] = MCE.rc(target, g);
+    const dr = Math.abs(tr - fr), dc = Math.abs(tc - fc);
+    if ((dr === 2 && dc === 1) || (dr === 1 && dc === 2)) return true;
+    // 2-square orthogonal attack
+    if ((dr === 2 && dc === 0) || (dr === 0 && dc === 2)) return true;
+    return false;
   }
 };
 
