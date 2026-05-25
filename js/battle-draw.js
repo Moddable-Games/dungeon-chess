@@ -231,8 +231,24 @@ function applyMove(owner, fr, fc, tr, tc) {
     G_lastMove = { fr, fc, tr, tc }
 
     if (captured) {
-      if (owner === 'player') G.capturedByPlayer.push(captured.key)
-      else G.capturedByAi.push(captured.key)
+      // Troll thick-skinned: first capture is absorbed — push back instead
+      if (captured.key === 'troll' && !G.trollWounded[captured.id]) {
+        G.trollWounded[captured.id] = true;
+        const pushR = tr + (tr - fr > 0 ? 1 : tr - fr < 0 ? -1 : 0);
+        const pushC = tc + (tc - fc > 0 ? 1 : tc - fc < 0 ? -1 : 0);
+        let landR = pushR, landC = pushC;
+        const landTerrain = MCE.onBoard(landR, landC, G.mceGame) ? MCE.getTerrain(MCE.sq(landR, landC, G.mceGame), G.mceGame) : null;
+        if (!MCE.onBoard(landR, landC, G.mceGame) || landTerrain === 'w' || landTerrain === 2 || G.mceGame.board[MCE.sq(landR, landC, G.mceGame)]) {
+          landR = tr; landC = tc;
+        }
+        const landSq = MCE.sq(landR, landC, G.mceGame);
+        G.mceGame.board[landSq] = 'X';
+        G.mceGame.pieceData[landSq] = { id: captured.id, key: 'troll', owner: captured.owner, isKing: false };
+        addLog(`${UNITS.troll.name} absorbs the blow! Pushed to ${String.fromCharCode(97+landC)}${landR+1}`);
+      } else {
+        if (owner === 'player') G.capturedByPlayer.push(captured.key)
+        else G.capturedByAi.push(captured.key)
+      }
 
       // Demonics volatile: on death, destroy all adjacent enemy pieces
       if (captured.key === 'demonics') {
@@ -250,6 +266,31 @@ function applyMove(owner, fr, fc, tr, tc) {
             else G.capturedByAi.push(adjPd.key);
           }
         });
+      }
+    }
+
+    // Salamander hit-and-run: after capture, move 1 square to safest adjacent
+    if (captured && piece.key === 'salamander') {
+      const pSq = MCE.sq(tr, tc, G.mceGame);
+      const [pr, pc] = [tr, tc];
+      let bestSq = null, bestScore = -Infinity;
+      for (const [dr, dc] of [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]) {
+        const nr = pr + dr, nc = pc + dc;
+        if (!MCE.onBoard(nr, nc, G.mceGame)) continue;
+        const adjSq = MCE.sq(nr, nc, G.mceGame);
+        const t = MCE.getTerrain(adjSq, G.mceGame);
+        if (t === 'w' || t === 2 || t === null) continue;
+        if (G.mceGame.board[adjSq]) continue;
+        const score = Math.abs(nr - fr) + Math.abs(nc - fc);
+        if (score > bestScore) { bestScore = score; bestSq = adjSq; }
+      }
+      if (bestSq !== null) {
+        G.mceGame.board[pSq] = null;
+        G.mceGame.pieceData[bestSq] = G.mceGame.pieceData[pSq];
+        G.mceGame.pieceData[pSq] = null;
+        G.mceGame.board[bestSq] = 'X';
+        const [lr, lc] = MCE.rc(bestSq, G.mceGame);
+        addLog(`Salamander retreats to ${String.fromCharCode(97+lc)}${lr+1}`);
       }
     }
 

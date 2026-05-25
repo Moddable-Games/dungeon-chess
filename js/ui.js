@@ -448,7 +448,7 @@ document.getElementById('confirm-place-btn').onclick = () => {
     const [r, c] = sqKey.split(',').map(Number)
     G.pieces.push({ id: id++, key, r, c, owner: 'player' })
   })
-  G.capturedByPlayer=[]; G.capturedByAi=[]; G.history=[]
+  G.capturedByPlayer=[]; G.capturedByAi=[]; G.history=[]; G.trollWounded={}
   const orderVal = document.querySelector('[name="turn-order"]:checked').value
   const firstTurn = orderVal === 'random'
     ? (Math.random() < 0.5 ? 'player' : 'ai') : orderVal
@@ -536,7 +536,7 @@ document.getElementById('play-again-btn').onclick = ()=>{
   G_undoStack.length = 0; G_lastMove = null
   Object.assign(G,{numPlayers:2,playerSp:null,aiSp:null,ai2Sp:null,ai3Sp:null,playerDraft:[],aiDraft:[],ai2Draft:[],ai3Draft:[],map:null,pieces:[],mceGame:null,
     turn:'player',aiThinking:false,aiTimer:null,selR:null,selC:null,
-    legalMoves:[],legalAttacks:[],capturedByPlayer:[],capturedByAi:[],history:[]})
+    legalMoves:[],legalAttacks:[],capturedByPlayer:[],capturedByAi:[],history:[],trollWounded:{}})
   Object.assign(PL,{selectedTrayIdx:null,placedSquares:{},placementPieces:[],spawnRows:[]})
   unlockTileSize(); invalidateStaticBoard()
   show('home')
@@ -548,7 +548,7 @@ document.getElementById('rematch-btn').onclick = ()=>{
   const savedMap = G.map, savedSp = G.playerSp, savedAiSp = G.aiSp
   const savedNum = G.numPlayers, savedAi2 = G.ai2Sp, savedAi3 = G.ai3Sp
   Object.assign(G,{pieces:[],mceGame:null,turn:'player',aiThinking:false,aiTimer:null,selR:null,selC:null,
-    legalMoves:[],legalAttacks:[],capturedByPlayer:[],capturedByAi:[],history:[],
+    legalMoves:[],legalAttacks:[],capturedByPlayer:[],capturedByAi:[],history:[],trollWounded:{},
     playerDraft:[],aiDraft:[],ai2Draft:[],ai3Draft:[]})
   Object.assign(PL,{selectedTrayIdx:null,placedSquares:{},placementPieces:[],spawnRows:[]})
   G.map = savedMap; G.playerSp = savedSp; G.aiSp = savedAiSp
@@ -564,7 +564,7 @@ document.getElementById('rematch-same-btn').onclick = ()=>{
   const savedAi2Draft = G.ai2Draft ? [...G.ai2Draft] : []
   const savedAi3Draft = G.ai3Draft ? [...G.ai3Draft] : []
   Object.assign(G,{pieces:[],mceGame:null,turn:'player',aiThinking:false,aiTimer:null,selR:null,selC:null,
-    legalMoves:[],legalAttacks:[],capturedByPlayer:[],capturedByAi:[],history:[]})
+    legalMoves:[],legalAttacks:[],capturedByPlayer:[],capturedByAi:[],history:[],trollWounded:{}})
   Object.assign(PL,{selectedTrayIdx:null,placedSquares:{},placementPieces:[],spawnRows:[]})
   G.playerDraft = savedDraft; G.aiDraft = savedAiDraft
   G.ai2Draft = savedAi2Draft; G.ai3Draft = savedAi3Draft
