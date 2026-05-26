@@ -415,7 +415,41 @@ function aiTryHex(owner) {
   if (!shamans.length) return false;
   const enemies = G.pieces.filter(p => p.owner !== owner);
   if (!enemies.length) return false;
-  const target = enemies.reduce((best, e) => UNITS[e.key].cost > UNITS[best.key].cost ? e : best);
+
+  // Smarter targeting: prefer enemies threatening our king or high-value pieces
+  const myKing = G.pieces.find(p => p.owner === owner && UNITS[p.key].type === PT.K);
+  const myHighValue = G.pieces.filter(p => p.owner === owner && UNITS[p.key].cost > 10);
+
+  const target = enemies.reduce((best, e) => {
+    let score = UNITS[e.key].cost;
+    // Bonus if this enemy is adjacent to or attacking our king
+    if (myKing) {
+      const dist = Math.abs(e.r - myKing.r) + Math.abs(e.c - myKing.c);
+      if (dist <= 2) score += 25;
+      const eSq = MCE.sq(e.r, e.c, G.mceGame);
+      const kSq = MCE.sq(myKing.r, myKing.c, G.mceGame);
+      if (MCE.isAttacked(G.mceGame, kSq, e.owner)) score += 15;
+    }
+    // Bonus if threatening our high-value pieces
+    myHighValue.forEach(hv => {
+      const hvSq = MCE.sq(hv.r, hv.c, G.mceGame);
+      if (MCE.isAttacked(G.mceGame, hvSq, e.owner)) score += 10;
+    });
+
+    let bestScore = UNITS[best.key].cost;
+    if (myKing) {
+      const dist = Math.abs(best.r - myKing.r) + Math.abs(best.c - myKing.c);
+      if (dist <= 2) bestScore += 25;
+      if (MCE.isAttacked(G.mceGame, MCE.sq(myKing.r, myKing.c, G.mceGame), best.owner)) bestScore += 15;
+    }
+    myHighValue.forEach(hv => {
+      const hvSq = MCE.sq(hv.r, hv.c, G.mceGame);
+      if (MCE.isAttacked(G.mceGame, hvSq, best.owner)) bestScore += 10;
+    });
+
+    return score > bestScore ? e : best;
+  });
+
   if (target.key === 'princess' || target.key === 'warlock' || target.key === 'red_dragon' || target.key === 'warlord') return false;
   const shaman = shamans[0];
   G.hexUsed[shaman.id] = true;
@@ -455,23 +489,147 @@ function runAi() {
   applyMove(owner, action.piece.r, action.piece.c, action.tr, action.tc)
 }
 
+// Helper: check if a square is attacked by any piece of a given owner
+function isSquareAttackedBy(r, c, byOwner) {
+  const sq = MCE.sq(r, c, G.mceGame)
+  const enemies = G.pieces.filter(p => p.owner === byOwner)
+  for (const enemy of enemies) {
+    const eSq = MCE.sq(enemy.r, enemy.c, G.mceGame)
+    const registry = MCE.getPieceRegistry()
+    const pieceChar = G.mceGame.board[eSq]
+    if (!pieceChar) continue
+    const type = MCE.pieceType(pieceChar)
+    if (registry[type] && registry[type].attacks(G.mceGame, eSq, sq)) return true
+  }
+  return false
+}
+
+// Helper: check if a square is defended by any friendly piece
+function isSquareDefendedBy(r, c, byOwner) {
+  const sq = MCE.sq(r, c, G.mceGame)
+  const friends = G.pieces.filter(p => p.owner === byOwner && !(p.r === r && p.c === c))
+  for (const friend of friends) {
+    const fSq = MCE.sq(friend.r, friend.c, G.mceGame)
+    const registry = MCE.getPieceRegistry()
+    const pieceChar = G.mceGame.board[fSq]
+    if (!pieceChar) continue
+    const type = MCE.pieceType(pieceChar)
+    if (registry[type] && registry[type].attacks(G.mceGame, fSq, sq)) return true
+  }
+  return false
+}
+
 function pickAiMove(owner = 'ai') {
   let best = null, bestScore = -Infinity
+  const enemyOwners = [...new Set(G.pieces.filter(p => p.owner !== owner).map(p => p.owner))]
   const enemyKings = G.pieces.filter(p => p.owner !== owner && UNITS[p.key].type === PT.K)
+  const myKing = G.pieces.find(p => p.owner === owner && UNITS[p.key].type === PT.K)
+  const kingInCheck = isInCheck(owner)
+
+  // Identify threatened friendly pieces worth >5 XP
+  const threatenedFriendly = G.pieces.filter(p => {
+    if (p.owner !== owner || UNITS[p.key].cost <= 5) return false
+    return enemyOwners.some(eo => isSquareAttackedBy(p.r, p.c, eo))
+  })
+
   G.pieces.filter(p => p.owner === owner).forEach(piece => {
     const { moves: rawMoves, attacks: rawAttacks } = getLegal(piece)
     const moves = rawMoves.filter(([tr, tc]) => !wouldLeaveInCheck(piece, tr, tc))
     const attacks = rawAttacks.filter(([tr, tc]) => !wouldLeaveInCheck(piece, tr, tc))
+    const pieceCost = UNITS[piece.key].cost
+    const isKing = UNITS[piece.key].type === PT.K
+
+    // King flee reflex: if king is adjacent to enemy or in check, weight escape moves
+    const kingThreatened = isKing && (kingInCheck || G.pieces.some(p =>
+      p.owner !== owner && Math.abs(p.r - piece.r) <= 1 && Math.abs(p.c - piece.c) <= 1
+    ))
+
     attacks.forEach(([tr, tc]) => {
-      const t = G.pieces.find(p => p.r === tr && p.c === tc && p.owner !== owner)
-      const score = 100 + (t ? UNITS[t.key].cost : 5)
+      const victim = G.pieces.find(p => p.r === tr && p.c === tc && p.owner !== owner)
+      const victimCost = victim ? UNITS[victim.key].cost : 5
+
+      // MVV-LVA: prefer capturing expensive pieces with cheap ones
+      let score = 100 + victimCost - (pieceCost / 10)
+
+      // 1-ply lookahead: can enemy recapture on this square?
+      const anyEnemyCanRecapture = enemyOwners.some(eo => isSquareAttackedBy(tr, tc, eo))
+      if (anyEnemyCanRecapture) {
+        // Check if we're defended there
+        const defended = isSquareDefendedBy(tr, tc, owner)
+        if (!defended) {
+          // Net exchange: we lose our piece, gained victim
+          const netLoss = pieceCost - victimCost
+          if (netLoss > 0) score -= netLoss
+        } else {
+          // Even if defended, penalize slightly for risky trades
+          const netLoss = pieceCost - victimCost
+          if (netLoss > 0) score -= netLoss * 0.3
+        }
+      }
+
+      // King flee bonus: captures that move king away from threats
+      if (kingThreatened) {
+        const oldMinDist = G.pieces.filter(p => p.owner !== owner)
+          .reduce((min, p) => Math.min(min, Math.abs(p.r - piece.r) + Math.abs(p.c - piece.c)), Infinity)
+        const newMinDist = G.pieces.filter(p => p.owner !== owner && !(p.r === tr && p.c === tc))
+          .reduce((min, p) => Math.min(min, Math.abs(p.r - tr) + Math.abs(p.c - tc)), Infinity)
+        if (newMinDist > oldMinDist) score += 200
+      }
+
+      // Small random factor for variety
+      score += (Math.random() * 6) - 3
+
       if (score > bestScore) { bestScore = score; best = { piece, tr, tc } }
     })
+
     moves.forEach(([tr, tc]) => {
+      let score = 0
+
+      // Base score: approach enemy kings
       let minDist = Infinity
-      enemyKings.forEach(k => { const d = Math.abs(tr - k.r) + Math.abs(tc - k.c); if (d < minDist) minDist = d })
-      if (minDist === Infinity) minDist = Math.abs(tr - Math.floor(G.map.rows / 2)) + Math.abs(tc - Math.floor(G.map.cols / 2))
-      const score = 50 - minDist
+      enemyKings.forEach(k => {
+        const d = Math.abs(tr - k.r) + Math.abs(tc - k.c)
+        if (d < minDist) minDist = d
+      })
+      if (minDist === Infinity) {
+        minDist = Math.abs(tr - Math.floor(G.map.rows / 2)) + Math.abs(tc - Math.floor(G.map.cols / 2))
+      }
+      score = 50 - minDist
+
+      // Don't hang pieces: penalize moving to attacked undefended squares
+      const anyEnemyAttacks = enemyOwners.some(eo => isSquareAttackedBy(tr, tc, eo))
+      if (anyEnemyAttacks) {
+        const defended = isSquareDefendedBy(tr, tc, owner)
+        if (!defended) {
+          score -= pieceCost
+        } else {
+          // Still slightly penalize even if defended (trade might not be desired)
+          score -= pieceCost * 0.2
+        }
+      }
+
+      // King flee reflex: heavily weight moves that increase distance from threats
+      if (kingThreatened) {
+        const oldMinDist = G.pieces.filter(p => p.owner !== owner)
+          .reduce((min, p) => Math.min(min, Math.abs(p.r - piece.r) + Math.abs(p.c - piece.c)), Infinity)
+        const newMinDist = G.pieces.filter(p => p.owner !== owner)
+          .reduce((min, p) => Math.min(min, Math.abs(p.r - tr) + Math.abs(p.c - tc)), Infinity)
+        if (newMinDist > oldMinDist) score += 200
+      }
+
+      // Protect high-value pieces: bonus for defending threatened friendlies
+      if (threatenedFriendly.length > 0) {
+        for (const tf of threatenedFriendly) {
+          if (tf.id === piece.id) continue
+          // Moving adjacent to threatened piece counts as defending
+          const dist = Math.abs(tr - tf.r) + Math.abs(tc - tf.c)
+          if (dist <= 1) { score += 30; break }
+        }
+      }
+
+      // Small random factor for variety
+      score += (Math.random() * 6) - 3
+
       if (score > bestScore) { bestScore = score; best = { piece, tr, tc } }
     })
   })
