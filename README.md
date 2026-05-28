@@ -121,6 +121,12 @@ Pure client-side JavaScript. No frameworks, no build tools, no runtime dependenc
 
 ## Changelog
 
+#### 2026-05-26
+- Improve AI: 1-ply lookahead, don't hang pieces, value trades, king safety heuristic
+- Add LICENSE.md: CC-BY-SA 4.0 (rules) + MIT (code) + proprietary (art)
+- Add social sharing meta tags and OG image (1200x630)
+- Add 32px favicon and apple-touch-icon
+
 #### 2026-05-25
 - Add version/cache-busting system: version.txt, bump.sh, query strings on all CSS/JS
 - Display version in footer for deployment verification
