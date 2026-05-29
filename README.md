@@ -121,6 +121,12 @@ Pure client-side JavaScript. No frameworks, no build tools, no runtime dependenc
 
 ## Changelog
 
+#### 2026-05-29
+- Add two custom piece sets: Realistic (3D rendered) and Artistic (cel-shaded)
+- Add piece style toggle on landing page and battle sidebar (switchable mid-game)
+- Increase draft XP budget from 75 to 80
+- Plan MCE integration roadmap: 6 issues created in moddable-chess, 5 in dungeon-chess
+
 #### 2026-05-26
 - Improve AI: 1-ply lookahead, don't hang pieces, value trades, king safety heuristic
 - Add LICENSE.md: CC-BY-SA 4.0 (rules) + MIT (code) + proprietary (art)
