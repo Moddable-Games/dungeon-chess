@@ -458,16 +458,28 @@ function renderBoard(map, pieces, selectedR, selectedC, legalMoves, legalAttacks
         const ownerSp = piece.owner === 'player' ? G.playerSp
           : piece.owner === 'ai' ? G.aiSp
           : piece.owner === 'ai2' ? G.ai2Sp : G.ai3Sp
-        const color = spToColor(ownerSp)
-        const sid = color + FEN_CH[def.type]
         const offset = (TILE - TILE * 0.88) / 2
         const sz = TILE * 0.88
 
         g.appendChild(svgEl('ellipse', { cx: TILE / 2, cy: TILE - 4, rx: TILE * 0.28, ry: 3.5, fill: 'rgba(0,0,0,0.60)' }))
-        const use = svgEl('use', { href: `#piece-${sid}`, x: offset, y: offset, width: sz, height: sz })
-        if (isSelected) use.setAttribute('filter', 'url(#piece-glow)')
-        g.appendChild(use)
-        appendPieceTint(g, ownerSp, offset, sz)
+
+        if (G.pieceStyle !== 'classic') {
+          const folder = G.pieceStyle === 'custom-a' ? 'pieces' : 'pieces-alt'
+          const imgEl = svgEl('image', {
+            x: offset, y: offset, width: sz, height: sz,
+            preserveAspectRatio: 'xMidYMid meet'
+          })
+          imgEl.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `assets/${folder}/${piece.key}.png`)
+          if (isSelected) imgEl.setAttribute('filter', 'url(#piece-glow)')
+          g.appendChild(imgEl)
+        } else {
+          const color = spToColor(ownerSp)
+          const sid = color + FEN_CH[def.type]
+          const use = svgEl('use', { href: `#piece-${sid}`, x: offset, y: offset, width: sz, height: sz })
+          if (isSelected) use.setAttribute('filter', 'url(#piece-glow)')
+          g.appendChild(use)
+          appendPieceTint(g, ownerSp, offset, sz)
+        }
       }
 
       dynG.appendChild(g)

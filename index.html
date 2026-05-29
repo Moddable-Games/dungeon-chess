@@ -7,7 +7,7 @@
 <meta name="description" content="Dungeon Chess: asymmetric skirmishes and dungeon crawling on a hex board. Four unique factions, modular dungeon maps, and draft-based army building. Free to play in your browser.">
 <meta property="og:title" content="Dungeon Chess — Asymmetrical Skirmishes & Dungeon Crawling">
 <meta property="og:description" content="Asymmetric skirmishes and dungeon crawling on a hex board. Four unique factions, modular dungeon maps, and draft-based army building. Free to play.">
-<meta property="og:image" content="https://dungeon.moddable.games/assets/og-image.png?v=1.1.1">
+<meta property="og:image" content="https://dungeon.moddable.games/assets/og-image.png?v=1.1.2">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:url" content="https://dungeon.moddable.games">
@@ -16,12 +16,12 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Dungeon Chess — Asymmetrical Skirmishes & Dungeon Crawling">
 <meta name="twitter:description" content="Asymmetric skirmishes and dungeon crawling on a hex board. Four unique factions, modular dungeon maps, and draft-based army building. Free to play.">
-<meta name="twitter:image" content="https://dungeon.moddable.games/assets/og-image.png?v=1.1.1">
-<link rel="stylesheet" href="css/fonts.css?v=1.1.1">
+<meta name="twitter:image" content="https://dungeon.moddable.games/assets/og-image.png?v=1.1.2">
+<link rel="stylesheet" href="css/fonts.css?v=1.1.2">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/favicon-192.png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="stylesheet" href="css/style.css?v=1.1.1">
+<link rel="stylesheet" href="css/style.css?v=1.1.2">
 </head>
 <body>
 <a href="#btn-play" class="sr-only">Skip to game</a>
@@ -43,6 +43,12 @@
           <a href="#landing-concept" class="btn landing__cta-learn">Learn More</a>
         </div>
         <p class="landing__stage">Pre-Alpha &middot; Solo vs AI &middot; Free to Play</p>
+        <div class="piece-style-toggle" id="piece-style-toggle">
+          <span class="pst-label">Pieces:</span>
+          <button class="pst-btn" data-style="classic">Classic</button>
+          <button class="pst-btn" data-style="custom-a">Realistic</button>
+          <button class="pst-btn active" data-style="custom-b">Artistic</button>
+        </div>
       </div>
       <div class="landing__scroll-hint" aria-hidden="true"></div>
     </div>
@@ -66,7 +72,7 @@
           <div class="landing__concept-card">
             <div class="landing__concept-icon landing__concept-icon--xp" aria-hidden="true"></div>
             <h3>Draft Your Warband</h3>
-            <p>Spend 75 XP to recruit your army. Every unit costs different XP. Every draft creates a unique force with distinct tactical options.</p>
+            <p>Spend 80 XP to recruit your army. Every unit costs different XP. Every draft creates a unique force with distinct tactical options.</p>
           </div>
         </div>
       </div>
@@ -125,7 +131,7 @@
           <div class="landing__step">
             <div class="landing__step-num">III</div>
             <h3>Draft Your Team</h3>
-            <p>Spend your 75 XP budget wisely. Mix heavy-hitters with cheap fodder or go all-in on elites.</p>
+            <p>Spend your 80 XP budget wisely. Mix heavy-hitters with cheap fodder or go all-in on elites.</p>
           </div>
           <div class="landing__step">
             <div class="landing__step-num">IV</div>
@@ -231,8 +237,8 @@
       <p id="draft-sub" class="draft-sub"></p>
     </div>
     <div class="xp-row">
-      <div class="xp-num ok" id="xp-left">75</div>
-      <div class="xp-lbl">XP remaining of 75</div>
+      <div class="xp-num ok" id="xp-left">80</div>
+      <div class="xp-lbl">XP remaining of 80</div>
     </div>
     <div class="draft-layout">
       <div class="draft-panel">
@@ -287,7 +293,7 @@
     </div>
     <div id="place-board-wrap" class="board-wrap">
       <canvas id="place-canvas" class="board-canvas"></canvas>
-      <svg id="place-board" xmlns="http://www.w3.org/2000/svg" class="board-svg"></svg>
+      <svg id="place-board" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="board-svg"></svg>
       <canvas id="place-lights" class="board-lights"></canvas>
     </div>
   </div>
@@ -340,12 +346,20 @@
     </div>
     <button class="btn sm" id="battle-rules-btn">? Rules</button>
     <button class="btn sm danger" id="forfeit-btn">⚑ Forfeit</button>
+    <div class="info-panel">
+      <h4>PIECES</h4>
+      <div class="piece-style-toggle piece-style-toggle--battle" id="piece-style-toggle-battle">
+        <button class="pst-btn" data-style="classic">Classic</button>
+        <button class="pst-btn" data-style="custom-a">Realistic</button>
+        <button class="pst-btn active" data-style="custom-b">Artistic</button>
+      </div>
+    </div>
   </div>
 
   <div class="b-centre">
     <div id="board-wrap" class="board-wrap">
       <canvas id="dungeon-canvas" class="board-canvas"></canvas>
-      <svg id="dungeon-board" xmlns="http://www.w3.org/2000/svg" class="board-svg" tabindex="0" aria-label="Game board - use arrow keys to navigate, Enter to select"></svg>
+      <svg id="dungeon-board" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="board-svg" tabindex="0" aria-label="Game board - use arrow keys to navigate, Enter to select"></svg>
       <canvas id="dungeon-lights" class="board-lights"></canvas>
     </div>
   </div>
@@ -394,7 +408,7 @@
     <div class="replay-board">
       <canvas id="replay-canvas" class="bg-canvas-replay"></canvas>
       <canvas id="replay-lights" class="bg-canvas-replay"></canvas>
-      <svg id="replay-svg" class="dungeon-board"></svg>
+      <svg id="replay-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="dungeon-board"></svg>
     </div>
     <div class="replay-sidebar">
       <h3 class="replay-title">GAME REPLAY</h3>
@@ -471,7 +485,7 @@
 
     <div class="rules-section">
       <h3 class="rules-heading">Drafting</h3>
-      <p class="rules-text">Before battle, spend <strong>75 XP</strong> to recruit your army. Must include exactly 1 King and at least 1 Pawn. Duplicates allowed. No maximum team size.</p>
+      <p class="rules-text">Before battle, spend <strong>80 XP</strong> to recruit your army. Must include exactly 1 King and at least 1 Pawn. Duplicates allowed. No maximum team size.</p>
     </div>
 
     <div class="rules-section">
@@ -488,19 +502,19 @@
 <script src="lib/mce/chess-engine.js"></script>
 <script src="lib/mce/chess-moves.js"></script>
 <script src="lib/mce/chess-play.js"></script>
-<script src="js/data.js?v=1.1.1"></script>
-<script src="js/board-renderer.js?v=1.1.1"></script>
-<script src="js/state.js?v=1.1.1"></script>
-<script src="js/mce-bridge.js?v=1.1.1"></script>
-<script src="js/screens.js?v=1.1.1"></script>
-<script src="js/engine.js?v=1.1.1"></script>
-<script src="js/battle.js?v=1.1.1"></script>
-<script src="js/battle-draw.js?v=1.1.1"></script>
-<script src="js/replay.js?v=1.1.1"></script>
-<script src="js/aria.js?v=1.1.1"></script>
-<script src="js/keyboard.js?v=1.1.1"></script>
-<script src="js/tooltip.js?v=1.1.1"></script>
-<script src="js/ui.js?v=1.1.1"></script>
-<footer class="site-version">v1.1.1</footer>
+<script src="js/data.js?v=1.1.2"></script>
+<script src="js/board-renderer.js?v=1.1.2"></script>
+<script src="js/state.js?v=1.1.2"></script>
+<script src="js/mce-bridge.js?v=1.1.2"></script>
+<script src="js/screens.js?v=1.1.2"></script>
+<script src="js/engine.js?v=1.1.2"></script>
+<script src="js/battle.js?v=1.1.2"></script>
+<script src="js/battle-draw.js?v=1.1.2"></script>
+<script src="js/replay.js?v=1.1.2"></script>
+<script src="js/aria.js?v=1.1.2"></script>
+<script src="js/keyboard.js?v=1.1.2"></script>
+<script src="js/tooltip.js?v=1.1.2"></script>
+<script src="js/ui.js?v=1.1.2"></script>
+<footer class="site-version">v1.1.2</footer>
 </body>
 </html>

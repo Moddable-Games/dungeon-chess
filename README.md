@@ -37,7 +37,7 @@ Every faction fights differently. Every battle plays out on a different map. Eve
 ```
 1. Pick your map        →  Compact arena or sprawling dungeon cross
 2. Choose your faction  →  Each has unique unit abilities
-3. Draft your team      →  75 XP budget, mix units and cards
+3. Draft your team      →  80 XP budget, mix units and cards
 4. Deploy your forces   →  Place pieces in your spawn zone
 5. Battle               →  Turn-based combat, capture the enemy king
 ```
@@ -89,7 +89,7 @@ dungeon-chess/
 
 - **4 playable factions** with distinct unit rosters and abilities
 - **3 battle maps** — compact, two-player cross, four-player cross
-- **XP-based drafting** — build your team within a 75 XP budget
+- **XP-based drafting** — build your team within a 80 XP budget
 - **Solo vs AI** — heuristic opponent that respects all game rules
 - **Animated dungeon board** — stone textures, flickering torchlight, floating embers, water caustics
 - **Piece move animations** — arc movement with capture burst effects

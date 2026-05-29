@@ -597,6 +597,20 @@ document.getElementById('rematch-same-btn').onclick = ()=>{
 }
 
 // ═══════════════════════════════════════════════════════════
+// PIECE STYLE TOGGLE
+// ═══════════════════════════════════════════════════════════
+document.querySelectorAll('.piece-style-toggle').forEach(toggle => {
+  toggle.addEventListener('click', (e) => {
+    const btn = e.target.closest('.pst-btn')
+    if (!btn) return
+    const style = btn.dataset.style
+    G.pieceStyle = style
+    document.querySelectorAll('.pst-btn').forEach(b => b.classList.toggle('active', b.dataset.style === style))
+    if (typeof drawBoard === 'function' && G.mceGame) drawBoard()
+  })
+})
+
+// ═══════════════════════════════════════════════════════════
 // RULES SCREEN
 // ═══════════════════════════════════════════════════════════
 let rulesReturnScreen = 'home'

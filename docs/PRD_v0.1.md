@@ -66,7 +66,7 @@ In Phase 1 (solo vs AI), the player picks one species and the AI controls one op
    └─ AI is assigned the opposing species
 
 3. TEAM DRAFTING
-   └─ Each player receives 75 XP to spend
+   └─ Each player receives 80 XP to spend
    └─ Constraints: at least 1 pawn, 1 king, max 3 cards
    └─ Spend XP on units + cards (proficiencies, objects, spells)
 
@@ -208,7 +208,7 @@ The AI must be functional and provide a meaningful challenge without requiring a
 - **Difficulty:** Single difficulty level for Phase 1 (balanced/casual)
 - **Behaviour:** Rule-aware — the AI respects all unit abilities, terrain constraints, and card effects
 - **Decision-making:** Heuristic-based (capture > advance > protect king priority)
-- **Drafting:** AI auto-drafts a valid team within the 75 XP budget
+- **Drafting:** AI auto-drafts a valid team within the 80 XP budget
 - **Turn time:** AI should "think" for 0.5–2 seconds for UX realism
 
 Phase 2 will introduce difficulty tiers and potentially a stronger search-based engine.

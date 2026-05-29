@@ -266,26 +266,41 @@ function renderPlacementBoard() {
       if (aiPiece) {
         const def = UNITS[aiPiece.key]
         const aiSp2 = aiPiece.owner==='ai'?G.aiSp:aiPiece.owner==='ai2'?G.ai2Sp:G.ai3Sp
-        const sid = spToColor(aiSp2) + FEN_CH[def.type]
         const offset = (TILE - TILE*0.9) / 2
         const sz = TILE*0.9
         g.appendChild(svgEl('ellipse', { cx:TILE/2, cy:TILE-5, rx:TILE*0.3, ry:4, fill:'rgba(0,0,0,0.2)' }))
-        const aiUse = svgEl('use', { href:`#piece-${sid}`, x:offset, y:offset, width:sz, height:sz })
-        g.appendChild(aiUse)
-        appendPieceTint(g, aiSp2, offset, sz)
+        if (G.pieceStyle !== 'classic') {
+          const folder = G.pieceStyle === 'custom-a' ? 'pieces' : 'pieces-alt'
+          const aiImg = svgEl('image', { x:offset, y:offset, width:sz, height:sz, preserveAspectRatio:'xMidYMid meet' })
+          aiImg.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `assets/${folder}/${aiPiece.key}.png`)
+          g.appendChild(aiImg)
+        } else {
+          const sid = spToColor(aiSp2) + FEN_CH[def.type]
+          const aiUse = svgEl('use', { href:`#piece-${sid}`, x:offset, y:offset, width:sz, height:sz })
+          g.appendChild(aiUse)
+          appendPieceTint(g, aiSp2, offset, sz)
+        }
       }
 
       // Player pieces with correct species colour
       if (placed) {
         const def = UNITS[placed.key]
-        const sid = spToColor(G.playerSp) + FEN_CH[def.type]
         const offset = (TILE - TILE*0.9) / 2
         const sz = TILE*0.9
         g.appendChild(svgEl('ellipse', { cx:TILE/2, cy:TILE-5, rx:TILE*0.3, ry:4, fill:'rgba(0,0,0,0.25)' }))
-        const use = svgEl('use', { href:`#piece-${sid}`, x:offset, y:offset, width:sz, height:sz })
-        use.setAttribute('filter','url(#piece-glow)')
-        g.appendChild(use)
-        appendPieceTint(g, G.playerSp, offset, sz)
+        if (G.pieceStyle !== 'classic') {
+          const folder = G.pieceStyle === 'custom-a' ? 'pieces' : 'pieces-alt'
+          const imgEl = svgEl('image', { x:offset, y:offset, width:sz, height:sz, preserveAspectRatio:'xMidYMid meet' })
+          imgEl.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `assets/${folder}/${placed.key}.png`)
+          imgEl.setAttribute('filter','url(#piece-glow)')
+          g.appendChild(imgEl)
+        } else {
+          const sid = spToColor(G.playerSp) + FEN_CH[def.type]
+          const use = svgEl('use', { href:`#piece-${sid}`, x:offset, y:offset, width:sz, height:sz })
+          use.setAttribute('filter','url(#piece-glow)')
+          g.appendChild(use)
+          appendPieceTint(g, G.playerSp, offset, sz)
+        }
         // Click to unplace
         g.addEventListener('click', () => handlePlacementClick(r, c))
       } else if (isSpawn && !isWater && selectedPiece) {

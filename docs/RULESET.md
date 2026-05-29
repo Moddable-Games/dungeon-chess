@@ -143,7 +143,7 @@ In 4-player mode: the game ends when only one player's King remains on the board
 
 ### 6.1 Budget
 
-Each player has **75 XP** to spend on their team.
+Each player has **80 XP** to spend on their team.
 
 ### 6.2 Constraints
 
@@ -156,7 +156,7 @@ Each player has **75 XP** to spend on their team.
 
 1. Player sees their faction's unit roster with costs.
 2. Add/remove units freely until budget is met and constraints satisfied.
-3. AI auto-drafts a valid team from its faction using the same 75 XP budget.
+3. AI auto-drafts a valid team from its faction using the same 80 XP budget.
 4. AI draft is visible to the player before battle begins.
 
 ---
@@ -229,7 +229,7 @@ AI "thinks" for 0.5–1.5 seconds (randomised) before moving for UX realism.
 
 ### 9.3 Drafting
 
-AI drafts using a template: always includes a King, then fills with a balanced mix of unit types within the 75 XP budget.
+AI drafts using a template: always includes a King, then fills with a balanced mix of unit types within the 80 XP budget.
 
 ---
 
