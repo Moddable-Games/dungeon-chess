@@ -178,23 +178,18 @@ function renderTray() {
   })
 }
 
-function renderPlacementBoard() {
-  const svg = document.getElementById('place-board')
+let _placeStaticBuilt = false
+let _placeStaticMap = null
+
+function invalidatePlacementStatic() { _placeStaticBuilt = false }
+
+function renderPlacementBoardStatic(svg) {
   const { grid, rows, cols } = G.map
-  const W = cols * TILE, H = rows * TILE
-  const WALL = TILE * 2.2
-  // For non-compact maps expand SVG for cavern surround; compact stays as-is
-  svg.setAttribute('width',   W + WALL*2)
-  svg.setAttribute('height',  H + WALL*2)
-  svg.setAttribute('viewBox', `${-WALL} ${-WALL} ${W+WALL*2} ${H+WALL*2}`)
-  svg.innerHTML = ''
 
-  ensureSpriteDefs(svg)
+  const existing = svg.getElementById('place-terrain')
+  if (existing) existing.remove()
 
-  const spawnSet = new Set(PL.spawnRows)
-  const selectedPiece = PL.selectedTrayIdx !== null
-    ? PL.placementPieces[PL.selectedTrayIdx]
-    : null
+  const layer = svgEl('g', { id: 'place-terrain' })
 
   for (let r=0; r<rows; r++) {
     for (let c=0; c<cols; c++) {
@@ -204,36 +199,15 @@ function renderPlacementBoard() {
       const x = c * TILE, y = r * TILE
       const isLight = (r+c) % 2 === 0
       const isWater = cell === 'w'
-      const isSpawn = spawnSet.has(r) && !isWater
-      const sqKey   = `${r},${c}`
-      const placed  = PL.placedSquares[sqKey]
-      const isSelSq = placed && PL.selectedTrayIdx === null  // clicking to unplace
 
-      const g = svgEl('g', { transform:`translate(${x},${y})`, style:'cursor:pointer' })
+      const g = svgEl('g', { transform:`translate(${x},${y})` })
 
-      // Background — solid base colour
       let fill = isWater ? (isLight ? SQ_WATER : SQ_WATER2)
                          : (isLight ? SQ_LIGHT : SQ_DARK)
       g.appendChild(svgEl('rect', { class:'sq-bg', x:0, y:0, width:TILE, height:TILE, fill }))
 
-      // Inline stone texture
       if (!isWater) drawStoneTexture(g, isLight)
 
-      // Spawn zone highlight — gold tint for empty valid squares when a piece is selected
-      if (isSpawn && !isWater) {
-        const isEmpty = !placed
-        if (isEmpty && selectedPiece) {
-          // Clickable target
-          g.appendChild(svgEl('rect', { x:0, y:0, width:TILE, height:TILE,
-            fill:'rgba(176,141,45,0.25)', stroke:'rgba(176,141,45,0.6)', 'stroke-width':2 }))
-        } else if (!selectedPiece) {
-          // Show spawn zone faintly even when nothing selected
-          g.appendChild(svgEl('rect', { x:0, y:0, width:TILE, height:TILE,
-            fill:'rgba(176,141,45,0.08)' }))
-        }
-      }
-
-      // Animated water — clipped to square, same as battle board
       if (isWater) {
         const clipId = `pwclip-${r}-${c}`
         const clipPath = svgEl('clipPath', { id: clipId })
@@ -261,7 +235,6 @@ function renderPlacementBoard() {
         g.appendChild(wg)
       }
 
-      // AI pieces — themed sprite with species colour filter
       const aiPiece = G.pieces.find(p => p.r===r && p.c===c && ['ai','ai2','ai3'].includes(p.owner))
       if (aiPiece) {
         const def = UNITS[aiPiece.key]
@@ -282,35 +255,97 @@ function renderPlacementBoard() {
         }
       }
 
-      // Player pieces with correct species colour
+      layer.appendChild(g)
+    }
+  }
+
+  svg.appendChild(layer)
+  _placeStaticBuilt = true
+  _placeStaticMap = G.map
+}
+
+function renderPlacementBoard() {
+  const svg = document.getElementById('place-board')
+  const { grid, rows, cols } = G.map
+  const W = cols * TILE, H = rows * TILE
+  const WALL = TILE * 2.2
+  svg.setAttribute('width',   W + WALL*2)
+  svg.setAttribute('height',  H + WALL*2)
+  svg.setAttribute('viewBox', `${-WALL} ${-WALL} ${W+WALL*2} ${H+WALL*2}`)
+
+  if (!_placeStaticBuilt || _placeStaticMap !== G.map) {
+    svg.innerHTML = ''
+    ensureSpriteDefs(svg)
+    renderPlacementBoardStatic(svg)
+  }
+
+  const oldDyn = svg.getElementById('place-dynamic')
+  if (oldDyn) oldDyn.remove()
+
+  const dynLayer = svgEl('g', { id: 'place-dynamic' })
+  const spawnSet = new Set(PL.spawnRows)
+  const selectedPiece = PL.selectedTrayIdx !== null
+    ? PL.placementPieces[PL.selectedTrayIdx]
+    : null
+
+  for (let r=0; r<rows; r++) {
+    for (let c=0; c<cols; c++) {
+      const cell = grid[r][c]
+      if (cell === null) continue
+      const isWater = cell === 'w'
+      const isSpawn = spawnSet.has(r) && !isWater
+      const sqKey = `${r},${c}`
+      const placed = PL.placedSquares[sqKey]
+      const x = c * TILE, y = r * TILE
+
+      if (isSpawn && !isWater) {
+        const isEmpty = !placed
+        if (isEmpty && selectedPiece) {
+          dynLayer.appendChild(svgEl('rect', { x, y, width:TILE, height:TILE,
+            fill:'rgba(176,141,45,0.25)', stroke:'rgba(176,141,45,0.6)', 'stroke-width':2 }))
+        } else if (!selectedPiece) {
+          dynLayer.appendChild(svgEl('rect', { x, y, width:TILE, height:TILE,
+            fill:'rgba(176,141,45,0.08)' }))
+        }
+      }
+
       if (placed) {
         const def = UNITS[placed.key]
         const offset = (TILE - TILE*0.9) / 2
         const sz = TILE*0.9
-        g.appendChild(svgEl('ellipse', { cx:TILE/2, cy:TILE-5, rx:TILE*0.3, ry:4, fill:'rgba(0,0,0,0.25)' }))
+        const pg = svgEl('g', { transform:`translate(${x},${y})` })
+        pg.appendChild(svgEl('ellipse', { cx:TILE/2, cy:TILE-5, rx:TILE*0.3, ry:4, fill:'rgba(0,0,0,0.25)' }))
         if (G.pieceStyle !== 'classic') {
           const folder = G.pieceStyle === 'custom-a' ? 'pieces' : 'pieces-alt'
           const imgEl = svgEl('image', { x:offset, y:offset, width:sz, height:sz, preserveAspectRatio:'xMidYMid meet' })
           imgEl.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `assets/${folder}/${placed.key}.png`)
           imgEl.setAttribute('filter','url(#piece-glow)')
-          g.appendChild(imgEl)
+          pg.appendChild(imgEl)
         } else {
           const sid = spToColor(G.playerSp) + FEN_CH[def.type]
           const use = svgEl('use', { href:`#piece-${sid}`, x:offset, y:offset, width:sz, height:sz })
           use.setAttribute('filter','url(#piece-glow)')
-          g.appendChild(use)
-          appendPieceTint(g, G.playerSp, offset, sz)
+          pg.appendChild(use)
+          appendPieceTint(pg, G.playerSp, offset, sz)
         }
-        // Click to unplace
-        g.addEventListener('click', () => handlePlacementClick(r, c))
-      } else if (isSpawn && !isWater && selectedPiece) {
-        // Empty spawn square — click to place selected piece
-        g.addEventListener('click', () => handlePlacementClick(r, c))
+        dynLayer.appendChild(pg)
       }
-
-      svg.appendChild(g)
     }
   }
+
+  // Click overlay for placement interaction
+  const overlay = svgEl('rect', { x:0, y:0, width:W, height:H, fill:'transparent', style:'cursor:pointer' })
+  overlay.addEventListener('click', (e) => {
+    const pt = svg.createSVGPoint()
+    pt.x = e.clientX; pt.y = e.clientY
+    const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse())
+    const c = Math.floor(svgPt.x / TILE)
+    const r = Math.floor(svgPt.y / TILE)
+    if (r >= 0 && r < rows && c >= 0 && c < cols) handlePlacementClick(r, c)
+  })
+  dynLayer.appendChild(overlay)
+
+  svg.appendChild(dynLayer)
 }
 
 let _placeSurroundDrawn = false

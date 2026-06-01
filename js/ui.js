@@ -595,6 +595,7 @@ document.querySelectorAll('.piece-style-toggle').forEach(toggle => {
     const style = btn.dataset.style
     G.pieceStyle = style
     document.querySelectorAll('.pst-btn').forEach(b => b.classList.toggle('active', b.dataset.style === style))
+    invalidatePlacementStatic()
     if (typeof drawBoard === 'function' && G.mceGame) drawBoard()
   })
 })
