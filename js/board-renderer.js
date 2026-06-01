@@ -1349,9 +1349,9 @@ let _tileCacheKey = null
 function dcTilePainter(svg, sqIdx, dr, dc, tileSize, isLight, game) {
   const map = G.map
   if (!map) return null
-  if (!map.grid[dr]) return null
+  if (!map.grid[dr]) return svgEl('g', {})
   const cell = map.grid[dr][dc]
-  if (cell === null) return null
+  if (cell === null) return svgEl('g', {})
 
   const cacheKey = `${map.id}-${dr}-${dc}-${tileSize}`
   if (_tileCacheKey !== `${map.id}-${tileSize}`) {
