@@ -223,11 +223,6 @@ function isWaterAt(g, sq) {
   return t === 'w' || t === 2;
 }
 
-function kingStepAttacks(g, from, target) {
-  const [fr, fc] = MCE.rc(from, g);
-  const [tr, tc] = MCE.rc(target, g);
-  return Math.abs(tr - fr) <= 1 && Math.abs(tc - fc) <= 1 && (tr !== fr || tc !== fc);
-}
 
 function isIntimidated(g, sq, side) {
   const [r, c] = MCE.rc(sq, g);
@@ -278,13 +273,6 @@ function cannonReaches(g, from, target, dirs) {
   return MCE.cannonReaches(g, from, target, dirs);
 }
 
-function slidesReach(g, from, target, dirs, waterBlock) {
-  return MCE.slidesTo(g, from, target, dirs, waterBlock ? { waterBlock: true } : undefined);
-}
-
-function gappedSlidesReach(g, from, target, dirs) {
-  return MCE.gappedSlidesTo(g, from, target, dirs);
-}
 
 // ── PAWN types ──
 
@@ -314,30 +302,10 @@ unitHandlers.kobold = unitHandlers.goblin = {
 
 // ── CASTLE types ──
 
-unitHandlers.stronghold = {
-  genMoves(g, sq, side) {
-    const moves = [];
-    const [r, c] = MCE.rc(sq, g);
-    for (const [dr, dc] of RD) {
-      const nr = r + dr, nc = c + dc;
-      if (!MCE.onBoard(nr, nc, g)) continue;
-      const target = MCE.sq(nr, nc, g);
-      if (isWaterAt(g, target)) continue;
-      if (MCE.isFriendly(target, side, g)) continue;
-      const tp = g.board[target];
-      if (tp) moves.push({ from: sq, to: target, flag: 'capture' });
-      else moves.push({ from: sq, to: target, flag: null });
-    }
-    MCE.genSlides(g, sq, r, c, side, RD, moves, { attackOnly: true });
-    return moves;
-  },
-  attacks(g, from, target) {
-    const [fr, fc] = MCE.rc(from, g);
-    const [tr, tc] = MCE.rc(target, g);
-    if (Math.abs(tr - fr) + Math.abs(tc - fc) === 1) return true;
-    return slidesReach(g, from, target, RD, false);
-  }
-};
+unitHandlers.stronghold = MCE.buildUnitHandler({
+  move: { style: 'jump', dirs: 'rook', waterBlock: true },
+  attack: 'rook'
+});
 
 unitHandlers.tomb = {
   genMoves(g, sq, side) {
@@ -410,96 +378,21 @@ function tombPhaseReaches(g, from, target) {
   return false;
 }
 
-unitHandlers.iron_golem = {
-  genMoves(g, sq, side) {
-    const moves = [];
-    const [r, c] = MCE.rc(sq, g);
-    for (const [dr, dc] of RD) {
-      const nr = r + dr, nc = c + dc;
-      if (!MCE.onBoard(nr, nc, g)) continue;
-      const target = MCE.sq(nr, nc, g);
-      if (isWaterAt(g, target)) continue;
-      if (MCE.isFriendly(target, side, g)) continue;
-      const tp = g.board[target];
-      if (tp) moves.push({ from: sq, to: target, flag: 'capture' });
-      else moves.push({ from: sq, to: target, flag: null });
-    }
-    MCE.genCannon(g, sq, r, c, side, RD, moves);
-    return moves;
-  },
-  attacks(g, from, target) {
-    const [fr, fc] = MCE.rc(from, g);
-    const [tr, tc] = MCE.rc(target, g);
-    if (Math.abs(tr - fr) + Math.abs(tc - fc) === 1) return true;
-    return cannonReaches(g, from, target, RD);
-  }
-};
+unitHandlers.iron_golem = MCE.buildUnitHandler({
+  move: { style: 'jump', dirs: 'rook', waterBlock: true },
+  cannon: 'rook'
+});
 
-unitHandlers.ogre = {
-  genMoves(g, sq, side) {
-    const moves = [];
-    const [r, c] = MCE.rc(sq, g);
-    for (const [dr, dc] of RD) {
-      const nr = r + dr, nc = c + dc;
-      if (!MCE.onBoard(nr, nc, g)) continue;
-      const target = MCE.sq(nr, nc, g);
-      if (isWaterAt(g, target)) continue;
-      if (MCE.isFriendly(target, side, g)) continue;
-      const tp = g.board[target];
-      if (tp) moves.push({ from: sq, to: target, flag: 'capture' });
-      else moves.push({ from: sq, to: target, flag: null });
-    }
-    MCE.genCannon(g, sq, r, c, side, RD, moves);
-    return moves;
-  },
-  attacks(g, from, target) {
-    const [fr, fc] = MCE.rc(from, g);
-    const [tr, tc] = MCE.rc(target, g);
-    if (Math.abs(tr - fr) + Math.abs(tc - fc) === 1) return true;
-    return cannonReaches(g, from, target, RD);
-  },
-  intimidate: true
-};
+unitHandlers.ogre = MCE.buildUnitHandler({
+  move: { style: 'jump', dirs: 'rook', waterBlock: true },
+  cannon: 'rook'
+});
+unitHandlers.ogre.intimidate = true;
 
 // ── KNIGHT types ──
 
-unitHandlers.knight_h = unitHandlers.salamander = {
-  genMoves(g, sq, side) {
-    const moves = [];
-    const [r, c] = MCE.rc(sq, g);
-    MCE.genJumps(g, sq, r, c, side, KNIGHT, moves);
-    return moves;
-  },
-  attacks(g, from, target) {
-    const [fr, fc] = MCE.rc(from, g);
-    const [tr, tc] = MCE.rc(target, g);
-    const dr = Math.abs(tr - fr), dc = Math.abs(tc - fc);
-    return (dr === 2 && dc === 1) || (dr === 1 && dc === 2);
-  }
-};
-
-unitHandlers.reaper = {
-  genMoves(g, sq, side) {
-    const moves = [];
-    const [r, c] = MCE.rc(sq, g);
-    for (const [dr, dc] of KNIGHT) {
-      const nr = r + dr, nc = c + dc;
-      if (!MCE.onBoard(nr, nc, g)) continue;
-      const target = MCE.sq(nr, nc, g);
-      if (MCE.isFriendly(target, side, g)) continue;
-      const tp = g.board[target];
-      if (tp) moves.push({ from: sq, to: target, flag: 'capture' });
-      else moves.push({ from: sq, to: target, flag: null });
-    }
-    return moves;
-  },
-  attacks(g, from, target) {
-    const [fr, fc] = MCE.rc(from, g);
-    const [tr, tc] = MCE.rc(target, g);
-    const dr = Math.abs(tr - fr), dc = Math.abs(tc - fc);
-    return (dr === 2 && dc === 1) || (dr === 1 && dc === 2);
-  }
-};
+unitHandlers.knight_h = unitHandlers.salamander = unitHandlers.reaper =
+  MCE.buildUnitHandler({ move: 'knight' });
 
 unitHandlers.orc = {
   genMoves(g, sq, side) {
@@ -532,132 +425,30 @@ unitHandlers.orc = {
 
 // ── BISHOP types ──
 
-unitHandlers.archer = {
-  genMoves(g, sq, side) {
-    const moves = [];
-    const [r, c] = MCE.rc(sq, g);
-    MCE.genSlides(g, sq, r, c, side, BD, moves, { moveOnly: true });
-    MCE.genGappedSlides(g, sq, r, c, side, BD, moves, { mode: 'attack' });
-    return moves;
-  },
-  attacks(g, from, target) { return gappedSlidesReach(g, from, target, BD); }
-};
+unitHandlers.archer = MCE.buildUnitHandler({ move: 'bishop', attack: 'bishop:gapped' });
 
-unitHandlers.wraith = {
-  genMoves(g, sq, side) {
-    const moves = [];
-    const [r, c] = MCE.rc(sq, g);
-    MCE.genGappedSlides(g, sq, r, c, side, BD, moves, { mode: 'move' });
-    MCE.genSlides(g, sq, r, c, side, BD, moves, { attackOnly: true });
-    return moves;
-  },
-  attacks(g, from, target) { return slidesReach(g, from, target, BD, false); }
-};
+unitHandlers.wraith = MCE.buildUnitHandler({ move: 'bishop:gapped', attack: 'bishop' });
 
-unitHandlers.fire_elem = unitHandlers.troll = {
-  genMoves(g, sq, side) {
-    const moves = [];
-    const [r, c] = MCE.rc(sq, g);
-    MCE.genSlides(g, sq, r, c, side, BD, moves, { waterBlock: true });
-    return moves;
-  },
-  attacks(g, from, target) { return slidesReach(g, from, target, BD, true); }
-};
+unitHandlers.fire_elem = unitHandlers.troll =
+  MCE.buildUnitHandler({ move: 'bishop:waterBlock', attack: 'bishop:waterBlock' });
 
 // ── QUEEN types ──
 
-unitHandlers.wizard = {
-  genMoves(g, sq, side) {
-    const moves = [];
-    const [r, c] = MCE.rc(sq, g);
-    MCE.genSlides(g, sq, r, c, side, RD, moves);
-    MCE.genSlides(g, sq, r, c, side, BD, moves, { attackOnly: true });
-    return moves;
-  },
-  attacks(g, from, target) {
-    return slidesReach(g, from, target, RD, false) || slidesReach(g, from, target, BD, false);
-  }
-};
+unitHandlers.wizard = MCE.buildUnitHandler({ move: 'rook', attack: 'bishop' });
 
-unitHandlers.vampire = {
-  genMoves(g, sq, side) {
-    const moves = [];
-    const [r, c] = MCE.rc(sq, g);
-    MCE.genSlides(g, sq, r, c, side, BD, moves);
-    MCE.genSlides(g, sq, r, c, side, RD, moves, { attackOnly: true });
-    return moves;
-  },
-  attacks(g, from, target) {
-    return slidesReach(g, from, target, BD, false) || slidesReach(g, from, target, RD, false);
-  }
-};
+unitHandlers.vampire = MCE.buildUnitHandler({ move: 'bishop', attack: 'rook' });
 
-unitHandlers.demonics = unitHandlers.shaman = {
-  genMoves(g, sq, side) {
-    const moves = [];
-    const [r, c] = MCE.rc(sq, g);
-    MCE.genSlides(g, sq, r, c, side, AD, moves, { waterBlock: true });
-    return moves;
-  },
-  attacks(g, from, target) { return slidesReach(g, from, target, AD, true); }
-};
+unitHandlers.demonics = unitHandlers.shaman =
+  MCE.buildUnitHandler({ move: 'queen:waterBlock', attack: 'queen:waterBlock' });
 
 // ── KING types ──
 
-function kingBaseMoves(g, sq, side) {
-  const moves = [];
-  const [r, c] = MCE.rc(sq, g);
-  for (const [dr, dc] of AD) {
-    const nr = r + dr, nc = c + dc;
-    if (!MCE.onBoard(nr, nc, g)) continue;
-    const target = MCE.sq(nr, nc, g);
-    if (isWaterAt(g, target)) continue;
-    if (MCE.isFriendly(target, side, g)) continue;
-    const tp = g.board[target];
-    if (tp) moves.push({ from: sq, to: target, flag: 'capture' });
-    else moves.push({ from: sq, to: target, flag: null });
-  }
-  return moves;
-}
+unitHandlers.princess = MCE.buildUnitHandler({ move: ['king:waterBlock', 'bishop'], attack: 'king:waterBlock' });
 
-unitHandlers.princess = {
-  genMoves(g, sq, side) {
-    const moves = kingBaseMoves(g, sq, side);
-    const [r, c] = MCE.rc(sq, g);
-    MCE.genSlides(g, sq, r, c, side, BD, moves, { moveOnly: true });
-    return moves;
-  },
-  attacks(g, from, target) { return kingStepAttacks(g, from, target); }
-};
+unitHandlers.warlock = MCE.buildUnitHandler({ move: 'king:waterBlock', attack: ['king:waterBlock', 'bishop'] });
 
-unitHandlers.warlock = {
-  genMoves(g, sq, side) {
-    const moves = kingBaseMoves(g, sq, side);
-    const [r, c] = MCE.rc(sq, g);
-    MCE.genSlides(g, sq, r, c, side, BD, moves, { attackOnly: true });
-    return moves;
-  },
-  attacks(g, from, target) {
-    if (kingStepAttacks(g, from, target)) return true;
-    return slidesReach(g, from, target, BD, false);
-  }
-};
-
-unitHandlers.red_dragon = unitHandlers.warlord = {
-  genMoves(g, sq, side) {
-    const moves = kingBaseMoves(g, sq, side);
-    const [r, c] = MCE.rc(sq, g);
-    MCE.genJumps(g, sq, r, c, side, KNIGHT, moves, { attackOnly: true });
-    return moves;
-  },
-  attacks(g, from, target) {
-    if (kingStepAttacks(g, from, target)) return true;
-    const [fr, fc] = MCE.rc(from, g);
-    const [tr, tc] = MCE.rc(target, g);
-    const dr = Math.abs(tr - fr), dc = Math.abs(tc - fc);
-    return (dr === 2 && dc === 1) || (dr === 1 && dc === 2);
-  }
-};
+unitHandlers.red_dragon = unitHandlers.warlord =
+  MCE.buildUnitHandler({ move: 'king:waterBlock', attack: ['king:waterBlock', 'knight'] });
 
 // ══════════════════════════════════════════════════════════════
 // GAME CREATION & STATE SYNC
