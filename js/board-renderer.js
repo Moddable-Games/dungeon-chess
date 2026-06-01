@@ -1349,6 +1349,7 @@ let _tileCacheKey = null
 function dcTilePainter(svg, sqIdx, dr, dc, tileSize, isLight, game) {
   const map = G.map
   if (!map) return null
+  if (!map.grid[dr]) return null
   const cell = map.grid[dr][dc]
   if (cell === null) return null
 
@@ -1370,8 +1371,10 @@ function dcTilePainter(svg, sqIdx, dr, dc, tileSize, isLight, game) {
   g.appendChild(svgEl('rect', { x: 0, y: 0, width: tileSize, height: tileSize, fill }))
 
   if (!isWater) {
-    drawStoneTexture(g, isLight)
-    drawFloorDetails(g, dr, dc, tileSize)
+    try {
+      drawStoneTexture(g, isLight)
+      drawFloorDetails(g, dr, dc, isLight)
+    } catch (e) { console.error('Tile render error:', dr, dc, e) }
   }
 
   if (isWater) {
