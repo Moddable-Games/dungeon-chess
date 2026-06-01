@@ -14,12 +14,10 @@ function registerAllUnits() {
     genMoves(g, sq, side) {
       const pd = g.pieceData[sq];
       if (!pd) return [];
-      // Shaman hex: immobilised pieces cannot move
-      if (typeof G !== 'undefined' && G.hexImmobilised && G.hexImmobilised[pd.id]) return [];
+      if (MCE.hasEffect(g, sq, 'hex')) return [];
       const handler = unitHandlers[pd.key];
       if (!handler) return [];
       const moves = handler.genMoves(g, sq, side);
-      // Skeleton fragile: any piece adjacent to a skeleton can capture it
       const [r, c] = MCE.rc(sq, g);
       for (const [dr, dc] of AD) {
         const nr = r + dr, nc = c + dc;
@@ -38,9 +36,9 @@ function registerAllUnits() {
     attacks(g, from, target) {
       const pd = g.pieceData[from];
       if (!pd) return false;
+      if (MCE.hasEffect(g, from, 'hex')) return false;
       const handler = unitHandlers[pd.key];
       if (handler && handler.attacks(g, from, target)) return true;
-      // Skeleton fragile: any adjacent piece attacks it
       const tpd = g.pieceData[target];
       if (tpd && unitHandlers[tpd.key] && unitHandlers[tpd.key].fragile) {
         const [fr, fc] = MCE.rc(from, g);
@@ -50,7 +48,104 @@ function registerAllUnits() {
       return false;
     }
   });
+
+  MCE.registerVariant('dungeon-chess', {
+    label: 'Dungeon Chess',
+    beforeMove: dcBeforeMove,
+    afterMove: dcAfterMove,
+    evaluate: dcEvaluate,
+    restoreState: dcRestoreState,
+  });
 }
+
+// ── VARIANT HOOKS ──
+
+function dcBeforeMove(g, move, undo) {
+  const targetPd = g.pieceData[move.to];
+  if (targetPd && targetPd.key === 'troll' && !targetPd.wounded) {
+    undo._trollWoundedSq = move.to;
+    undo._trollPushedTo = null;
+    targetPd.wounded = true;
+    const [fr, fc] = MCE.rc(move.from, g);
+    const [tr, tc] = MCE.rc(move.to, g);
+    const dr = tr - fr > 0 ? 1 : tr - fr < 0 ? -1 : 0;
+    const dc = tc - fc > 0 ? 1 : tc - fc < 0 ? -1 : 0;
+    const pushR = tr + dr, pushC = tc + dc;
+    let canPush = false;
+    if (MCE.onBoard(pushR, pushC, g)) {
+      const landSq = MCE.sq(pushR, pushC, g);
+      const lt = MCE.getTerrain(landSq, g);
+      if (lt !== 'w' && lt !== 2 && !g.board[landSq]) canPush = true;
+    }
+    if (canPush) {
+      const landSq = MCE.sq(pushR, pushC, g);
+      undo._trollPushedTo = landSq;
+      MCE.mutateBoard(g, undo, [{ sq: landSq, piece: PIECE_CHAR }]);
+      g.pieceData[landSq] = targetPd;
+      g.board[move.to] = g.board[move.from];
+      g.pieceData[move.to] = g.pieceData[move.from];
+      g.board[move.from] = null;
+      g.pieceData[move.from] = null;
+    }
+    return { cancelCapture: true };
+  }
+  g.board[move.to] = g.board[move.from];
+  g.board[move.from] = null;
+  if (g.pieceData) { g.pieceData[move.to] = g.pieceData[move.from]; g.pieceData[move.from] = null; }
+}
+
+function dcAfterMove(g, move, undo) {
+  if (undo.captured && undo.pieceDataTo && undo.pieceDataTo.key === 'demonics' && !undo.captureIntercepted) {
+    const victimPd = undo.pieceDataTo;
+    const [cr, cc] = MCE.rc(move.to, g);
+    const exploded = [];
+    for (const [dr, dc] of AD) {
+      const nr = cr + dr, nc = cc + dc;
+      if (!MCE.onBoard(nr, nc, g)) continue;
+      const adjSq = MCE.sq(nr, nc, g);
+      const adjPd = g.pieceData[adjSq];
+      if (adjPd && adjPd.owner !== victimPd.owner) {
+        exploded.push({ sq: adjSq, pd: adjPd });
+        MCE.mutateBoard(g, undo, [{ sq: adjSq, piece: null }]);
+        g.pieceData[adjSq] = null;
+      }
+    }
+    undo._demonicsExploded = exploded;
+  }
+}
+
+function dcRestoreState(g, undo) {
+  if (undo._trollWoundedSq !== undefined) {
+    const pd = g.pieceData[undo._trollWoundedSq];
+    if (pd) pd.wounded = false;
+  }
+  if (undo._trollPushedTo !== null && undo._trollPushedTo !== undefined) {
+    g.pieceData[undo._trollPushedTo] = null;
+  }
+  if (undo._demonicsExploded) {
+    for (const { sq, pd } of undo._demonicsExploded) {
+      g.pieceData[sq] = pd;
+    }
+  }
+}
+
+function dcEvaluate(g) {
+  let score = 0;
+  const total = g.rows * g.cols;
+  for (let i = 0; i < total; i++) {
+    if (!g.board[i] || !g.pieceData[i]) continue;
+    const pd = g.pieceData[i];
+    const unit = typeof UNITS !== 'undefined' ? UNITS[pd.key] : null;
+    const val = unit ? unit.cost * 50 : 100;
+    const isKing = unit && unit.type === PT.K;
+    const kingBonus = isKing ? 20000 : 0;
+    if (pd.owner === g.turn) score += val + kingBonus;
+    else score -= val + kingBonus;
+  }
+  return score;
+}
+
+// ── UTILITY ──
 
 function isWaterAt(g, sq) {
   const t = MCE.getTerrain(sq, g);
@@ -107,7 +202,6 @@ function pawnAttacks(g, from, target) {
 }
 
 function cannonReaches(g, from, target, dirs) {
-  // Iron Golem cannon-proof: cannot be targeted by cannon attacks
   const tpd = g.pieceData[target];
   if (tpd && tpd.key === 'iron_golem') return false;
   const [fr, fc] = MCE.rc(from, g);
@@ -234,7 +328,6 @@ unitHandlers.tomb = {
       if (tp) moves.push({ from: sq, to: target, flag: 'capture' });
       else moves.push({ from: sq, to: target, flag: null });
     }
-    // Tomb phase fire: rook attacks pass through one friendly piece
     tombPhaseSlides(g, sq, r, c, side, moves);
     return moves;
   },
@@ -368,7 +461,6 @@ unitHandlers.reaper = {
       const nr = r + dr, nc = c + dc;
       if (!MCE.onBoard(nr, nc, g)) continue;
       const target = MCE.sq(nr, nc, g);
-      // Reaper water-walk: does NOT skip water squares
       if (MCE.isFriendly(target, side, g)) continue;
       const tp = g.board[target];
       if (tp) moves.push({ from: sq, to: target, flag: 'capture' });
@@ -389,7 +481,6 @@ unitHandlers.orc = {
     const moves = [];
     const [r, c] = MCE.rc(sq, g);
     MCE.genJumps(g, sq, r, c, side, KNIGHT, moves);
-    // Orc flexible: also move 2 squares orthogonally
     for (const [dr, dc] of RD) {
       const nr = r + dr * 2, nc = c + dc * 2;
       if (!MCE.onBoard(nr, nc, g)) continue;
@@ -409,7 +500,6 @@ unitHandlers.orc = {
     const [tr, tc] = MCE.rc(target, g);
     const dr = Math.abs(tr - fr), dc = Math.abs(tc - fc);
     if ((dr === 2 && dc === 1) || (dr === 1 && dc === 2)) return true;
-    // 2-square orthogonal attack
     if ((dr === 2 && dc === 0) || (dr === 0 && dc === 2)) return true;
     return false;
   }
@@ -425,9 +515,7 @@ unitHandlers.archer = {
     MCE.genGappedSlides(g, sq, r, c, side, BD, moves, { mode: 'attack' });
     return moves;
   },
-  attacks(g, from, target) {
-    return gappedSlidesReach(g, from, target, BD);
-  }
+  attacks(g, from, target) { return gappedSlidesReach(g, from, target, BD); }
 };
 
 unitHandlers.wraith = {
@@ -438,9 +526,7 @@ unitHandlers.wraith = {
     MCE.genSlides(g, sq, r, c, side, BD, moves, { attackOnly: true });
     return moves;
   },
-  attacks(g, from, target) {
-    return slidesReach(g, from, target, BD, false);
-  }
+  attacks(g, from, target) { return slidesReach(g, from, target, BD, false); }
 };
 
 unitHandlers.fire_elem = unitHandlers.troll = {
@@ -450,9 +536,7 @@ unitHandlers.fire_elem = unitHandlers.troll = {
     MCE.genSlides(g, sq, r, c, side, BD, moves, { waterBlock: true });
     return moves;
   },
-  attacks(g, from, target) {
-    return slidesReach(g, from, target, BD, true);
-  }
+  attacks(g, from, target) { return slidesReach(g, from, target, BD, true); }
 };
 
 // ── QUEEN types ──
@@ -490,9 +574,7 @@ unitHandlers.demonics = unitHandlers.shaman = {
     MCE.genSlides(g, sq, r, c, side, AD, moves, { waterBlock: true });
     return moves;
   },
-  attacks(g, from, target) {
-    return slidesReach(g, from, target, AD, true);
-  }
+  attacks(g, from, target) { return slidesReach(g, from, target, AD, true); }
 };
 
 // ── KING types ──
@@ -520,9 +602,7 @@ unitHandlers.princess = {
     MCE.genSlides(g, sq, r, c, side, BD, moves, { moveOnly: true });
     return moves;
   },
-  attacks(g, from, target) {
-    return kingStepAttacks(g, from, target);
-  }
+  attacks(g, from, target) { return kingStepAttacks(g, from, target); }
 };
 
 unitHandlers.warlock = {
@@ -574,6 +654,7 @@ function createDungeonGame(map, pieces, players) {
     noCastling: true,
     noEnPassant: true,
     noPromotion: true,
+    variant: 'dungeon-chess',
   });
   pieces.forEach(p => {
     const sq = MCE.sq(p.r, p.c, g);
@@ -638,5 +719,13 @@ function isInCheck(owner, g) {
   return MCE.inCheck(g, owner);
 }
 
-return { registerAllUnits, createDungeonGame, syncPiecesFromMCE, getLegal, findMCEMove, isInCheck };
+function applyHex(g, targetSq, undo) {
+  MCE.addEffect(g, undo || { _effectsSnapshot: null }, { sq: targetSq, type: 'hex', duration: 2 });
+}
+
+function pickAiMove(g, difficulty) {
+  return MCE.aiPickMove(g, 50, { difficulty: difficulty || 'medium' });
+}
+
+return { registerAllUnits, createDungeonGame, syncPiecesFromMCE, getLegal, findMCEMove, isInCheck, applyHex, pickAiMove };
 })();

@@ -121,6 +121,17 @@ Pure client-side JavaScript. No frameworks, no build tools, no runtime dependenc
 
 ## Changelog
 
+#### 2026-06-01
+- **MCE AI integration** — replace hand-rolled heuristic AI with MCE's negamax search (alpha-beta, quiescence, transposition table, iterative deepening, time-budgeted difficulty)
+- Register Dungeon Chess as MCE variant plugin with `beforeMove`, `afterMove`, `evaluate`, and `restoreState` hooks
+- Migrate troll thick-skinned to MCE `beforeMove` capture interception
+- Migrate demonics explosion to MCE `afterMove` with `mutateBoard` (proper undo support)
+- Migrate hex immobilisation from manual counters to MCE effects system (`duration: 2`)
+- Vendor `chess-variants.js` and `chess-ai.js` from MCE; update `pull-mce.sh`
+- Remove ~160 lines of hand-rolled AI code (pickAiMove, isSquareAttackedBy, isSquareDefendedBy)
+- Custom XP-based position evaluator for MCE AI (maps unit costs to centipawn values)
+- Version 1.2.0
+
 #### 2026-05-29
 - Add two custom piece sets: Realistic (3D rendered) and Artistic (cel-shaded)
 - Add piece style toggle on landing page and battle sidebar (switchable mid-game)

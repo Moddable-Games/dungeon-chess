@@ -6,5 +6,7 @@ DEST="lib/mce"
 cp "$SRC/chess-engine.js" "$DEST/"
 cp "$SRC/chess-moves.js" "$DEST/"
 cp "$SRC/chess-play.js" "$DEST/"
+cp "$SRC/chess-variants.js" "$DEST/"
+cp "$SRC/chess-ai.js" "$DEST/"
 
 echo "MCE updated from $SRC"
