@@ -1347,9 +1347,10 @@ const _tileCache = new Map()
 let _tileCacheKey = null
 
 function dcTilePainter(svg, sqIdx, dr, dc, tileSize, isLight, game) {
+  console.log('dcTilePainter called:', dr, dc)
   const map = G.map
-  if (!map) return null
-  if (!map.grid[dr]) return null
+  if (!map) { console.log('no map'); return null }
+  if (!map.grid[dr]) { console.log('no grid row', dr); return null }
   const cell = map.grid[dr][dc]
   if (cell === null) return null
 
