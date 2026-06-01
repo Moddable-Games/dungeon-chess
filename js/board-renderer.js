@@ -1339,3 +1339,158 @@ function ensureSpriteDefs(svg) {
   }
 }
 
+// ═══════════════════════════════════════════════════════════
+// MCE HOOK ADAPTERS
+// ═══════════════════════════════════════════════════════════
+
+const _tileCache = new Map()
+let _tileCacheKey = null
+
+function dcTilePainter(svg, sqIdx, dr, dc, tileSize, isLight, game) {
+  const map = G.map
+  if (!map) return null
+  const cell = map.grid[dr][dc]
+  if (cell === null) return null
+
+  const cacheKey = `${map.id}-${dr}-${dc}-${tileSize}`
+  if (_tileCacheKey !== `${map.id}-${tileSize}`) {
+    _tileCache.clear()
+    _tileCacheKey = `${map.id}-${tileSize}`
+  }
+
+  if (_tileCache.has(cacheKey)) {
+    return _tileCache.get(cacheKey).cloneNode(true)
+  }
+
+  const g = svgEl('g', {})
+  const isWater = cell === 'w'
+
+  let fill = isWater ? (isLight ? SQ_WATER : SQ_WATER2)
+                     : (isLight ? SQ_LIGHT : SQ_DARK)
+  g.appendChild(svgEl('rect', { x: 0, y: 0, width: tileSize, height: tileSize, fill }))
+
+  if (!isWater) {
+    drawStoneTexture(g, isLight)
+    drawFloorDetails(g, dr, dc, tileSize)
+  }
+
+  if (isWater) {
+    const clipId = `mwclip-${dr}-${dc}`
+    const clipPath = svgEl('clipPath', { id: clipId })
+    clipPath.appendChild(svgEl('rect', { x: 0, y: 0, width: tileSize, height: tileSize }))
+    let defs = svg.querySelector('defs')
+    if (!defs) { defs = svgEl('defs', {}); svg.insertBefore(defs, svg.firstChild) }
+    defs.appendChild(clipPath)
+    const wg = svgEl('g', { 'clip-path': `url(#${clipId})`, 'pointer-events': 'none' })
+    wg.appendChild(svgEl('rect', { x: 0, y: 0, width: tileSize, height: tileSize, fill: 'rgba(60,100,160,0.08)' }))
+    for (let wi = 0; wi < 3; wi++) {
+      const wy = tileSize * (0.22 + wi * 0.26)
+      const wc = ['wva', 'wvb', 'wvc'][wi]
+      const wv = svgEl('path', {
+        d: `M -4 ${wy} Q ${tileSize*0.25} ${wy-4} ${tileSize/2} ${wy} Q ${tileSize*0.75} ${wy+4} ${tileSize+4} ${wy}`,
+        stroke: 'rgba(140,200,255,0.40)', 'stroke-width': 1.2, fill: 'none'
+      })
+      wv.setAttribute('class', wc)
+      wg.appendChild(wv)
+      const wv2 = svgEl('path', {
+        d: `M -4 ${wy+4} Q ${tileSize*0.30} ${wy+1} ${tileSize/2} ${wy+4} Q ${tileSize*0.70} ${wy+7} ${tileSize+4} ${wy+4}`,
+        stroke: 'rgba(80,150,220,0.22)', 'stroke-width': 0.8, fill: 'none'
+      })
+      wv2.setAttribute('class', ['wvc', 'wva', 'wvb'][wi])
+      wg.appendChild(wv2)
+    }
+    g.appendChild(wg)
+  }
+
+  _tileCache.set(cacheKey, g.cloneNode(true))
+  return g
+}
+
+function dcPieceProvider(game, sqIdx, tileSize) {
+  const pd = game.pieceData[sqIdx]
+  if (!pd) return null
+  const def = UNITS[pd.key]
+  if (!def) return null
+
+  const ownerSp = pd.owner === 'player' ? G.playerSp
+    : pd.owner === 'ai' ? G.aiSp
+    : pd.owner === 'ai2' ? G.ai2Sp : G.ai3Sp
+  const sz = tileSize * 0.88
+  const offset = (tileSize - sz) / 2
+
+  const g = svgEl('g', {})
+  g.appendChild(svgEl('ellipse', { cx: tileSize / 2, cy: tileSize - 4, rx: tileSize * 0.28, ry: 3.5, fill: 'rgba(0,0,0,0.60)' }))
+
+  if (G.pieceStyle !== 'classic') {
+    const folder = G.pieceStyle === 'custom-a' ? 'pieces' : 'pieces-alt'
+    const img = svgEl('image', { x: offset, y: offset, width: sz, height: sz, preserveAspectRatio: 'xMidYMid meet' })
+    img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `assets/${folder}/${pd.key}.png`)
+    g.appendChild(img)
+  } else {
+    const color = spToColor(ownerSp)
+    const sid = color + FEN_CH[def.type]
+    const use = svgEl('use', { href: `#piece-${sid}`, x: offset, y: offset, width: sz, height: sz })
+    g.appendChild(use)
+    appendPieceTint(g, ownerSp, offset, sz)
+  }
+
+  return g
+}
+
+function dcSurroundRenderer(container, game, boardRect) {
+  const map = G.map
+  if (!map) return
+  let canvas = container.querySelector('canvas.dc-surround')
+  if (!canvas) {
+    canvas = document.createElement('canvas')
+    canvas.className = 'dc-surround'
+    canvas.style.position = 'absolute'
+    canvas.style.top = '0'
+    canvas.style.left = '0'
+    canvas.style.pointerEvents = 'none'
+  }
+  const WALL = boardRect.tileSize * 2.2
+  canvas.width = boardRect.width + WALL * 2
+  canvas.height = boardRect.height + WALL * 2
+  canvas.style.width = canvas.width + 'px'
+  canvas.style.height = canvas.height + 'px'
+  container.appendChild(canvas)
+  drawDungeonSurround(canvas, map)
+}
+
+function dcEffectOverlay(svg, effect, x, y, tileSize, game) {
+  if (effect.type !== 'hex') return null
+  const g = svgEl('g', {})
+  g.appendChild(svgEl('rect', {
+    x: x + 2, y: y + 2, width: tileSize - 4, height: tileSize - 4,
+    fill: 'rgba(120,40,200,0.15)', stroke: 'rgba(160,60,255,0.5)',
+    'stroke-width': 1.5, 'stroke-dasharray': '4,2'
+  }))
+  const cx = x + tileSize / 2, cy = y + tileSize / 2
+  const txt = svgEl('text', {
+    x: cx, y: cy + 3, 'text-anchor': 'middle', 'font-size': tileSize * 0.3,
+    fill: 'rgba(160,60,255,0.7)', 'pointer-events': 'none'
+  })
+  txt.textContent = '⚡'
+  g.appendChild(txt)
+  return g
+}
+
+function dcAfterRender(svg, game, tileSize, opts) {
+  ensureSpriteDefs(svg)
+  if (typeof kbRenderCursor === 'function') kbRenderCursor(svg, tileSize)
+}
+
+function getDCRenderOpts() {
+  const map = G.map
+  if (!map) return {}
+  return {
+    size: map.cols * TILE,
+    tilePainter: dcTilePainter,
+    pieceProvider: dcPieceProvider,
+    surroundRenderer: dcSurroundRenderer,
+    effectOverlay: dcEffectOverlay,
+    afterRender: dcAfterRender
+  }
+}
+

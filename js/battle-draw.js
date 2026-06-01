@@ -38,7 +38,8 @@ function createBattleController() {
   const players = {}
   G.mceGame.players.forEach(p => { players[p] = p === 'player' ? 'human' : 'ai' })
 
-  G_controller = MCE.createGameController(null, G.mceGame, {
+  const boardEl = document.getElementById('board-wrap')
+  G_controller = MCE.createGameController(boardEl, G.mceGame, {
     players: players,
     aiDifficulty: 'medium',
 
@@ -139,7 +140,6 @@ function createBattleController() {
       document.getElementById('sel-info').innerHTML =
         `<div class="sel-name">Salamander Retreat</div>
          <div class="sel-meta">Click an adjacent square to retreat to</div>`
-      drawBoard()
     },
 
     onPendingActionEnd: function() {
