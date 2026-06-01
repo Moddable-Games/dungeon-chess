@@ -170,25 +170,22 @@ function handleSquareClick(r, c) {
     return
   }
 
-  if (G.salamanderRetreat) {
-    const valid = G.legalMoves.some(([lr, lc]) => lr === r && lc === c)
-    if (valid) {
-      const sal = G.salamanderRetreat
-      const fromSq = MCE.sq(sal.r, sal.c, G.mceGame)
-      const toSq = MCE.sq(r, c, G.mceGame)
-      G.mceGame.board[fromSq] = null
-      G.mceGame.pieceData[toSq] = G.mceGame.pieceData[fromSq]
-      G.mceGame.pieceData[fromSq] = null
-      G.mceGame.board[toSq] = 'X'
+  if (G.mceGame._pendingAction) {
+    const pa = G.mceGame._pendingAction
+    const toSq = MCE.sq(r, c, G.mceGame)
+    const allMoves = MCE.legalMoves(G.mceGame)
+    const retreatMove = allMoves.find(m => m.to === toSq)
+    if (retreatMove) {
+      MCE.makeMove(G.mceGame, retreatMove)
       addLog(`Salamander retreats to ${String.fromCharCode(97+c)}${r+1}`)
-      G.salamanderRetreat = null
       G.selR = null; G.selC = null; G.legalMoves = []; G.legalAttacks = []
       G.pieces = DungeonMCE.syncPiecesFromMCE(G.mceGame)
+      G.turn = G.mceGame.turn
       if (G.turn !== 'player') {
         G.aiThinking = true; updateUI(); drawBoard()
         G.aiTimer = setTimeout(runAi, 500 + Math.random() * 500)
       } else {
-        updateUI(); drawBoard()
+        G.aiThinking = false; updateUI(); drawBoard()
       }
     }
     return
@@ -253,23 +250,18 @@ function applyMove(owner, fr, fc, tr, tc) {
       addLog(`${UNITS.troll.name} absorbs the blow!`)
     }
 
-    // Salamander hit-and-run: after capture, retreat 1 square
-    if (captured && !mceUndo.captureIntercepted && piece.key === 'salamander') {
-      const retreatOptions = [];
-      for (const [dr, dc] of [[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]]) {
-        const nr = tr + dr, nc = tc + dc;
-        if (!MCE.onBoard(nr, nc, G.mceGame)) continue;
-        const adjSq = MCE.sq(nr, nc, G.mceGame);
-        const t = MCE.getTerrain(adjSq, G.mceGame);
-        if (t === 'w' || t === 2 || t === null) continue;
-        if (G.mceGame.board[adjSq]) continue;
-        retreatOptions.push([nr, nc]);
-      }
-      if (retreatOptions.length && owner === 'player') {
+    if (G.mceGame._pendingAction && owner === 'player') {
+      const retreatMoves = MCE.legalMoves(G.mceGame);
+      if (retreatMoves.length === 0) {
+        G.mceGame._pendingAction = null;
+        MCE.advanceTurn(G.mceGame);
+      } else {
         G.pieces = DungeonMCE.syncPiecesFromMCE(G.mceGame);
-        G.salamanderRetreat = { r: tr, c: tc, id: piece.id };
-        G.legalMoves = retreatOptions; G.legalAttacks = [];
-        G.selR = tr; G.selC = tc;
+        G.legalMoves = retreatMoves.map(m => MCE.rc(m.to, G.mceGame));
+        G.legalAttacks = [];
+        const pa = G.mceGame._pendingAction;
+        const [pr, pc] = MCE.rc(pa.from, G.mceGame);
+        G.selR = pr; G.selC = pc;
         G.aiThinking = false;
         document.getElementById('sel-info').innerHTML =
           `<div class="sel-name">Salamander Retreat</div>
@@ -277,18 +269,18 @@ function applyMove(owner, fr, fc, tr, tc) {
         drawBoard();
         if (isCapture) flashCapture(tr, tc);
         return;
-      } else if (retreatOptions.length) {
-        const best = retreatOptions.reduce((b, [nr, nc]) => {
-          const score = Math.abs(nr - fr) + Math.abs(nc - fc);
-          return score > b.score ? { r: nr, c: nc, score } : b;
-        }, { r: retreatOptions[0][0], c: retreatOptions[0][1], score: -1 });
-        const pSq = MCE.sq(tr, tc, G.mceGame);
-        const toSq = MCE.sq(best.r, best.c, G.mceGame);
-        G.mceGame.board[pSq] = null;
-        G.mceGame.pieceData[toSq] = G.mceGame.pieceData[pSq];
-        G.mceGame.pieceData[pSq] = null;
-        G.mceGame.board[toSq] = 'X';
-        addLog(`Salamander retreats to ${String.fromCharCode(97+best.c)}${best.r+1}`);
+      }
+    }
+    if (G.mceGame._pendingAction && owner !== 'player') {
+      const retreatMoves = MCE.legalMoves(G.mceGame);
+      if (retreatMoves.length > 0) {
+        const pick = retreatMoves[Math.floor(Math.random() * retreatMoves.length)];
+        MCE.makeMove(G.mceGame, pick);
+        const [rr, rc] = MCE.rc(pick.to, G.mceGame);
+        addLog(`Salamander retreats to ${String.fromCharCode(97+rc)}${rr+1}`);
+      } else {
+        G.mceGame._pendingAction = null;
+        MCE.advanceTurn(G.mceGame);
       }
     }
 

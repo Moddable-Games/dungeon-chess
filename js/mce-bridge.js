@@ -54,8 +54,10 @@ function registerAllUnits() {
     moveFilter: dcMoveFilter,
     beforeMove: dcBeforeMove,
     afterMove: dcAfterMove,
+    turnLogic: dcTurnLogic,
     evaluate: dcEvaluate,
     restoreState: dcRestoreState,
+    positionKey: dcPositionKey,
   });
 }
 
@@ -157,6 +159,44 @@ function dcRestoreState(g, undo) {
       g.pieceData[sq] = pd;
     }
   }
+}
+
+function dcTurnLogic(g, undo) {
+  const move = undo;
+  if (move.captured && !move.captureIntercepted) {
+    const pd = g.pieceData[move.to];
+    if (pd && pd.key === 'salamander') {
+      const [tr, tc] = MCE.rc(move.to, g);
+      const retreatOptions = [];
+      for (const [dr, dc] of AD) {
+        const nr = tr + dr, nc = tc + dc;
+        if (!MCE.onBoard(nr, nc, g)) continue;
+        const adjSq = MCE.sq(nr, nc, g);
+        const t = MCE.getTerrain(adjSq, g);
+        if (t === 'w' || t === 2 || t === null) continue;
+        if (g.board[adjSq]) continue;
+        retreatOptions.push(adjSq);
+      }
+      if (retreatOptions.length > 0) {
+        g._pendingAction = { from: move.to, filter: (m) => retreatOptions.includes(m.to) };
+        undo._salamanderRetreatFrom = move.to;
+        return;
+      }
+    }
+  }
+  if (g.effects && g.effects.length > 0) MCE.tickEffects(g, undo);
+  MCE.advanceTurn(g);
+}
+
+function dcPositionKey(g) {
+  let key = '';
+  const total = g.rows * g.cols;
+  for (let i = 0; i < total; i++) {
+    const pd = g.pieceData[i];
+    if (pd) key += pd.key.substring(0, 3) + pd.owner[0];
+    else key += '.';
+  }
+  return key + ' ' + g.turn;
 }
 
 function dcEvaluate(g) {
