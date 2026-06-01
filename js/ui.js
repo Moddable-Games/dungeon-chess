@@ -90,7 +90,7 @@ function addLog(text){
 // END GAME
 // ═══════════════════════════════════════════════════════════
 function endGame(winner){
-  if(G.aiTimer)clearTimeout(G.aiTimer)
+  destroyBattleController()
   G.aiThinking=false
   // Announce game result for screen readers
   if (typeof kbAnnounce === 'function') {
@@ -490,17 +490,12 @@ document.getElementById('confirm-place-btn').onclick = () => {
   G.mceGame.turnIndex = G.mceGame.players.indexOf(firstTurn)
   if (typeof rpSaveInitial === 'function') rpSaveInitial()
   show('battle')
-  drawBoard()
   lockTileSize()
   const bCanvas2 = document.getElementById('dungeon-canvas')
   if (bCanvas2 && G.map) drawDungeonSurround(bCanvas2, G.map)
   const bLights2 = document.getElementById('dungeon-lights')
   if (bLights2 && G.map) startLightAnimation(bLights2, G.map, TILE*2.2)
-  updateUI()
-  if (firstTurn !== 'player') {
-    G.aiThinking = true
-    G.aiTimer = setTimeout(runAi, 600 + Math.random() * 400)
-  }
+  createBattleController()
 }
 document.getElementById('place-back').onclick = () => show('draft')
 document.getElementById('place-auto').onclick = () => autoPlace()
@@ -527,9 +522,7 @@ document.getElementById('species-back').onclick   = ()=>show('map')
 document.getElementById('draft-back').onclick     = ()=>show('species')
 document.getElementById('forfeit-btn').onclick = () => {
   if (!confirm('Are you sure you want to forfeit?')) return
-  if (G.aiTimer) clearTimeout(G.aiTimer)
-  G.aiThinking=false
-  // In 4-player, pick the AI with most pieces as winner
+  if (G_controller) G_controller.forfeit()
   const aiOwners = G.numPlayers===4 ? ['ai','ai2','ai3'] : ['ai']
   const winner = aiOwners.reduce((best,o) =>
     G.pieces.filter(p=>p.owner===o).length > G.pieces.filter(p=>p.owner===best).length ? o : best
@@ -537,31 +530,23 @@ document.getElementById('forfeit-btn').onclick = () => {
   endGame(winner)
 }
 document.getElementById('undo-btn').onclick = () => {
-  if (G.turn !== 'player' || G_undoStack.length < 2) return
-  for (let i = 0; i < 2; i++) {
-    const move = G_undoStack.pop()
-    if (!move) break
-    if (move.mceUndo) MCE.unmakeMove(G.mceGame, move.mceUndo)
-    if (move.capturedPiece) {
-      if (move.owner === 'player') G.capturedByPlayer.pop()
-      else G.capturedByAi.pop()
-    }
-    G.history.pop()
-  }
+  if (!G_controller || G.turn !== 'player') return
+  G_controller.undo()
   G.pieces = DungeonMCE.syncPiecesFromMCE(G.mceGame)
-  G.turn = G.mceGame.turn; G.aiThinking = false
-  G_lastMove = G_undoStack.length ? { fr: G_undoStack[G_undoStack.length-1].fr, fc: G_undoStack[G_undoStack.length-1].fc, tr: G_undoStack[G_undoStack.length-1].tr, tc: G_undoStack[G_undoStack.length-1].tc } : null
-  G.selR = null; G.selC = null; G.legalMoves = []; G.legalAttacks = []
+  G.turn = G.mceGame.turn
+  G.capturedByPlayer.pop()
+  G.capturedByAi.pop()
+  G.history.pop(); G.history.pop()
+  G_lastMove = null
   const el = document.getElementById('h-list')
   el.innerHTML = ''
   G.history.forEach(text => { const d = document.createElement('div'); d.className='h-entry'; d.textContent=text; el.insertBefore(d, el.firstChild) })
-  document.getElementById('undo-btn').disabled = G_undoStack.length < 2
   drawBoard(); updateUI()
 }
 
 document.getElementById('play-again-btn').onclick = ()=>{
-  if(G.aiTimer)clearTimeout(G.aiTimer)
-  G_undoStack.length = 0; G_lastMove = null
+  destroyBattleController()
+  G_lastMove = null
   Object.assign(G,{numPlayers:2,playerSp:null,aiSp:null,ai2Sp:null,ai3Sp:null,playerDraft:[],aiDraft:[],ai2Draft:[],ai3Draft:[],map:null,pieces:[],mceGame:null,
     turn:'player',aiThinking:false,aiTimer:null,selR:null,selC:null,
     legalMoves:[],legalAttacks:[],capturedByPlayer:[],capturedByAi:[],history:[]})
@@ -571,8 +556,8 @@ document.getElementById('play-again-btn').onclick = ()=>{
 }
 
 document.getElementById('rematch-btn').onclick = ()=>{
-  if(G.aiTimer)clearTimeout(G.aiTimer)
-  G_undoStack.length = 0; G_lastMove = null
+  destroyBattleController()
+  G_lastMove = null
   const savedMap = G.map, savedSp = G.playerSp, savedAiSp = G.aiSp
   const savedNum = G.numPlayers, savedAi2 = G.ai2Sp, savedAi3 = G.ai3Sp
   Object.assign(G,{pieces:[],mceGame:null,turn:'player',aiThinking:false,aiTimer:null,selR:null,selC:null,
@@ -586,8 +571,8 @@ document.getElementById('rematch-btn').onclick = ()=>{
 }
 
 document.getElementById('rematch-same-btn').onclick = ()=>{
-  if(G.aiTimer)clearTimeout(G.aiTimer)
-  G_undoStack.length = 0; G_lastMove = null
+  destroyBattleController()
+  G_lastMove = null
   const savedDraft = [...G.playerDraft], savedAiDraft = [...G.aiDraft]
   const savedAi2Draft = G.ai2Draft ? [...G.ai2Draft] : []
   const savedAi3Draft = G.ai3Draft ? [...G.ai3Draft] : []

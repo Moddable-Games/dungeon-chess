@@ -84,7 +84,7 @@ function kbActivate() {
     drawBoard()
     return
   }
-  handleSquareClick(KB.cursorR, KB.cursorC)
+  onBoardClick(KB.cursorR, KB.cursorC)
   kbAnnounceAction()
 }
 

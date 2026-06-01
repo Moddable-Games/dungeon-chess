@@ -2,8 +2,9 @@
 // ═══════════════════════════════════════════════════════════
 // DRAW BOARD (calls SVG renderer)
 // ═══════════════════════════════════════════════════════════
-const G_undoStack = []
 let G_lastMove = null
+let G_controller = null
+const G_undoStack = []
 
 let _lastTile = null
 let _tileLocked = false
@@ -20,9 +21,163 @@ function drawBoard(excludePieceId) {
     G.map, piecesToDraw,
     G.selR, G.selC,
     G.legalMoves, G.legalAttacks,
-    handleSquareClick,
+    onBoardClick,
     G_lastMove
   )
+}
+
+function onBoardClick(r, c) {
+  if (!G_controller) return
+  const sq = MCE.sq(r, c, G.mceGame)
+  G_controller.handleClick(sq)
+}
+
+// ═══════════════════════════════════════════════════════════
+// GAME CONTROLLER SETUP
+// ═══════════════════════════════════════════════════════════
+function createBattleController() {
+  const players = {}
+  G.mceGame.players.forEach(p => { players[p] = p === 'player' ? 'human' : 'ai' })
+
+  G_controller = MCE.createGameController(null, G.mceGame, {
+    players: players,
+    aiDifficulty: 'medium',
+
+    customRender: function(game, state) {
+      G.pieces = DungeonMCE.syncPiecesFromMCE(game)
+      G.turn = game.turn
+      G.aiThinking = state.aiThinking
+      if (!state.aiThinking && !game._pendingAction) {
+        G.selR = null; G.selC = null
+        G.legalMoves = []; G.legalAttacks = []
+        if (state.selected !== null) {
+          const moves = state.getLegalMoves().filter(m => m.from === state.selected)
+          const [sr, sc] = MCE.rc(state.selected, game)
+          G.selR = sr; G.selC = sc
+          moves.forEach(m => {
+            const [mr, mc] = MCE.rc(m.to, game)
+            if (m.flag === 'capture' || m.attackOnly) G.legalAttacks.push([mr, mc])
+            if (!m.attackOnly && m.flag !== 'capture') G.legalMoves.push([mr, mc])
+          })
+        }
+      }
+      if (state.lastMove) {
+        const [fr, fc] = MCE.rc(state.lastMove.from, game)
+        const [tr, tc] = MCE.rc(state.lastMove.to, game)
+        G_lastMove = { fr, fc, tr, tc }
+      }
+      updateUI()
+      drawBoard()
+    },
+
+    onSquareClick: function(sq, game, api) {
+      if (G.hexTargeting) {
+        const [r, c] = MCE.rc(sq, game)
+        const target = G.pieces.find(p => p.r === r && p.c === c && p.owner !== 'player')
+        if (target) {
+          const shaman = G.pieces.find(p => p.id === G.hexTargeting)
+          const mceMove = DungeonMCE.findMCEMove(game, shaman.r, shaman.c, target.r, target.c, 'action')
+          if (mceMove) {
+            api.executeMove(mceMove)
+            addLog(`⚡ Shaman hexes ${UNITS[target.key].name}!`)
+          }
+          G.hexTargeting = null
+        }
+        return true
+      }
+      return false
+    },
+
+    onAnimateMove: function(move, game, done) {
+      const [fr, fc] = MCE.rc(move.from, game)
+      const [tr, tc] = MCE.rc(move.to, game)
+      const pd = game.pieceData[move.from]
+      if (!pd) { done(); return }
+      const piece = G.pieces.find(p => p.r === fr && p.c === fc && p.owner === pd.owner)
+      if (!piece) { done(); return }
+      const captured = game.board[move.to]
+      animateMove(piece, fr, fc, tr, tc, !!captured, done)
+    },
+
+    onCaptureEffect: function(sq, captured) {
+      const [r, c] = MCE.rc(sq, G.mceGame)
+      flashCapture(r, c)
+    },
+
+    onMove: function(move, undo, captured) {
+      const game = G.mceGame
+      const pd = game.pieceData[move.to]
+      if (!pd) return
+      const owner = pd.owner
+
+      if (captured && !undo.captureIntercepted) {
+        if (owner === 'player') G.capturedByPlayer.push(undo.pieceDataTo.key)
+        else G.capturedByAi.push(undo.pieceDataTo.key)
+      }
+      if (captured && undo.captureIntercepted) {
+        addLog(`${UNITS.troll.name} absorbs the blow!`)
+      }
+
+      if (move.flag === 'action') return
+
+      const ownerLabel = owner === 'player' ? SP_INFO[G.playerSp].emoji + ' You'
+        : owner === 'ai' ? SP_INFO[G.aiSp].emoji + ' AI'
+        : owner === 'ai2' ? SP_INFO[G.ai2Sp].emoji + ' AI2'
+        : SP_INFO[G.ai3Sp].emoji + ' AI3'
+      const [fr, fc] = MCE.rc(move.from, game)
+      const [tr, tc] = MCE.rc(move.to, game)
+      const coord = `${String.fromCharCode(97+fc)}${fr+1}→${String.fromCharCode(97+tc)}${tr+1}`
+      const pieceKey = pd.key
+      const captureLabel = captured && !undo.captureIntercepted && undo.pieceDataTo
+        ? ` ✕ ${UNITS[undo.pieceDataTo.key].name}` : ''
+      addLog(`${ownerLabel}: ${UNITS[pieceKey].name} ${coord}${captureLabel}`)
+    },
+
+    onPendingAction: function(action, legalMoves) {
+      G.pieces = DungeonMCE.syncPiecesFromMCE(G.mceGame)
+      G.legalMoves = legalMoves.map(m => MCE.rc(m.to, G.mceGame))
+      G.legalAttacks = []
+      const [pr, pc] = MCE.rc(action.from, G.mceGame)
+      G.selR = pr; G.selC = pc
+      G.aiThinking = false
+      document.getElementById('sel-info').innerHTML =
+        `<div class="sel-name">Salamander Retreat</div>
+         <div class="sel-meta">Click an adjacent square to retreat to</div>`
+      drawBoard()
+    },
+
+    onPendingActionEnd: function() {
+      document.getElementById('sel-info').innerHTML = '<span class="sel-info">Click a piece</span>'
+    },
+
+    onSelect: function(sq, piece, moves) {
+      const pd = G.mceGame.pieceData[sq]
+      if (pd) {
+        const p = G.pieces.find(pp => pp.r === MCE.rc(sq, G.mceGame)[0] && pp.c === MCE.rc(sq, G.mceGame)[1])
+        if (p) showSelected(p)
+      }
+    },
+
+    onGameEnd: function(status) {
+      if (status && status.startsWith && status.startsWith('win-')) {
+        endGame(status.substring(4))
+      }
+    },
+
+    onTurnChange: function(turn) {
+      G.turn = turn
+      G.pieces = DungeonMCE.syncPiecesFromMCE(G.mceGame)
+    }
+  })
+
+  G_controller.render()
+}
+
+function destroyBattleController() {
+  if (G_controller) {
+    G_controller.destroy()
+    G_controller = null
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -138,223 +293,4 @@ function flashCapture(tr, tc) {
     else flash.remove()
   }
   requestAnimationFrame(frameFlash)
-}
-
-// ═══════════════════════════════════════════════════════════
-// INTERACTION
-// ═══════════════════════════════════════════════════════════
-function handleSquareClick(r, c) {
-  if (G.turn !== 'player' || G.aiThinking) return
-
-  if (G.hexTargeting) {
-    const target = G.pieces.find(p => p.r === r && p.c === c && p.owner !== 'player')
-    if (target) {
-      const shaman = G.pieces.find(p => p.id === G.hexTargeting)
-      const mceMove = DungeonMCE.findMCEMove(G.mceGame, shaman.r, shaman.c, target.r, target.c, 'action')
-      if (mceMove) {
-        MCE.makeMove(G.mceGame, mceMove)
-        G.pieces = DungeonMCE.syncPiecesFromMCE(G.mceGame)
-        addLog(`⚡ Shaman hexes ${UNITS[target.key].name}!`)
-      }
-      G.hexTargeting = null
-      G.selR = null; G.selC = null; G.legalMoves = []; G.legalAttacks = []
-      G.turn = G.mceGame.turn
-      document.getElementById('sel-info').innerHTML = '<span class="sel-info">Click a piece</span>'
-      if (G.turn !== 'player') {
-        G.aiThinking = true; updateUI(); drawBoard()
-        G.aiTimer = setTimeout(runAi, 500 + Math.random() * 500)
-      } else {
-        updateUI(); drawBoard()
-      }
-    }
-    return
-  }
-
-  if (G.mceGame._pendingAction) {
-    const pa = G.mceGame._pendingAction
-    const toSq = MCE.sq(r, c, G.mceGame)
-    const allMoves = MCE.legalMoves(G.mceGame)
-    const retreatMove = allMoves.find(m => m.to === toSq)
-    if (retreatMove) {
-      MCE.makeMove(G.mceGame, retreatMove)
-      addLog(`Salamander retreats to ${String.fromCharCode(97+c)}${r+1}`)
-      G.selR = null; G.selC = null; G.legalMoves = []; G.legalAttacks = []
-      G.pieces = DungeonMCE.syncPiecesFromMCE(G.mceGame)
-      G.turn = G.mceGame.turn
-      if (G.turn !== 'player') {
-        G.aiThinking = true; updateUI(); drawBoard()
-        G.aiTimer = setTimeout(runAi, 500 + Math.random() * 500)
-      } else {
-        G.aiThinking = false; updateUI(); drawBoard()
-      }
-    }
-    return
-  }
-
-  const isLegal = G.legalMoves.some(([lr, lc]) => lr === r && lc === c)
-  const isAttack = G.legalAttacks.some(([ar, ac]) => ar === r && ac === c)
-  if ((isLegal || isAttack) && G.selR !== null) {
-    applyMove('player', G.selR, G.selC, r, c)
-    return
-  }
-
-  const piece = G.pieces.find(p => p.r === r && p.c === c && p.owner === 'player')
-  if (piece) {
-    const sq = MCE.sq(piece.r, piece.c, G.mceGame)
-    const allLegal = MCE.variantLegalMoves(G.mceGame)
-    const pieceLegal = allLegal.filter(m => m.from === sq && m.flag !== 'action')
-    const safeMoves = [], safeAttacks = []
-    pieceLegal.forEach(m => {
-      const [mr, mc] = MCE.rc(m.to, G.mceGame)
-      if (m.flag === 'capture' || m.attackOnly) safeAttacks.push([mr, mc])
-      if (!m.attackOnly && m.flag !== 'capture') safeMoves.push([mr, mc])
-    })
-    G.selR = r; G.selC = c; G.legalMoves = safeMoves; G.legalAttacks = safeAttacks
-    showSelected(piece)
-  } else {
-    G.selR = null; G.selC = null; G.legalMoves = []; G.legalAttacks = []
-    document.getElementById('sel-info').innerHTML = '<span class="sel-info">Click a piece</span>'
-  }
-  drawBoard()
-}
-
-// ═══════════════════════════════════════════════════════════
-// APPLY MOVE
-// ═══════════════════════════════════════════════════════════
-function applyMove(owner, fr, fc, tr, tc) {
-  const piece = G.pieces.find(p => p.r === fr && p.c === fc && p.owner === owner)
-  if (!piece) return
-
-  const captured = G.pieces.find(p => p.r === tr && p.c === tc && p.owner !== owner)
-  const isCapture = !!captured
-
-  G.aiThinking = true
-
-  animateMove(piece, fr, fc, tr, tc, isCapture, () => {
-    const mceMove = DungeonMCE.findMCEMove(G.mceGame, fr, fc, tr, tc)
-    const mceUndo = mceMove ? MCE.makeMove(G.mceGame, mceMove) : null
-
-    G_undoStack.push({
-      pieceId: piece.id, fr, fc, tr, tc,
-      capturedPiece: captured ? { ...captured } : null,
-      owner, mceUndo
-    })
-    G_lastMove = { fr, fc, tr, tc }
-
-    if (captured && !mceUndo.captureIntercepted) {
-      if (owner === 'player') G.capturedByPlayer.push(captured.key)
-      else G.capturedByAi.push(captured.key)
-    }
-
-    if (captured && mceUndo.captureIntercepted) {
-      addLog(`${UNITS.troll.name} absorbs the blow!`)
-    }
-
-    if (G.mceGame._pendingAction && owner === 'player') {
-      const retreatMoves = MCE.legalMoves(G.mceGame);
-      if (retreatMoves.length === 0) {
-        G.mceGame._pendingAction = null;
-        MCE.advanceTurn(G.mceGame);
-      } else {
-        G.pieces = DungeonMCE.syncPiecesFromMCE(G.mceGame);
-        G.legalMoves = retreatMoves.map(m => MCE.rc(m.to, G.mceGame));
-        G.legalAttacks = [];
-        const pa = G.mceGame._pendingAction;
-        const [pr, pc] = MCE.rc(pa.from, G.mceGame);
-        G.selR = pr; G.selC = pc;
-        G.aiThinking = false;
-        document.getElementById('sel-info').innerHTML =
-          `<div class="sel-name">Salamander Retreat</div>
-           <div class="sel-meta">Click an adjacent square to retreat to</div>`;
-        drawBoard();
-        if (isCapture) flashCapture(tr, tc);
-        return;
-      }
-    }
-    if (G.mceGame._pendingAction && owner !== 'player') {
-      const retreatMoves = MCE.legalMoves(G.mceGame);
-      if (retreatMoves.length > 0) {
-        const pick = retreatMoves[Math.floor(Math.random() * retreatMoves.length)];
-        MCE.makeMove(G.mceGame, pick);
-        const [rr, rc] = MCE.rc(pick.to, G.mceGame);
-        addLog(`Salamander retreats to ${String.fromCharCode(97+rc)}${rr+1}`);
-      } else {
-        G.mceGame._pendingAction = null;
-        MCE.advanceTurn(G.mceGame);
-      }
-    }
-
-    G.pieces = DungeonMCE.syncPiecesFromMCE(G.mceGame)
-
-    const ownerLabel = owner === 'player' ? SP_INFO[G.playerSp].emoji + ' You'
-      : owner === 'ai' ? SP_INFO[G.aiSp].emoji + ' AI'
-      : owner === 'ai2' ? SP_INFO[G.ai2Sp].emoji + ' AI2'
-      : SP_INFO[G.ai3Sp].emoji + ' AI3'
-    const coord = `${String.fromCharCode(97+fc)}${fr+1}→${String.fromCharCode(97+tc)}${tr+1}`
-    const captureLabel = captured && !mceUndo.captureIntercepted ? ` ✕ ${UNITS[captured.key].name}` : ''
-    addLog(`${ownerLabel}: ${UNITS[piece.key].name} ${coord}${captureLabel}`)
-
-    const status = MCE.getStatus(G.mceGame)
-    if (status && status.startsWith && status.startsWith('win-')) {
-      const winner = status.substring(4)
-      G.selR = null; G.selC = null; G.legalMoves = []; G.legalAttacks = []
-      G.aiThinking = false
-      drawBoard()
-      if (isCapture) flashCapture(tr, tc)
-      return endGame(winner)
-    }
-
-    G.selR = null; G.selC = null; G.legalMoves = []; G.legalAttacks = []
-    G.turn = G.mceGame.turn
-
-    if (G.turn === 'player') {
-      G.aiThinking = false; updateUI(); drawBoard()
-      if (isCapture) flashCapture(tr, tc)
-    } else {
-      G.aiThinking = true; updateUI(); drawBoard()
-      if (isCapture) flashCapture(tr, tc)
-      G.aiTimer = setTimeout(runAi, 500 + Math.random() * 500)
-    }
-  })
-}
-
-// ═══════════════════════════════════════════════════════════
-// AI TURN — delegates to MCE negamax
-// ═══════════════════════════════════════════════════════════
-function runAi() {
-  const owner = G.turn
-
-  const move = DungeonMCE.pickAiMove(G.mceGame, 'medium')
-  if (!move) {
-    MCE.advanceTurn(G.mceGame)
-    G.turn = G.mceGame.turn
-    if (G.turn !== 'player') {
-      G.aiTimer = setTimeout(runAi, 400)
-    } else {
-      G.aiThinking = false; updateUI(); drawBoard()
-    }
-    return
-  }
-
-  if (move.flag === 'action') {
-    const targetPd = G.mceGame.pieceData[move.to]
-    MCE.makeMove(G.mceGame, move)
-    G.pieces = DungeonMCE.syncPiecesFromMCE(G.mceGame)
-    G.turn = G.mceGame.turn
-    if (targetPd) {
-      const sp = owner === 'ai' ? G.aiSp : owner === 'ai2' ? G.ai2Sp : G.ai3Sp
-      addLog(`${SP_INFO[sp].emoji} Shaman hexes ${UNITS[targetPd.key].name}!`)
-    }
-    if (G.turn !== 'player') {
-      updateUI(); drawBoard()
-      G.aiTimer = setTimeout(runAi, 500 + Math.random() * 500)
-    } else {
-      G.aiThinking = false; updateUI(); drawBoard()
-    }
-    return
-  }
-
-  const [fr, fc] = MCE.rc(move.from, G.mceGame)
-  const [tr, tc] = MCE.rc(move.to, G.mceGame)
-  applyMove(owner, fr, fc, tr, tc)
 }
