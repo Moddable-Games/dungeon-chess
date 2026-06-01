@@ -1413,23 +1413,23 @@ function dcPieceProvider(game, sqIdx, tileSize) {
   const sz = tileSize * 0.88
   const offset = (tileSize - sz) / 2
 
-  const g = svgEl('g', {})
-  g.appendChild(svgEl('ellipse', { cx: tileSize / 2, cy: tileSize - 4, rx: tileSize * 0.28, ry: 3.5, fill: 'rgba(0,0,0,0.60)' }))
+  const wrapper = svgEl('svg', { width: tileSize, height: tileSize, overflow: 'visible' })
+  wrapper.appendChild(svgEl('ellipse', { cx: tileSize / 2, cy: tileSize - 4, rx: tileSize * 0.28, ry: 3.5, fill: 'rgba(0,0,0,0.60)' }))
 
   if (G.pieceStyle !== 'classic') {
     const folder = G.pieceStyle === 'custom-a' ? 'pieces' : 'pieces-alt'
     const img = svgEl('image', { x: offset, y: offset, width: sz, height: sz, preserveAspectRatio: 'xMidYMid meet' })
     img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `assets/${folder}/${pd.key}.png`)
-    g.appendChild(img)
+    wrapper.appendChild(img)
   } else {
     const color = spToColor(ownerSp)
     const sid = color + FEN_CH[def.type]
     const use = svgEl('use', { href: `#piece-${sid}`, x: offset, y: offset, width: sz, height: sz })
-    g.appendChild(use)
-    appendPieceTint(g, ownerSp, offset, sz)
+    wrapper.appendChild(use)
+    appendPieceTint(wrapper, ownerSp, offset, sz)
   }
 
-  return g
+  return wrapper
 }
 
 function dcSurroundRenderer(container, game, boardRect) {
