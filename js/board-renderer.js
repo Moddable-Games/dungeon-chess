@@ -1355,62 +1355,6 @@ function dcTilePainter(svg, sqIdx, dr, dc, tileSize, isLight, game) {
   const g = svgEl('g', {})
   g.appendChild(svgEl('rect', { x: 0, y: 0, width: tileSize, height: tileSize, fill: 'red' }))
   return g
-  // TEMP: test red squares — remove below code skipped by early return
-
-  const cacheKey = `${map.id}-${dr}-${dc}-${tileSize}`
-  if (_tileCacheKey !== `${map.id}-${tileSize}`) {
-    _tileCache.clear()
-    _tileCacheKey = `${map.id}-${tileSize}`
-  }
-
-  if (_tileCache.has(cacheKey)) {
-    return _tileCache.get(cacheKey).cloneNode(true)
-  }
-
-  const g = svgEl('g', {})
-  const isWater = cell === 'w'
-
-  let fill = isWater ? (isLight ? SQ_WATER : SQ_WATER2)
-                     : (isLight ? SQ_LIGHT : SQ_DARK)
-  g.appendChild(svgEl('rect', { x: 0, y: 0, width: tileSize, height: tileSize, fill }))
-
-  if (!isWater) {
-    try {
-      drawStoneTexture(g, isLight)
-      drawFloorDetails(g, dr, dc, isLight)
-    } catch (e) { console.error('Tile render error:', dr, dc, e) }
-  }
-
-  if (isWater) {
-    const clipId = `mwclip-${dr}-${dc}`
-    const clipPath = svgEl('clipPath', { id: clipId })
-    clipPath.appendChild(svgEl('rect', { x: 0, y: 0, width: tileSize, height: tileSize }))
-    let defs = svg.querySelector('defs')
-    if (!defs) { defs = svgEl('defs', {}); svg.insertBefore(defs, svg.firstChild) }
-    defs.appendChild(clipPath)
-    const wg = svgEl('g', { 'clip-path': `url(#${clipId})`, 'pointer-events': 'none' })
-    wg.appendChild(svgEl('rect', { x: 0, y: 0, width: tileSize, height: tileSize, fill: 'rgba(60,100,160,0.08)' }))
-    for (let wi = 0; wi < 3; wi++) {
-      const wy = tileSize * (0.22 + wi * 0.26)
-      const wc = ['wva', 'wvb', 'wvc'][wi]
-      const wv = svgEl('path', {
-        d: `M -4 ${wy} Q ${tileSize*0.25} ${wy-4} ${tileSize/2} ${wy} Q ${tileSize*0.75} ${wy+4} ${tileSize+4} ${wy}`,
-        stroke: 'rgba(140,200,255,0.40)', 'stroke-width': 1.2, fill: 'none'
-      })
-      wv.setAttribute('class', wc)
-      wg.appendChild(wv)
-      const wv2 = svgEl('path', {
-        d: `M -4 ${wy+4} Q ${tileSize*0.30} ${wy+1} ${tileSize/2} ${wy+4} Q ${tileSize*0.70} ${wy+7} ${tileSize+4} ${wy+4}`,
-        stroke: 'rgba(80,150,220,0.22)', 'stroke-width': 0.8, fill: 'none'
-      })
-      wv2.setAttribute('class', ['wvc', 'wva', 'wvb'][wi])
-      wg.appendChild(wv2)
-    }
-    g.appendChild(wg)
-  }
-
-  _tileCache.set(cacheKey, g.cloneNode(true))
-  return g
 }
 
 function dcPieceProvider(game, sqIdx, tileSize) {
