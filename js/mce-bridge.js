@@ -51,6 +51,7 @@ function registerAllUnits() {
 
   MCE.registerVariant('dungeon-chess', {
     label: 'Dungeon Chess',
+    terrainSkip: (t) => t === 'w' || t === 2,
     moveFilter: dcMoveFilter,
     beforeMove: dcBeforeMove,
     afterMove: dcAfterMove,
@@ -274,61 +275,15 @@ function pawnAttacks(g, from, target) {
 function cannonReaches(g, from, target, dirs) {
   const tpd = g.pieceData[target];
   if (tpd && tpd.key === 'iron_golem') return false;
-  const [fr, fc] = MCE.rc(from, g);
-  for (const [dr, dc] of dirs) {
-    let nr = fr + dr, nc = fc + dc, screen = false;
-    while (MCE.onBoard(nr, nc, g)) {
-      const sq = MCE.sq(nr, nc, g);
-      if (isWaterAt(g, sq)) { nr += dr; nc += dc; continue; }
-      const tp = g.board[sq];
-      if (!screen) {
-        if (tp) screen = true;
-      } else {
-        if (sq === target) return true;
-        if (tp) break;
-      }
-      nr += dr; nc += dc;
-    }
-  }
-  return false;
+  return MCE.cannonReaches(g, from, target, dirs);
 }
 
 function slidesReach(g, from, target, dirs, waterBlock) {
-  const [fr, fc] = MCE.rc(from, g);
-  const [tr, tc] = MCE.rc(target, g);
-  for (const [dr, dc] of dirs) {
-    let nr = fr + dr, nc = fc + dc;
-    while (MCE.onBoard(nr, nc, g)) {
-      const sq = MCE.sq(nr, nc, g);
-      if (isWaterAt(g, sq)) {
-        if (waterBlock) break;
-        nr += dr; nc += dc; continue;
-      }
-      if (nr === tr && nc === tc) return true;
-      if (g.board[sq]) break;
-      nr += dr; nc += dc;
-    }
-  }
-  return false;
+  return MCE.slidesTo(g, from, target, dirs, waterBlock ? { waterBlock: true } : undefined);
 }
 
 function gappedSlidesReach(g, from, target, dirs) {
-  const [fr, fc] = MCE.rc(from, g);
-  const [tr, tc] = MCE.rc(target, g);
-  for (const [dr, dc] of dirs) {
-    let nr = fr + dr, nc = fc + dc, gapped = false;
-    while (MCE.onBoard(nr, nc, g)) {
-      const sq = MCE.sq(nr, nc, g);
-      if (isWaterAt(g, sq)) { nr += dr; nc += dc; continue; }
-      if (nr === tr && nc === tc) return true;
-      if (g.board[sq]) {
-        if (gapped) break;
-        gapped = true;
-      }
-      nr += dr; nc += dc;
-    }
-  }
-  return false;
+  return MCE.gappedSlidesTo(g, from, target, dirs);
 }
 
 // ── PAWN types ──
