@@ -126,10 +126,11 @@ Pure client-side JavaScript. No frameworks, no build tools, no runtime dependenc
 - Register Dungeon Chess as MCE variant plugin with `beforeMove`, `afterMove`, `evaluate`, and `restoreState` hooks
 - Migrate troll thick-skinned to MCE `beforeMove` capture interception
 - Migrate demonics explosion to MCE `afterMove` with `mutateBoard` (proper undo support)
-- Migrate hex immobilisation from manual counters to MCE effects system (`duration: 2`)
+- Migrate hex to MCE action move system — AI now evaluates hex strategically via negamax (no more 25% random chance)
 - Vendor `chess-variants.js` and `chess-ai.js` from MCE; update `pull-mce.sh`
-- Remove ~160 lines of hand-rolled AI code (pickAiMove, isSquareAttackedBy, isSquareDefendedBy)
+- Remove ~200 lines of hand-rolled AI/hex code (pickAiMove, isSquareAttackedBy, isSquareDefendedBy, aiTryHex)
 - Custom XP-based position evaluator for MCE AI (maps unit costs to centipawn values)
+- Add MCE decoupling roadmap (docs/ROADMAP-MCE-DECOUPLING.md) — 7-phase plan to make DC a pure skin/plugin
 - Version 1.2.0
 
 #### 2026-05-29
