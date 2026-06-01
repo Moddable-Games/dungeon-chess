@@ -14,15 +14,14 @@ function drawBoard(excludePieceId) {
   if (G.map && !_tileLocked) computeTile(G.map)
   if (_lastTile !== null && _lastTile !== TILE) invalidateStaticBoard()
   _lastTile = TILE
-  const piecesToDraw = excludePieceId
-    ? G.pieces.filter(p => p.id !== excludePieceId)
-    : G.pieces
   renderBoard(
-    G.map, piecesToDraw,
+    G.map, null,
     G.selR, G.selC,
     G.legalMoves, G.legalAttacks,
     onBoardClick,
-    G_lastMove
+    G_lastMove,
+    undefined,
+    excludePieceId
   )
 }
 
@@ -44,7 +43,6 @@ function createBattleController() {
     aiDifficulty: 'medium',
 
     customRender: function(game, state) {
-      G.pieces = DungeonMCE.syncPiecesFromMCE(game)
       G.turn = game.turn
       G.aiThinking = state.aiThinking
       if (!state.aiThinking && !game._pendingAction) {
@@ -72,14 +70,15 @@ function createBattleController() {
 
     onSquareClick: function(sq, game, api) {
       if (G.hexTargeting) {
-        const [r, c] = MCE.rc(sq, game)
-        const target = G.pieces.find(p => p.r === r && p.c === c && p.owner !== 'player')
-        if (target) {
-          const shaman = G.pieces.find(p => p.id === G.hexTargeting)
-          const mceMove = DungeonMCE.findMCEMove(game, shaman.r, shaman.c, target.r, target.c, 'action')
+        const targetPd = game.pieceData[sq]
+        if (targetPd && targetPd.owner !== 'player') {
+          const shamanPd = G.hexTargeting
+          const [sr, sc] = MCE.rc(shamanPd.sq, game)
+          const [tr, tc] = MCE.rc(sq, game)
+          const mceMove = DungeonMCE.findMCEMove(game, sr, sc, tr, tc, 'action')
           if (mceMove) {
             api.executeMove(mceMove)
-            addLog(`⚡ Shaman hexes ${UNITS[target.key].name}!`)
+            addLog(`⚡ Shaman hexes ${UNITS[targetPd.key].name}!`)
           }
           G.hexTargeting = null
         }
@@ -93,10 +92,8 @@ function createBattleController() {
       const [tr, tc] = MCE.rc(move.to, game)
       const pd = game.pieceData[move.from]
       if (!pd) { done(); return }
-      const piece = G.pieces.find(p => p.r === fr && p.c === fc && p.owner === pd.owner)
-      if (!piece) { done(); return }
       const captured = game.board[move.to]
-      animateMove(piece, fr, fc, tr, tc, !!captured, done)
+      animateMove(pd, fr, fc, tr, tc, !!captured, done)
     },
 
     onCaptureEffect: function(sq, captured) {
@@ -134,7 +131,6 @@ function createBattleController() {
     },
 
     onPendingAction: function(action, legalMoves) {
-      G.pieces = DungeonMCE.syncPiecesFromMCE(G.mceGame)
       G.legalMoves = legalMoves.map(m => MCE.rc(m.to, G.mceGame))
       G.legalAttacks = []
       const [pr, pc] = MCE.rc(action.from, G.mceGame)
@@ -153,8 +149,8 @@ function createBattleController() {
     onSelect: function(sq, piece, moves) {
       const pd = G.mceGame.pieceData[sq]
       if (pd) {
-        const p = G.pieces.find(pp => pp.r === MCE.rc(sq, G.mceGame)[0] && pp.c === MCE.rc(sq, G.mceGame)[1])
-        if (p) showSelected(p)
+        const [r, c] = MCE.rc(sq, G.mceGame)
+        showSelected({ key: pd.key, owner: pd.owner, r, c, id: pd.id })
       }
     },
 
@@ -166,7 +162,6 @@ function createBattleController() {
 
     onTurnChange: function(turn) {
       G.turn = turn
-      G.pieces = DungeonMCE.syncPiecesFromMCE(G.mceGame)
     }
   })
 
@@ -185,21 +180,21 @@ function destroyBattleController() {
 // ═══════════════════════════════════════════════════════════
 const MOVE_DURATION = 350
 
-function animateMove(piece, fr, fc, tr, tc, isCapture, callback) {
+function animateMove(pd, fr, fc, tr, tc, isCapture, callback) {
   const svg = document.getElementById('dungeon-board')
   if (!svg || !G.map) { callback(); return }
 
-  drawBoard(piece.id)
+  drawBoard(pd.id)
 
   const fromX = fc * TILE
   const fromY = fr * TILE
   const toX = tc * TILE
   const toY = tr * TILE
 
-  const def = UNITS[piece.key]
-  const ownerSp = piece.owner === 'player' ? G.playerSp
-    : piece.owner === 'ai' ? G.aiSp
-    : piece.owner === 'ai2' ? G.ai2Sp : G.ai3Sp
+  const def = UNITS[pd.key]
+  const ownerSp = pd.owner === 'player' ? G.playerSp
+    : pd.owner === 'ai' ? G.aiSp
+    : pd.owner === 'ai2' ? G.ai2Sp : G.ai3Sp
   const color = spToColor(ownerSp)
   const sid = color + FEN_CH[def.type]
   const sz = TILE * 0.88

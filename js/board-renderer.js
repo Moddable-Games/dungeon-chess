@@ -366,7 +366,8 @@ function renderBoardStatic(map, svgId) {
   }
 }
 
-function renderBoard(map, pieces, selectedR, selectedC, legalMoves, legalAttacks, onSquareClick, lastMove, svgId) {
+function renderBoard(map, pieces, selectedR, selectedC, legalMoves, legalAttacks, onSquareClick, lastMove, svgId, excludePieceId) {
+  const game = G.mceGame
   boardState = { map, selectedR, selectedC, legalMoves, legalAttacks, onSquareClick }
 
   const targetId = svgId || 'dungeon-board'
@@ -395,7 +396,9 @@ function renderBoard(map, pieces, selectedR, selectedC, legalMoves, legalAttacks
       const isSelected = selectedR === r && selectedC === c
       const isLegal = legalMoves.some(([lr, lc]) => lr === r && lc === c)
       const isAttack = legalAttacks.some(([ar, ac]) => ar === r && ac === c)
-      const piece = pieces.find(p => p.r === r && p.c === c)
+      const sq = game ? r * cols + c : -1
+      let piece = game && game.pieceData[sq] ? game.pieceData[sq] : (pieces ? pieces.find(p => p.r === r && p.c === c) : null)
+      if (piece && excludePieceId && piece.id === excludePieceId) piece = null
       const isLastFrom = lastMove && lastMove.fr === r && lastMove.fc === c
       const isLastTo = lastMove && lastMove.tr === r && lastMove.tc === c
 

@@ -26,7 +26,7 @@ function kbAnnounceSquare() {
   const { cursorR, cursorC } = KB
   const file = String.fromCharCode(97 + cursorC)
   const rank = cursorR + 1
-  const piece = G.pieces.find(p => p.r === cursorR && p.c === cursorC)
+  const piece = G.mceGame ? DungeonMCE.getPieceAt(G.mceGame, cursorR, cursorC) : null
   let msg = `${file}${rank}`
   if (piece) {
     const def = UNITS[piece.key]
@@ -48,9 +48,8 @@ function kbAnnounceSquare() {
 
 function kbAnnounceAction() {
   const { cursorR, cursorC } = KB
-  const piece = G.pieces.find(
-    p => p.r === cursorR && p.c === cursorC && p.owner === 'player'
-  )
+  const pd = G.mceGame ? DungeonMCE.getPieceAt(G.mceGame, cursorR, cursorC) : null
+  const piece = pd && pd.owner === 'player' ? pd : null
   if (piece) {
     const def = UNITS[piece.key]
     kbAnnounce(`Selected ${def.name}`)

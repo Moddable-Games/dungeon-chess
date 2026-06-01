@@ -539,5 +539,33 @@ function pickAiMove(g, difficulty) {
   return MCE.aiPickMove(g, 50, { difficulty: difficulty || 'medium' });
 }
 
-return { registerAllUnits, createDungeonGame, syncPiecesFromMCE, getLegal, findMCEMove, isInCheck, pickAiMove };
+function getPieceAt(g, r, c) {
+  const sq = MCE.sq(r, c, g);
+  return g.pieceData[sq] || null;
+}
+
+function countPieces(g, owner) {
+  let count = 0;
+  const total = g.rows * g.cols;
+  for (let i = 0; i < total; i++) {
+    const pd = g.pieceData[i];
+    if (pd && pd.owner === owner) count++;
+  }
+  return count;
+}
+
+function allPieces(g) {
+  const result = [];
+  const total = g.rows * g.cols;
+  for (let i = 0; i < total; i++) {
+    if (g.board[i] && g.pieceData[i]) {
+      const [r, c] = MCE.rc(i, g);
+      const pd = g.pieceData[i];
+      result.push({ sq: i, r, c, id: pd.id, key: pd.key, owner: pd.owner });
+    }
+  }
+  return result;
+}
+
+return { registerAllUnits, createDungeonGame, syncPiecesFromMCE, getLegal, findMCEMove, isInCheck, pickAiMove, getPieceAt, countPieces, allPieces };
 })();

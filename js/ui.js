@@ -25,9 +25,9 @@ function updateUI() {
   const pi2=SP_INFO[G.playerSp], ai2i=SP_INFO[G.aiSp]
   document.getElementById('p-label').textContent=`${pi2.emoji} YOU`
   document.getElementById('a-label').textContent=`${ai2i.emoji} AI${G.numPlayers===4?' 1':''}`
-  document.getElementById('p-pieces').textContent=`Pieces: ${G.pieces.filter(p=>p.owner==='player').length}`
-  document.getElementById('a-pieces').textContent=`Pieces: ${G.pieces.filter(p=>p.owner==='ai').length}${
-    G.numPlayers===4 && G.ai2Sp ? ` | ${SP_INFO[G.ai2Sp].emoji}${G.pieces.filter(p=>p.owner==='ai2').length} | ${SP_INFO[G.ai3Sp].emoji}${G.pieces.filter(p=>p.owner==='ai3').length}`:''}`
+  document.getElementById('p-pieces').textContent=`Pieces: ${G.mceGame ? DungeonMCE.countPieces(G.mceGame,'player') : 0}`
+  document.getElementById('a-pieces').textContent=`Pieces: ${G.mceGame ? DungeonMCE.countPieces(G.mceGame,'ai') : 0}${
+    G.numPlayers===4 && G.ai2Sp && G.mceGame ? ` | ${SP_INFO[G.ai2Sp].emoji}${DungeonMCE.countPieces(G.mceGame,'ai2')} | ${SP_INFO[G.ai3Sp].emoji}${DungeonMCE.countPieces(G.mceGame,'ai3')}`:''}`
   document.getElementById('p-cap').textContent=G.capturedByPlayer.length
     ?'Cap: '+G.capturedByPlayer.map(k=>UNITS[k].name).join(', ')
     :'Captured: none'
@@ -46,7 +46,7 @@ function showSelected(p){
     const shamanSq = MCE.sq(p.r, p.c, G.mceGame)
     const shamanPd = G.mceGame && G.mceGame.pieceData[shamanSq]
     if (shamanPd && !shamanPd.hexUsed) {
-      hexBtn = `<button class="btn sm btn-hex" onclick="playerHex(${p.id})">⚡ HEX</button>`
+      hexBtn = `<button class="btn sm btn-hex" onclick="playerHex(${shamanSq})">⚡ HEX</button>`
     }
   }
   document.getElementById('sel-info').innerHTML=
@@ -57,10 +57,10 @@ function showSelected(p){
      ${hexBtn}`
 }
 
-function playerHex(shamanId) {
-  G.hexTargeting = shamanId
+function playerHex(shamanSq) {
+  G.hexTargeting = { sq: shamanSq }
   G.legalMoves = []
-  G.legalAttacks = G.pieces
+  G.legalAttacks = DungeonMCE.allPieces(G.mceGame)
     .filter(p => p.owner !== 'player')
     .map(p => [p.r, p.c])
   document.getElementById('sel-info').innerHTML =
@@ -114,7 +114,7 @@ function endGame(winner){
   const mvp = G.capturedByPlayer.length
     ? G.capturedByPlayer.reduce((best, k) => UNITS[k].cost > UNITS[best].cost ? k : best)
     : null
-  const survivors = G.pieces.filter(p => p.owner === 'player')
+  const survivors = G.mceGame ? DungeonMCE.allPieces(G.mceGame).filter(p => p.owner === 'player') : []
   const bestSurvivor = survivors.length
     ? survivors.reduce((best, p) => UNITS[p.key].cost > UNITS[best.key].cost ? p : best)
     : null
@@ -470,11 +470,12 @@ function renderAtmosphereCanvas(canvas) {
 // BUTTON WIRING
 // ═══════════════════════════════════════════════════════════
 document.getElementById('confirm-place-btn').onclick = () => {
-  // Build G.pieces from placement — AI pieces already set, add player pieces
-  let id = Math.max(...G.pieces.map(p=>p.id), 0) + 1
+  // Build initial pieces from placement — AI pieces already in G.pieces, add player
+  const initPieces = [...G.pieces]
+  let id = Math.max(...initPieces.map(p=>p.id), 0) + 1
   Object.entries(PL.placedSquares).forEach(([sqKey, {key}]) => {
     const [r, c] = sqKey.split(',').map(Number)
-    G.pieces.push({ id: id++, key, r, c, owner: 'player' })
+    initPieces.push({ id: id++, key, r, c, owner: 'player' })
   })
   G.capturedByPlayer=[]; G.capturedByAi=[]; G.history=[]
   const orderVal = document.querySelector('[name="turn-order"]:checked').value
@@ -482,10 +483,9 @@ document.getElementById('confirm-place-btn').onclick = () => {
     ? (Math.random() < 0.5 ? 'player' : 'ai') : orderVal
   G.turn = firstTurn; G.aiThinking = false; G.selR=null; G.selC=null
   G.legalMoves=[]; G.legalAttacks=[]
-  // Initialize MCE game state
   DungeonMCE.registerAllUnits()
   const players = G.numPlayers === 4 ? ['player','ai','ai2','ai3'] : ['player','ai']
-  G.mceGame = DungeonMCE.createDungeonGame(G.map, G.pieces, players)
+  G.mceGame = DungeonMCE.createDungeonGame(G.map, initPieces, players)
   G.mceGame.turn = firstTurn
   G.mceGame.turnIndex = G.mceGame.players.indexOf(firstTurn)
   if (typeof rpSaveInitial === 'function') rpSaveInitial()
@@ -525,14 +525,13 @@ document.getElementById('forfeit-btn').onclick = () => {
   if (G_controller) G_controller.forfeit()
   const aiOwners = G.numPlayers===4 ? ['ai','ai2','ai3'] : ['ai']
   const winner = aiOwners.reduce((best,o) =>
-    G.pieces.filter(p=>p.owner===o).length > G.pieces.filter(p=>p.owner===best).length ? o : best
+    DungeonMCE.countPieces(G.mceGame,o) > DungeonMCE.countPieces(G.mceGame,best) ? o : best
   , aiOwners[0])
   endGame(winner)
 }
 document.getElementById('undo-btn').onclick = () => {
   if (!G_controller || G.turn !== 'player') return
   G_controller.undo()
-  G.pieces = DungeonMCE.syncPiecesFromMCE(G.mceGame)
   G.turn = G.mceGame.turn
   G.capturedByPlayer.pop()
   G.capturedByAi.pop()

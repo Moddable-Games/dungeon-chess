@@ -7,7 +7,7 @@ const RP = { initialPieces:[], moves:[], currentIdx:-1, pieces:[],
   playing:false, timer:null, speed:800 }
 
 function rpSaveInitial() {
-  RP.initialPieces = G.pieces.map(p => ({ ...p }))
+  RP.initialPieces = G.mceGame ? DungeonMCE.allPieces(G.mceGame) : []
 }
 
 function rpSaveMoves() {

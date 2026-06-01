@@ -45,7 +45,7 @@ function ttHandleHover(e) {
     return
   }
 
-  const piece = G.pieces.find(p => p.r === hoverR && p.c === hoverC)
+  const piece = G.mceGame ? DungeonMCE.getPieceAt(G.mceGame, hoverR, hoverC) : null
   if (!piece) {
     ttHide()
     return
@@ -127,9 +127,7 @@ function ttGetAbilities(unitKey) { return TT_ABILITIES[unitKey] || '' }
 // Show tooltip on keyboard cursor focus
 function ttShowForCursor() {
   if (!KB.active || !G.map) return
-  const piece = G.pieces.find(
-    p => p.r === KB.cursorR && p.c === KB.cursorC
-  )
+  const piece = G.mceGame ? DungeonMCE.getPieceAt(G.mceGame, KB.cursorR, KB.cursorC) : null
   if (!piece) {
     ttHide()
     return
