@@ -30,7 +30,13 @@ function createBattleController() {
   G_controller = MCE.createGameController(boardEl, G.mceGame, {
     players: players,
     aiDifficulty: 'medium',
-    renderOpts: getDCRenderOpts(),
+    renderOpts: {
+      size: G.map.cols * TILE,
+      tilePainter: dcTilePainter,
+      pieceProvider: dcPieceProvider,
+      effectOverlay: dcEffectOverlay,
+      afterRender: dcAfterRender
+    },
 
     onRender: function(game) {
       G.turn = game.turn
