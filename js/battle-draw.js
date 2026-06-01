@@ -149,13 +149,15 @@ function handleSquareClick(r, c) {
   if (G.hexTargeting) {
     const target = G.pieces.find(p => p.r === r && p.c === c && p.owner !== 'player')
     if (target) {
-      G.hexUsed[G.hexTargeting] = true
-      const targetSq = MCE.sq(target.r, target.c, G.mceGame)
-      DungeonMCE.applyHex(G.mceGame, targetSq, null)
-      addLog(`⚡ Shaman hexes ${UNITS[target.key].name}!`)
+      const shaman = G.pieces.find(p => p.id === G.hexTargeting)
+      const mceMove = DungeonMCE.findMCEMove(G.mceGame, shaman.r, shaman.c, target.r, target.c, 'action')
+      if (mceMove) {
+        MCE.makeMove(G.mceGame, mceMove)
+        G.pieces = DungeonMCE.syncPiecesFromMCE(G.mceGame)
+        addLog(`⚡ Shaman hexes ${UNITS[target.key].name}!`)
+      }
       G.hexTargeting = null
       G.selR = null; G.selC = null; G.legalMoves = []; G.legalAttacks = []
-      MCE.advanceTurn(G.mceGame)
       G.turn = G.mceGame.turn
       document.getElementById('sel-info').innerHTML = '<span class="sel-info">Click a piece</span>'
       if (G.turn !== 'player') {
@@ -202,8 +204,8 @@ function handleSquareClick(r, c) {
   const piece = G.pieces.find(p => p.r === r && p.c === c && p.owner === 'player')
   if (piece) {
     const sq = MCE.sq(piece.r, piece.c, G.mceGame)
-    const allLegal = MCE.legalMoves(G.mceGame)
-    const pieceLegal = allLegal.filter(m => m.from === sq)
+    const allLegal = MCE.variantLegalMoves(G.mceGame)
+    const pieceLegal = allLegal.filter(m => m.from === sq && m.flag !== 'action')
     const safeMoves = [], safeAttacks = []
     pieceLegal.forEach(m => {
       const [mr, mc] = MCE.rc(m.to, G.mceGame)
@@ -324,53 +326,11 @@ function applyMove(owner, fr, fc, tr, tc) {
   })
 }
 
-function aiTryHex(owner) {
-  if (!G.hexUsed) return false;
-  const shamans = G.pieces.filter(p => p.key === 'shaman' && p.owner === owner && !G.hexUsed[p.id]);
-  if (!shamans.length) return false;
-  const enemies = G.pieces.filter(p => p.owner !== owner);
-  if (!enemies.length) return false;
-
-  const myKing = G.pieces.find(p => p.owner === owner && UNITS[p.key].type === PT.K);
-  const target = enemies.reduce((best, e) => {
-    let score = UNITS[e.key].cost;
-    if (myKing) {
-      const dist = Math.abs(e.r - myKing.r) + Math.abs(e.c - myKing.c);
-      if (dist <= 2) score += 25;
-    }
-    let bestScore = UNITS[best.key].cost;
-    if (myKing) {
-      const dist = Math.abs(best.r - myKing.r) + Math.abs(best.c - myKing.c);
-      if (dist <= 2) bestScore += 25;
-    }
-    return score > bestScore ? e : best;
-  });
-
-  if (UNITS[target.key].type === PT.K) return false;
-  const shaman = shamans[0];
-  G.hexUsed[shaman.id] = true;
-  const targetSq = MCE.sq(target.r, target.c, G.mceGame);
-  DungeonMCE.applyHex(G.mceGame, targetSq, null);
-  const sp = owner === 'ai' ? G.aiSp : owner === 'ai2' ? G.ai2Sp : G.ai3Sp;
-  addLog(`${SP_INFO[sp].emoji} Shaman hexes ${UNITS[target.key].name}!`);
-  MCE.advanceTurn(G.mceGame);
-  G.turn = G.mceGame.turn;
-  return true;
-}
-
 // ═══════════════════════════════════════════════════════════
 // AI TURN — delegates to MCE negamax
 // ═══════════════════════════════════════════════════════════
 function runAi() {
   const owner = G.turn
-  if (Math.random() < 0.25 && aiTryHex(owner)) {
-    if (G.turn !== 'player') {
-      G.aiTimer = setTimeout(runAi, 500 + Math.random() * 500)
-    } else {
-      G.aiThinking = false; updateUI(); drawBoard()
-    }
-    return
-  }
 
   const move = DungeonMCE.pickAiMove(G.mceGame, 'medium')
   if (!move) {
@@ -378,6 +338,24 @@ function runAi() {
     G.turn = G.mceGame.turn
     if (G.turn !== 'player') {
       G.aiTimer = setTimeout(runAi, 400)
+    } else {
+      G.aiThinking = false; updateUI(); drawBoard()
+    }
+    return
+  }
+
+  if (move.flag === 'action') {
+    const targetPd = G.mceGame.pieceData[move.to]
+    MCE.makeMove(G.mceGame, move)
+    G.pieces = DungeonMCE.syncPiecesFromMCE(G.mceGame)
+    G.turn = G.mceGame.turn
+    if (targetPd) {
+      const sp = owner === 'ai' ? G.aiSp : owner === 'ai2' ? G.ai2Sp : G.ai3Sp
+      addLog(`${SP_INFO[sp].emoji} Shaman hexes ${UNITS[targetPd.key].name}!`)
+    }
+    if (G.turn !== 'player') {
+      updateUI(); drawBoard()
+      G.aiTimer = setTimeout(runAi, 500 + Math.random() * 500)
     } else {
       G.aiThinking = false; updateUI(); drawBoard()
     }

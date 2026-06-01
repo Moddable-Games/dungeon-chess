@@ -51,6 +51,7 @@ function registerAllUnits() {
 
   MCE.registerVariant('dungeon-chess', {
     label: 'Dungeon Chess',
+    moveFilter: dcMoveFilter,
     beforeMove: dcBeforeMove,
     afterMove: dcAfterMove,
     evaluate: dcEvaluate,
@@ -60,7 +61,32 @@ function registerAllUnits() {
 
 // ── VARIANT HOOKS ──
 
+function dcMoveFilter(g, moves) {
+  const total = g.rows * g.cols;
+  for (let i = 0; i < total; i++) {
+    if (!g.board[i] || !g.pieceData[i]) continue;
+    const pd = g.pieceData[i];
+    if (pd.key !== 'shaman' || pd.owner !== g.turn || pd.hexUsed) continue;
+    for (let j = 0; j < total; j++) {
+      if (!g.board[j] || !g.pieceData[j]) continue;
+      const tpd = g.pieceData[j];
+      if (tpd.owner === g.turn || tpd.isKing) continue;
+      moves.push({ from: i, to: j, flag: 'action' });
+    }
+  }
+  return moves;
+}
+
 function dcBeforeMove(g, move, undo) {
+  if (move.flag === 'action') {
+    const pd = g.pieceData[move.from];
+    if (pd && pd.key === 'shaman') {
+      undo._hexShamanSq = move.from;
+      pd.hexUsed = true;
+      MCE.addEffect(g, undo, { sq: move.to, type: 'hex', duration: 2 });
+    }
+    return;
+  }
   const targetPd = g.pieceData[move.to];
   if (targetPd && targetPd.key === 'troll' && !targetPd.wounded) {
     undo._trollWoundedSq = move.to;
@@ -115,6 +141,10 @@ function dcAfterMove(g, move, undo) {
 }
 
 function dcRestoreState(g, undo) {
+  if (undo._hexShamanSq !== undefined) {
+    const pd = g.pieceData[undo._hexShamanSq];
+    if (pd) pd.hexUsed = false;
+  }
   if (undo._trollWoundedSq !== undefined) {
     const pd = g.pieceData[undo._trollWoundedSq];
     if (pd) pd.wounded = false;
@@ -693,8 +723,8 @@ function syncPiecesFromMCE(g) {
 
 function getLegal(piece, g) {
   const sq = MCE.sq(piece.r, piece.c, g);
-  const allMoves = MCE.legalMoves(g);
-  const pieceMoves = allMoves.filter(m => m.from === sq);
+  const allMoves = MCE.variantLegalMoves(g);
+  const pieceMoves = allMoves.filter(m => m.from === sq && m.flag !== 'action');
   const moves = [], attacks = [];
   pieceMoves.forEach(m => {
     const [r, c] = MCE.rc(m.to, g);
@@ -708,24 +738,20 @@ function getLegal(piece, g) {
   return { moves, attacks };
 }
 
-function findMCEMove(g, fr, fc, tr, tc) {
+function findMCEMove(g, fr, fc, tr, tc, flag) {
   const fromSq = MCE.sq(fr, fc, g);
   const toSq = MCE.sq(tr, tc, g);
-  const allMoves = MCE.legalMoves(g);
-  return allMoves.find(m => m.from === fromSq && m.to === toSq);
+  const allMoves = MCE.variantLegalMoves(g);
+  return allMoves.find(m => m.from === fromSq && m.to === toSq && (!flag || m.flag === flag));
 }
 
 function isInCheck(owner, g) {
   return MCE.inCheck(g, owner);
 }
 
-function applyHex(g, targetSq, undo) {
-  MCE.addEffect(g, undo || { _effectsSnapshot: null }, { sq: targetSq, type: 'hex', duration: 2 });
-}
-
 function pickAiMove(g, difficulty) {
   return MCE.aiPickMove(g, 50, { difficulty: difficulty || 'medium' });
 }
 
-return { registerAllUnits, createDungeonGame, syncPiecesFromMCE, getLegal, findMCEMove, isInCheck, applyHex, pickAiMove };
+return { registerAllUnits, createDungeonGame, syncPiecesFromMCE, getLegal, findMCEMove, isInCheck, pickAiMove };
 })();
