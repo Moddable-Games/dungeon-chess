@@ -10,25 +10,13 @@ let _lastTile = null
 let _tileLocked = false
 function lockTileSize() { _tileLocked = true }
 function unlockTileSize() { _tileLocked = false }
-function drawBoard(excludePieceId) {
-  if (G.map && !_tileLocked) computeTile(G.map)
-  if (_lastTile !== null && _lastTile !== TILE) invalidateStaticBoard()
-  _lastTile = TILE
-  renderBoard(
-    G.map, null,
-    G.selR, G.selC,
-    G.legalMoves, G.legalAttacks,
-    onBoardClick,
-    G_lastMove,
-    undefined,
-    excludePieceId
-  )
-}
 
-function onBoardClick(r, c) {
+function renderWithExclude(excludeSq) {
   if (!G_controller) return
-  const sq = MCE.sq(r, c, G.mceGame)
-  G_controller.handleClick(sq)
+  const opts = getDCRenderOpts()
+  opts.excludePiece = excludeSq
+  const boardEl = document.getElementById('mce-board-container')
+  MCE.renderBoard(boardEl, G.mceGame, opts)
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -38,35 +26,15 @@ function createBattleController() {
   const players = {}
   G.mceGame.players.forEach(p => { players[p] = p === 'player' ? 'human' : 'ai' })
 
-  const boardEl = document.getElementById('board-wrap')
+  const boardEl = document.getElementById('mce-board-container')
   G_controller = MCE.createGameController(boardEl, G.mceGame, {
     players: players,
     aiDifficulty: 'medium',
+    renderOpts: getDCRenderOpts(),
 
-    customRender: function(game, state) {
+    onRender: function(game) {
       G.turn = game.turn
-      G.aiThinking = state.aiThinking
-      if (!state.aiThinking && !game._pendingAction) {
-        G.selR = null; G.selC = null
-        G.legalMoves = []; G.legalAttacks = []
-        if (state.selected !== null) {
-          const moves = state.getLegalMoves().filter(m => m.from === state.selected)
-          const [sr, sc] = MCE.rc(state.selected, game)
-          G.selR = sr; G.selC = sc
-          moves.forEach(m => {
-            const [mr, mc] = MCE.rc(m.to, game)
-            if (m.flag === 'capture' || m.attackOnly) G.legalAttacks.push([mr, mc])
-            if (!m.attackOnly && m.flag !== 'capture') G.legalMoves.push([mr, mc])
-          })
-        }
-      }
-      if (state.lastMove) {
-        const [fr, fc] = MCE.rc(state.lastMove.from, game)
-        const [tr, tc] = MCE.rc(state.lastMove.to, game)
-        G_lastMove = { fr, fc, tr, tc }
-      }
       updateUI()
-      drawBoard()
     },
 
     onSquareClick: function(sq, game, api) {
@@ -184,7 +152,8 @@ function animateMove(pd, fr, fc, tr, tc, isCapture, callback) {
   const svg = document.getElementById('dungeon-board')
   if (!svg || !G.map) { callback(); return }
 
-  drawBoard(pd.id)
+  const fromSq = MCE.sq(fr, fc, G.mceGame)
+  renderWithExclude(fromSq)
 
   const fromX = fc * TILE
   const fromY = fr * TILE

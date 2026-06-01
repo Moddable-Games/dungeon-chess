@@ -83,7 +83,6 @@ function show(id) {
   if (id==='rules' && typeof renderRulesUnitTable === 'function') renderRulesUnitTable()
   if (id==='replay' && typeof rpBuildLog === 'function') rpBuildLog()
   if (id==='battle' && typeof ttInit === 'function') ttInit()
-  // canvas surround drawn after drawBoard() in confirm-place-btn handler
 }
 
 // ═══════════════════════════════════════════════════════════

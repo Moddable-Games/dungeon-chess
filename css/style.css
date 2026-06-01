@@ -448,6 +448,8 @@ h1,h2,h3,h4 { font-family:'Cinzel',serif; }
 .board-wrap { position:relative; display:inline-block; border:2px solid var(--border); border-radius:8px;
   transition:box-shadow 0.4s ease; }
 #board-wrap { box-shadow:0 8px 32px rgba(0,0,0,0.8); background:#0a0a12; }
+#mce-board-container { position:absolute; top:0; left:0; }
+#mce-board-container svg { pointer-events:all; overflow:visible; touch-action:manipulation; display:block; }
 .board-canvas { display:block; }
 .board-svg { position:absolute; top:0; left:0; pointer-events:all; overflow:visible; touch-action:manipulation; }
 .board-lights { position:absolute; top:0; left:0; pointer-events:none; mix-blend-mode:screen; z-index:2; }

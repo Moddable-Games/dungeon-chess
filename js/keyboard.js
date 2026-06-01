@@ -74,17 +74,17 @@ function kbMoveCursor(key, map) {
     KB.cursorC = nextC
   }
 
-  drawBoard()
+  if (G_controller) G_controller.render()
   kbAnnounceSquare()
 }
 
 function kbActivate() {
   if (!KB.active) {
     KB.active = true
-    drawBoard()
+    if (G_controller) G_controller.render()
     return
   }
-  onBoardClick(KB.cursorR, KB.cursorC)
+  if (G_controller) G_controller.handleClick(MCE.sq(KB.cursorR, KB.cursorC, G.mceGame))
   kbAnnounceAction()
 }
 
@@ -96,7 +96,7 @@ function kbDeselect() {
     G.legalAttacks = []
     document.getElementById('sel-info').innerHTML =
       '<span class="sel-info">Click a piece</span>'
-    drawBoard()
+    if (G_controller) G_controller.render()
     kbAnnounce('Selection cleared')
   }
 }

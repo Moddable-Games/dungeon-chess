@@ -1477,6 +1477,10 @@ function dcEffectOverlay(svg, effect, x, y, tileSize, game) {
 }
 
 function dcAfterRender(svg, game, tileSize, opts) {
+  svg.id = 'dungeon-board'
+  svg.classList.add('board-svg')
+  svg.setAttribute('tabindex', '0')
+  svg.setAttribute('aria-label', 'Game board - use arrow keys to navigate, Enter to select')
   ensureSpriteDefs(svg)
   if (typeof kbRenderCursor === 'function') kbRenderCursor(svg, tileSize)
 }
@@ -1488,7 +1492,6 @@ function getDCRenderOpts() {
     size: map.cols * TILE,
     tilePainter: dcTilePainter,
     pieceProvider: dcPieceProvider,
-    surroundRenderer: dcSurroundRenderer,
     effectOverlay: dcEffectOverlay,
     afterRender: dcAfterRender
   }
