@@ -1,6 +1,6 @@
 'use strict'
 // ═══════════════════════════════════════════════════════════
-// DRAW BOARD (calls SVG renderer)
+// BATTLE CONTROLLER + ANIMATION
 // ═══════════════════════════════════════════════════════════
 let G_lastMove = null
 let G_controller = null
@@ -11,49 +11,32 @@ let _tileLocked = false
 function lockTileSize() { _tileLocked = true }
 function unlockTileSize() { _tileLocked = false }
 
-function drawBoard(excludePieceId) {
-  renderBoard(G.map, null, G.selR, G.selC, G.legalMoves, G.legalAttacks, function(r, c) {
-    if (G_controller) G_controller.handleClick(MCE.sq(r, c, G.mceGame))
-  }, G_lastMove, undefined, excludePieceId)
-}
+// ═══════════════════════════════════════════════════════════
+// GAME CONTROLLER SETUP — MCE.renderBoard with DC hooks
+// ═══════════════════════════════════════════════════════════
+let _dcOpts = null
 
-// ═══════════════════════════════════════════════════════════
-// GAME CONTROLLER SETUP
-// ═══════════════════════════════════════════════════════════
 function createBattleController() {
   const players = {}
   G.mceGame.players.forEach(p => { players[p] = p === 'player' ? 'human' : 'ai' })
 
-  G_controller = MCE.createGameController(null, G.mceGame, {
+  const boardContainer = document.getElementById('mce-board-area')
+  const WALL = TILE * 2.2
+  boardContainer.style.top = WALL + 'px'
+  boardContainer.style.left = WALL + 'px'
+  boardContainer.style.width = (G.map.cols * TILE) + 'px'
+  boardContainer.style.height = (G.map.rows * TILE) + 'px'
+
+  _dcOpts = getDCRenderOpts()
+
+  G_controller = MCE.createGameController(boardContainer, G.mceGame, {
     players: players,
     aiDifficulty: 'medium',
+    renderOpts: _dcOpts,
 
-    customRender: function(game, state) {
+    onRender: function(game) {
       G.turn = game.turn
-      G.aiThinking = state.aiThinking
-      if (!state.aiThinking && !game._pendingAction) {
-        G.selR = null; G.selC = null
-        G.legalMoves = []; G.legalAttacks = []
-        if (state.selected !== null) {
-          const moves = state.getLegalMoves().filter(m => m.from === state.selected)
-          const [sr, sc] = MCE.rc(state.selected, game)
-          G.selR = sr; G.selC = sc
-          moves.forEach(m => {
-            const [mr, mc] = MCE.rc(m.to, game)
-            if (m.flag === 'capture' || m.attackOnly) G.legalAttacks.push([mr, mc])
-            if (!m.attackOnly && m.flag !== 'capture') G.legalMoves.push([mr, mc])
-          })
-        }
-      }
-      if (state.lastMove) {
-        const [fr, fc] = MCE.rc(state.lastMove.from, game)
-        const [tr, tc] = MCE.rc(state.lastMove.to, game)
-        G_lastMove = { fr, fc, tr, tc }
-      }
       updateUI()
-      renderBoard(G.map, null, G.selR, G.selC, G.legalMoves, G.legalAttacks, function(r, c) {
-        G_controller.handleClick(MCE.sq(r, c, G.mceGame))
-      }, G_lastMove)
     },
 
     onSquareClick: function(sq, game, api) {
@@ -76,12 +59,19 @@ function createBattleController() {
     },
 
     onAnimateMove: function(move, game, done) {
-      const [fr, fc] = MCE.rc(move.from, game)
-      const [tr, tc] = MCE.rc(move.to, game)
       const pd = game.pieceData[move.from]
       if (!pd) { done(); return }
+      const [fr, fc] = MCE.rc(move.from, game)
+      const [tr, tc] = MCE.rc(move.to, game)
       const captured = game.board[move.to]
-      animateMove(pd, fr, fc, tr, tc, !!captured, done)
+
+      _dcOpts.excludePiece = move.from
+      G_controller.render()
+
+      animateMove(pd, fr, fc, tr, tc, !!captured, function() {
+        delete _dcOpts.excludePiece
+        done()
+      })
     },
 
     onCaptureEffect: function(sq, captured) {
@@ -119,11 +109,6 @@ function createBattleController() {
     },
 
     onPendingAction: function(action, legalMoves) {
-      G.legalMoves = legalMoves.map(m => MCE.rc(m.to, G.mceGame))
-      G.legalAttacks = []
-      const [pr, pc] = MCE.rc(action.from, G.mceGame)
-      G.selR = pr; G.selC = pc
-      G.aiThinking = false
       document.getElementById('sel-info').innerHTML =
         `<div class="sel-name">Salamander Retreat</div>
          <div class="sel-meta">Click an adjacent square to retreat to</div>`
@@ -160,6 +145,7 @@ function destroyBattleController() {
     G_controller.destroy()
     G_controller = null
   }
+  _dcOpts = null
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -170,8 +156,6 @@ const MOVE_DURATION = 350
 function animateMove(pd, fr, fc, tr, tc, isCapture, callback) {
   const svg = document.getElementById('dungeon-board')
   if (!svg || !G.map) { callback(); return }
-
-  drawBoard(pd.id)
 
   const fromX = fc * TILE
   const fromY = fr * TILE

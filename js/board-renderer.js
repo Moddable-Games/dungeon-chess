@@ -1471,12 +1471,66 @@ function dcEffectOverlay(svg, effect, x, y, tileSize, game) {
   return g
 }
 
+function dcLegalMoveRenderer(svg, move, x, y, tileSize, isCapture, game) {
+  const isAttack = move.flag === 'capture' || move.attackOnly
+  const cx = x + tileSize / 2, cy = y + tileSize / 2
+
+  if (isAttack) {
+    const ag = svgEl('g', { style: 'pointer-events:none' })
+    const rs = tileSize * 0.38
+    ag.appendChild(svgEl('circle', { cx, cy, r: rs,
+      fill: 'rgba(200,30,20,0.10)', stroke: 'rgba(220,60,40,0.65)', 'stroke-width': 1.5,
+      'stroke-dasharray': '4,2' }))
+    ag.appendChild(svgEl('path', {
+      d: `M ${cx - rs*0.45} ${cy - rs*0.2} L ${cx} ${cy - rs*0.58} L ${cx + rs*0.45} ${cy - rs*0.2}`,
+      stroke: 'rgba(220,60,40,0.85)', 'stroke-width': 1.5, fill: 'none',
+      'stroke-linecap': 'round', 'stroke-linejoin': 'round' }))
+    ag.appendChild(svgEl('path', {
+      d: `M ${cx - rs*0.45} ${cy + rs*0.2} L ${cx} ${cy + rs*0.58} L ${cx + rs*0.45} ${cy + rs*0.2}`,
+      stroke: 'rgba(220,60,40,0.85)', 'stroke-width': 1.5, fill: 'none',
+      'stroke-linecap': 'round', 'stroke-linejoin': 'round' }))
+    return ag
+  }
+
+  const rg = svgEl('g', { style: 'pointer-events:none' })
+  const rs = tileSize * 0.28
+  rg.appendChild(svgEl('circle', { cx, cy, r: rs,
+    fill: 'rgba(40,180,60,0.15)', stroke: 'rgba(80,220,80,0.60)', 'stroke-width': 1.2,
+    'stroke-dasharray': '5,3' }))
+  rg.appendChild(svgEl('path', {
+    d: `M ${cx - rs*0.55} ${cy} L ${cx + rs*0.55} ${cy} M ${cx} ${cy - rs*0.55} L ${cx} ${cy + rs*0.55}`,
+    stroke: 'rgba(80,220,80,0.70)', 'stroke-width': 1.2, fill: 'none', 'stroke-linecap': 'round' }))
+  rg.appendChild(svgEl('circle', { cx, cy, r: rs * 0.25, fill: 'rgba(80,220,80,0.50)' }))
+  return rg
+}
+
 function dcAfterRender(svg, game, tileSize, opts) {
   svg.id = 'dungeon-board'
   svg.classList.add('board-svg')
   svg.setAttribute('tabindex', '0')
   svg.setAttribute('aria-label', 'Game board - use arrow keys to navigate, Enter to select')
   ensureSpriteDefs(svg)
+
+  if (opts.selected !== null && opts.selected !== undefined) {
+    const [sr, sc] = MCE.rc(opts.selected, game)
+    const sx = sc * tileSize, sy = sr * tileSize
+    svg.appendChild(svgEl('rect', { x: sx + 1, y: sy + 1, width: tileSize - 2, height: tileSize - 2,
+      fill: 'rgba(246,199,71,0.12)', stroke: 'rgba(246,199,71,0.50)',
+      'stroke-width': 1.5, 'pointer-events': 'none' }))
+  }
+
+  if (opts.lastMove) {
+    const squares = [opts.lastMove.from, opts.lastMove.to]
+    for (let i = 0; i < squares.length; i++) {
+      const [r, c] = MCE.rc(squares[i], game)
+      const lx = c * tileSize, ly = r * tileSize
+      const isTo = i === 1
+      svg.appendChild(svgEl('rect', { x: lx + 1, y: ly + 1, width: tileSize - 2, height: tileSize - 2,
+        fill: isTo ? 'rgba(176,141,45,0.12)' : 'rgba(176,141,45,0.06)',
+        stroke: 'rgba(176,141,45,0.35)', 'stroke-width': 1, 'pointer-events': 'none' }))
+    }
+  }
+
   if (typeof kbRenderCursor === 'function') kbRenderCursor(svg, tileSize)
 }
 
@@ -1487,8 +1541,10 @@ function getDCRenderOpts() {
     size: map.cols * TILE,
     tilePainter: dcTilePainter,
     pieceProvider: dcPieceProvider,
+    legalMoveRenderer: dcLegalMoveRenderer,
     effectOverlay: dcEffectOverlay,
-    afterRender: dcAfterRender
+    afterRender: dcAfterRender,
+    suppressHighlights: true
   }
 }
 
