@@ -24,8 +24,7 @@ function createBattleController() {
   const players = {}
   G.mceGame.players.forEach(p => { players[p] = p === 'player' ? 'human' : 'ai' })
 
-  const boardEl = document.getElementById('mce-board-container')
-  G_controller = MCE.createGameController(boardEl, G.mceGame, {
+  G_controller = MCE.createGameController(null, G.mceGame, {
     players: players,
     aiDifficulty: 'medium',
 
