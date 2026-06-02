@@ -4,7 +4,6 @@
 // ═══════════════════════════════════════════════════════════
 let G_lastMove = null
 let G_controller = null
-const G_undoStack = []
 
 let _lastTile = null
 let _tileLocked = false

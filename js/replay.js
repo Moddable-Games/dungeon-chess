@@ -1,29 +1,26 @@
 'use strict'
 // ═══════════════════════════════════════════════════════════
-// GAME REPLAY — step through recorded moves
+// GAME REPLAY — step through recorded moves via MCE
 // ═══════════════════════════════════════════════════════════
 
-const RP = { initialPieces:[], moves:[], currentIdx:-1, pieces:[],
-  playing:false, timer:null, speed:800 }
+const RP = { game: null, moves: [], undoStack: [], currentIdx: -1,
+  playing: false, timer: null, speed: 800, initialPieces: [] }
 
 function rpSaveInitial() {
-  RP.initialPieces = G.mceGame ? DungeonMCE.allPieces(G.mceGame) : []
-}
-
-function rpSaveMoves() {
-  RP.moves = G_undoStack.map(m => ({ ...m }))
+  if (!G.mceGame) return
+  RP.initialPieces = DungeonMCE.allPieces(G.mceGame)
 }
 
 function rpStart() {
-  rpSaveMoves()
-  RP.currentIdx = -1
-  RP.pieces = RP.initialPieces.map(p => ({ ...p }))
+  if (!G.mceGame || !G.map) return
+  RP.moves = G.mceGame.history.slice()
+  DungeonMCE.registerAllUnits()
   RP.playing = false
   if (RP.timer) clearInterval(RP.timer)
   RP.timer = null
   show('replay')
-  rpRender()
-  rpUpdateControls()
+  rpGoToStart()
+  rpBuildLog()
   document.addEventListener('keydown', rpKeyHandler)
 }
 
@@ -36,13 +33,17 @@ function rpKeyHandler(e) {
 }
 
 function rpRender() {
-  if (!G.map) return
+  if (!G.map || !RP.game) return
   computeTile(G.map)
-  const highlight = RP.currentIdx >= 0
-    ? { fr: RP.moves[RP.currentIdx].fr, fc: RP.moves[RP.currentIdx].fc,
-        tr: RP.moves[RP.currentIdx].tr, tc: RP.moves[RP.currentIdx].tc }
-    : null
-  renderBoard(G.map, RP.pieces, null, null, [], [], null, highlight, 'replay-svg')
+  const container = document.getElementById('replay-board-area')
+  if (!container) return
+  const opts = getDCRenderOpts()
+  opts.suppressHighlights = true
+  if (RP.currentIdx >= 0) {
+    const m = RP.moves[RP.currentIdx]
+    opts.lastMove = { from: m.from, to: m.to }
+  }
+  MCE.renderBoard(container, RP.game, opts)
 }
 
 function rpStepForward() {
@@ -51,26 +52,23 @@ function rpStepForward() {
     return
   }
   RP.currentIdx++
-  const m = RP.moves[RP.currentIdx]
-  const piece = RP.pieces.find(p => p.id === m.pieceId)
-  if (piece) { piece.r = m.tr; piece.c = m.tc }
-  if (m.capturedPiece) {
-    RP.pieces = RP.pieces.filter(p => p.id !== m.capturedPiece.id)
-  }
-  rpRender()
-  rpUpdateControls()
-  rpHighlightLog()
+  rpGoToMove(RP.currentIdx)
 }
 
 function rpStepBack() {
   if (RP.currentIdx < 0) return
-  const m = RP.moves[RP.currentIdx]
-  const piece = RP.pieces.find(p => p.id === m.pieceId)
-  if (piece) { piece.r = m.fr; piece.c = m.fc }
-  if (m.capturedPiece) {
-    RP.pieces.push({ ...m.capturedPiece })
-  }
   RP.currentIdx--
+  rpGoToMove(RP.currentIdx)
+}
+
+function rpGoToMove(target) {
+  DungeonMCE.registerAllUnits()
+  const pieces = RP.initialPieces.slice()
+  RP.game = DungeonMCE.createDungeonGame(G.map, pieces, G.mceGame.players.slice())
+  RP.undoStack = []
+  for (let i = 0; i <= target; i++) {
+    RP.undoStack.push(MCE.makeMove(RP.game, RP.moves[i]))
+  }
   rpRender()
   rpUpdateControls()
   rpHighlightLog()
@@ -79,7 +77,10 @@ function rpStepBack() {
 function rpGoToStart() {
   rpPause()
   RP.currentIdx = -1
-  RP.pieces = RP.initialPieces.map(p => ({ ...p }))
+  DungeonMCE.registerAllUnits()
+  const pieces = RP.initialPieces.slice()
+  RP.game = DungeonMCE.createDungeonGame(G.map, pieces, G.mceGame.players.slice())
+  RP.undoStack = []
   rpRender()
   rpUpdateControls()
   rpHighlightLog()
@@ -87,18 +88,8 @@ function rpGoToStart() {
 
 function rpGoToEnd() {
   rpPause()
-  while (RP.currentIdx < RP.moves.length - 1) {
-    RP.currentIdx++
-    const m = RP.moves[RP.currentIdx]
-    const piece = RP.pieces.find(p => p.id === m.pieceId)
-    if (piece) { piece.r = m.tr; piece.c = m.tc }
-    if (m.capturedPiece) {
-      RP.pieces = RP.pieces.filter(p => p.id !== m.capturedPiece.id)
-    }
-  }
-  rpRender()
-  rpUpdateControls()
-  rpHighlightLog()
+  RP.currentIdx = RP.moves.length - 1
+  rpGoToMove(RP.currentIdx)
 }
 
 function rpPlay() {
@@ -135,14 +126,15 @@ function rpHighlightLog() {
 
 function rpBuildLog() {
   const list = document.getElementById('rp-log')
+  if (!list) return
   list.innerHTML = RP.moves.map((m, i) => {
-    const p = RP.initialPieces.find(x => x.id === m.pieceId)
-    const name = p ? UNITS[p.key].name : '?'
-    const c = `${String.fromCharCode(97+m.fc)}${m.fr+1}→${String.fromCharCode(97+m.tc)}${m.tr+1}`
-    const cap = m.capturedPiece ? ` ✕ ${UNITS[m.capturedPiece.key].name}` : ''
-    return `<div class="rp-entry" data-i="${i}">${m.owner==='player'?'You':'AI'}: ${name} ${c}${cap}</div>`
+    const pd = G.mceGame.pieceData ? null : null
+    const [fr, fc] = MCE.rc(m.from, G.mceGame)
+    const [tr, tc] = MCE.rc(m.to, G.mceGame)
+    const coord = `${String.fromCharCode(97+fc)}${fr+1}→${String.fromCharCode(97+tc)}${tr+1}`
+    return `<div class="rp-entry" data-i="${i}">${coord}</div>`
   }).join('')
   list.querySelectorAll('.rp-entry').forEach(el => {
-    el.onclick = () => { rpPause(); rpGoToStart(); while (RP.currentIdx < +el.dataset.i) rpStepForward() }
+    el.onclick = () => { rpPause(); RP.currentIdx = +el.dataset.i; rpGoToMove(RP.currentIdx) }
   })
 }
