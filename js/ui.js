@@ -67,14 +67,14 @@ function playerHex(shamanSq) {
     `<div class="sel-name">Hex Target</div>
      <div class="sel-meta">Click an enemy to immobilise for 2 turns</div>
      <button class="btn sm" onclick="cancelHex()">Cancel</button>`
-  if (G_controller) G_controller.render()
+  drawBoard()
 }
 
 function cancelHex() {
   G.hexTargeting = null
   G.selR = null; G.selC = null; G.legalMoves = []; G.legalAttacks = []
   document.getElementById('sel-info').innerHTML = '<span class="sel-info">Click a piece</span>'
-  if (G_controller) G_controller.render()
+  drawBoard()
 }
 
 function addLog(text){
@@ -540,7 +540,7 @@ document.getElementById('undo-btn').onclick = () => {
   const el = document.getElementById('h-list')
   el.innerHTML = ''
   G.history.forEach(text => { const d = document.createElement('div'); d.className='h-entry'; d.textContent=text; el.insertBefore(d, el.firstChild) })
-  if (G_controller) G_controller.render()
+  drawBoard()
   updateUI()
 }
 
@@ -596,7 +596,7 @@ document.querySelectorAll('.piece-style-toggle').forEach(toggle => {
     G.pieceStyle = style
     document.querySelectorAll('.pst-btn').forEach(b => b.classList.toggle('active', b.dataset.style === style))
     invalidatePlacementStatic()
-    if (G_controller) G_controller.render()
+    drawBoard()
   })
 })
 
