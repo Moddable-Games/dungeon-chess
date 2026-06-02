@@ -64,6 +64,9 @@ function createBattleController() {
       const [fr, fc] = MCE.rc(move.from, game)
       const [tr, tc] = MCE.rc(move.to, game)
       const captured = game.board[move.to]
+      const isHuman = pd.owner === 'player'
+
+      if (!isHuman) { done(); return }
 
       const animOpts = Object.assign({}, _dcOpts, { excludePiece: move.from })
       MCE.renderBoard(document.getElementById('mce-board-area'), game, animOpts)
