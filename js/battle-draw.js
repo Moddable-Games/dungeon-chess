@@ -67,7 +67,9 @@ function createBattleController() {
 
       if (!isHuman) { done(); return }
 
-      const animOpts = Object.assign({}, _dcOpts, { excludePiece: move.from })
+      const excludes = [move.from]
+      if (captured) excludes.push(move.to)
+      const animOpts = Object.assign({}, _dcOpts, { excludePieces: excludes })
       MCE.renderBoard(document.getElementById('mce-board-area'), game, animOpts)
 
       animateMove(pd, fr, fc, tr, tc, !!captured, done)
