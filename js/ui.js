@@ -551,7 +551,7 @@ document.getElementById('play-again-btn').onclick = ()=>{
     turn:'player',aiThinking:false,aiTimer:null,selR:null,selC:null,
     legalMoves:[],legalAttacks:[],capturedByPlayer:[],capturedByAi:[],history:[]})
   Object.assign(PL,{selectedTrayIdx:null,placedSquares:{},placementPieces:[],spawnRows:[]})
-  unlockTileSize(); invalidateStaticBoard()
+  unlockTileSize()
   show('home')
 }
 
@@ -566,7 +566,7 @@ document.getElementById('rematch-btn').onclick = ()=>{
   Object.assign(PL,{selectedTrayIdx:null,placedSquares:{},placementPieces:[],spawnRows:[]})
   G.map = savedMap; G.playerSp = savedSp; G.aiSp = savedAiSp
   G.numPlayers = savedNum; G.ai2Sp = savedAi2; G.ai3Sp = savedAi3
-  unlockTileSize(); invalidateStaticBoard()
+  unlockTileSize()
   show('draft')
 }
 
@@ -581,7 +581,7 @@ document.getElementById('rematch-same-btn').onclick = ()=>{
   Object.assign(PL,{selectedTrayIdx:null,placedSquares:{},placementPieces:[],spawnRows:[]})
   G.playerDraft = savedDraft; G.aiDraft = savedAiDraft
   G.ai2Draft = savedAi2Draft; G.ai3Draft = savedAi3Draft
-  unlockTileSize(); invalidateStaticBoard()
+  unlockTileSize()
   show('place')
 }
 
