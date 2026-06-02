@@ -65,13 +65,10 @@ function createBattleController() {
       const [tr, tc] = MCE.rc(move.to, game)
       const captured = game.board[move.to]
 
-      _dcOpts.excludePiece = move.from
-      G_controller.render()
+      const animOpts = Object.assign({}, _dcOpts, { excludePiece: move.from })
+      MCE.renderBoard(document.getElementById('mce-board-area'), game, animOpts)
 
-      animateMove(pd, fr, fc, tr, tc, !!captured, function() {
-        delete _dcOpts.excludePiece
-        done()
-      })
+      animateMove(pd, fr, fc, tr, tc, !!captured, done)
     },
 
     onCaptureEffect: function(sq, captured) {
