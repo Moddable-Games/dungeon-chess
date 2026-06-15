@@ -11,6 +11,7 @@ import { rpSaveInitial, rpStart, rpGoToStart, rpStepBack, rpStepForward, rpGoToE
 import { kbInit } from './keyboard.js'
 import { kbEnsureLiveRegion } from './aria.js'
 import { ttInit } from './tooltip.js'
+import './battle.js'
 
 registerScreenHook('rules', () => renderRulesUnitTable())
 registerScreenHook('battle', () => ttInit())
