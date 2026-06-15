@@ -493,6 +493,14 @@ function createDungeonGame(map, pieces, players) {
       return false;
     });
     if (alive.length <= 1) return alive.length === 1 ? 'win-' + alive[0] : 'draw';
+    const moves = variantLegalMoves(gState);
+    if (moves.length === 0) {
+      if (inCheck(gState, gState.turn)) {
+        const winner = gState.players.find(o => o !== gState.turn);
+        return 'win-' + winner;
+      }
+      return 'draw';
+    }
     return 'active';
   });
   return g;
