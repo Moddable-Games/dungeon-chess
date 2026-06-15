@@ -125,7 +125,7 @@ function endGame(winner){
     ['Lost', G.capturedByAi.length],
     ['MVP Kill', mvp ? UNITS[mvp].name : '—'],
     ['Top Survivor', bestSurvivor ? UNITS[bestSurvivor.key].name : '—'],
-  ].map(([l,v])=>`<div class="end-stat"><div class="end-val${typeof v==='string'?' end-val--text':''}">${v}</div><div class="end-lbl">${l}</div></div>`).join('')
+  ].map(([l,v])=>`<div class="end-stat"><div class="end-val${typeof v==='string'?' end-val--text':''">${v}</div><div class="end-lbl">${l}</div></div>`).join('')
 
   const surviving = survivors.map(p => UNITS[p.key].name)
   const lost = G.capturedByAi.map(k => UNITS[k].name)
@@ -512,8 +512,8 @@ document.getElementById('place-reset').onclick = () => {
 // Render atmosphere on initial home screen
 window.addEventListener('load', ()=>{ const hc=document.getElementById('home-canvas'); if(hc) renderAtmosphereCanvas(hc) })
 
-document.getElementById('btn-play').onclick       = ()=>show('players')
-document.getElementById('btn-play-bottom').onclick = ()=>show('players')
+document.getElementById('btn-play').onclick       = async ()=>{ await DATA_READY; show('players') }
+document.getElementById('btn-play-bottom').onclick = async ()=>{ await DATA_READY; show('players') }
 document.getElementById('players-back').onclick   = ()=>show('home')
 document.getElementById('pick-2p').onclick        = ()=>{ G.numPlayers=2; show('map') }
 document.getElementById('pick-4p').onclick        = ()=>{ G.numPlayers=4; G.map=MAPS[2]; show('species') }
@@ -605,7 +605,7 @@ document.querySelectorAll('.piece-style-toggle').forEach(toggle => {
 // ═══════════════════════════════════════════════════════════
 let rulesReturnScreen = 'home'
 
-document.getElementById('btn-rules').onclick = () => { rulesReturnScreen = 'home'; show('rules') }
+document.getElementById('btn-rules').onclick = async () => { await DATA_READY; rulesReturnScreen = 'home'; show('rules') }
 document.getElementById('battle-rules-btn').onclick = () => { rulesReturnScreen = 'battle'; show('rules') }
 document.getElementById('rules-back').onclick = () => show(rulesReturnScreen)
 
