@@ -191,10 +191,16 @@ export function animateMove(pd, fr, fc, tr, tc, isCapture, callback) {
   })
   anim.appendChild(shadow)
 
-  const use = svgEl('use', { href: `#piece-${sid}`, x: offset, y: offset, width: sz, height: sz })
-  anim.appendChild(use)
-
-  appendPieceTint(anim, ownerSp, offset, sz)
+  if (G.pieceStyle !== 'classic') {
+    const folder = G.pieceStyle === 'custom-a' ? 'pieces' : 'pieces-alt'
+    const img = svgEl('image', { x: offset, y: offset, width: sz, height: sz, preserveAspectRatio: 'xMidYMid meet' })
+    img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', `assets/${folder}/${pd.key}.png`)
+    anim.appendChild(img)
+  } else {
+    const use = svgEl('use', { href: `#piece-${sid}`, x: offset, y: offset, width: sz, height: sz })
+    anim.appendChild(use)
+    appendPieceTint(anim, ownerSp, offset, sz)
+  }
 
   anim.setAttribute('transform', `translate(${fromX},${fromY})`)
   svg.appendChild(anim)
