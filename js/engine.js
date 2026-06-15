@@ -1,4 +1,5 @@
 import MCE from '../lib/mce/chess-engine.js'
+import { legalMoves } from '../lib/mce/chess-moves.js'
 import { DungeonMCE } from './mce-bridge.js'
 import { G } from './state.js'
 
@@ -9,7 +10,7 @@ export function getLegal(piece) {
 export function wouldLeaveInCheck(piece, tr, tc) {
   const sq = MCE.sq(piece.r, piece.c, G.mceGame)
   const targetSq = MCE.sq(tr, tc, G.mceGame)
-  const allLegal = MCE.legalMoves(G.mceGame)
+  const allLegal = legalMoves(G.mceGame)
   return !allLegal.some(m => m.from === sq && m.to === targetSq)
 }
 

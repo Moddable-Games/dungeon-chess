@@ -1,4 +1,6 @@
 import MCE from '../lib/mce/chess-engine.js'
+import '../lib/mce/chess-play.js'
+import '../lib/mce/board-renderer.js'
 import { computeTile } from './data.js'
 import { G, show, registerScreenHook } from './state.js'
 import { DungeonMCE } from './mce-bridge.js'

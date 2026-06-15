@@ -1,11 +1,15 @@
 import MCE from '../lib/mce/chess-engine.js'
+import { ROOK_DIRS, BISHOP_DIRS, QUEEN_DIRS, KNIGHT_OFFSETS, genJumps, genCannon, cannonReaches, inCheck } from '../lib/mce/chess-moves.js'
+import { buildUnitHandler } from '../lib/mce/chess-units.js'
+import { variantLegalMoves } from '../lib/mce/chess-variants.js'
+import '../lib/mce/chess-ai.js'
 import { PT, UNITS } from './data.js'
 
 const PIECE_CHAR = 'X'
-const RD = MCE.ROOK_DIRS
-const BD = MCE.BISHOP_DIRS
-const AD = MCE.QUEEN_DIRS
-const KNIGHT = MCE.KNIGHT_OFFSETS
+const RD = ROOK_DIRS
+const BD = BISHOP_DIRS
+const AD = QUEEN_DIRS
+const KNIGHT = KNIGHT_OFFSETS
 
 const unitHandlers = {};
 
@@ -254,7 +258,7 @@ function pawnGenMoves(g, sq, side, withCannon) {
       moves.push({ from: sq, to: target, flag: null });
     }
   }
-  if (withCannon && !intimidated) MCE.genCannon(g, sq, r, c, side, RD, moves);
+  if (withCannon && !intimidated) genCannon(g, sq, r, c, side, RD, moves);
   return moves;
 }
 
@@ -270,7 +274,7 @@ function pawnAttacks(g, from, target) {
 function cannonReaches(g, from, target, dirs) {
   const tpd = g.pieceData[target];
   if (tpd && tpd.key === 'iron_golem') return false;
-  return MCE.cannonReaches(g, from, target, dirs);
+  return cannonReaches(g, from, target, dirs);
 }
 
 
@@ -302,7 +306,7 @@ unitHandlers.kobold = unitHandlers.goblin = {
 
 // ── CASTLE types ──
 
-unitHandlers.stronghold = MCE.buildUnitHandler({
+unitHandlers.stronghold = buildUnitHandler({
   move: { style: 'jump', dirs: 'rook', waterBlock: true },
   attack: 'rook'
 });
@@ -378,12 +382,12 @@ function tombPhaseReaches(g, from, target) {
   return false;
 }
 
-unitHandlers.iron_golem = MCE.buildUnitHandler({
+unitHandlers.iron_golem = buildUnitHandler({
   move: { style: 'jump', dirs: 'rook', waterBlock: true },
   cannon: 'rook'
 });
 
-unitHandlers.ogre = MCE.buildUnitHandler({
+unitHandlers.ogre = buildUnitHandler({
   move: { style: 'jump', dirs: 'rook', waterBlock: true },
   cannon: 'rook'
 });
@@ -392,13 +396,13 @@ unitHandlers.ogre.intimidate = true;
 // ── KNIGHT types ──
 
 unitHandlers.knight_h = unitHandlers.salamander = unitHandlers.reaper =
-  MCE.buildUnitHandler({ move: 'knight' });
+  buildUnitHandler({ move: 'knight' });
 
 unitHandlers.orc = {
   genMoves(g, sq, side) {
     const moves = [];
     const [r, c] = MCE.rc(sq, g);
-    MCE.genJumps(g, sq, r, c, side, KNIGHT, moves);
+    genJumps(g, sq, r, c, side, KNIGHT, moves);
     for (const [dr, dc] of RD) {
       const nr = r + dr * 2, nc = c + dc * 2;
       if (!MCE.onBoard(nr, nc, g)) continue;
@@ -425,30 +429,30 @@ unitHandlers.orc = {
 
 // ── BISHOP types ──
 
-unitHandlers.archer = MCE.buildUnitHandler({ move: 'bishop', attack: 'bishop:gapped' });
+unitHandlers.archer = buildUnitHandler({ move: 'bishop', attack: 'bishop:gapped' });
 
-unitHandlers.wraith = MCE.buildUnitHandler({ move: 'bishop:gapped', attack: 'bishop' });
+unitHandlers.wraith = buildUnitHandler({ move: 'bishop:gapped', attack: 'bishop' });
 
 unitHandlers.fire_elem = unitHandlers.troll =
-  MCE.buildUnitHandler({ move: 'bishop:waterBlock', attack: 'bishop:waterBlock' });
+  buildUnitHandler({ move: 'bishop:waterBlock', attack: 'bishop:waterBlock' });
 
 // ── QUEEN types ──
 
-unitHandlers.wizard = MCE.buildUnitHandler({ move: 'rook', attack: 'bishop' });
+unitHandlers.wizard = buildUnitHandler({ move: 'rook', attack: 'bishop' });
 
-unitHandlers.vampire = MCE.buildUnitHandler({ move: 'bishop', attack: 'rook' });
+unitHandlers.vampire = buildUnitHandler({ move: 'bishop', attack: 'rook' });
 
 unitHandlers.demonics = unitHandlers.shaman =
-  MCE.buildUnitHandler({ move: 'queen:waterBlock', attack: 'queen:waterBlock' });
+  buildUnitHandler({ move: 'queen:waterBlock', attack: 'queen:waterBlock' });
 
 // ── KING types ──
 
-unitHandlers.princess = MCE.buildUnitHandler({ move: ['king:waterBlock', 'bishop'], attack: 'king:waterBlock' });
+unitHandlers.princess = buildUnitHandler({ move: ['king:waterBlock', 'bishop'], attack: 'king:waterBlock' });
 
-unitHandlers.warlock = MCE.buildUnitHandler({ move: 'king:waterBlock', attack: ['king:waterBlock', 'bishop'] });
+unitHandlers.warlock = buildUnitHandler({ move: 'king:waterBlock', attack: ['king:waterBlock', 'bishop'] });
 
 unitHandlers.red_dragon = unitHandlers.warlord =
-  MCE.buildUnitHandler({ move: 'king:waterBlock', attack: ['king:waterBlock', 'knight'] });
+  buildUnitHandler({ move: 'king:waterBlock', attack: ['king:waterBlock', 'knight'] });
 
 // ══════════════════════════════════════════════════════════════
 // GAME CREATION & STATE SYNC
@@ -478,7 +482,7 @@ function createDungeonGame(map, pieces, players) {
     g.pieceData[sq] = { id: p.id, key: p.key, owner: p.owner, isKing: UNITS[p.key].type === PT.K };
   });
   MCE.setLegalityFilter(g, function(gState, move, undo) {
-    return !MCE.inCheck(gState, undo.turn);
+    return !inCheck(gState, undo.turn);
   });
   MCE.setWinCondition(g, function(gState) {
     const alive = gState.players.filter(o => {
@@ -509,7 +513,7 @@ function syncPiecesFromMCE(g) {
 
 function getLegal(piece, g) {
   const sq = MCE.sq(piece.r, piece.c, g);
-  const allMoves = MCE.variantLegalMoves(g);
+  const allMoves = variantLegalMoves(g);
   const pieceMoves = allMoves.filter(m => m.from === sq && m.flag !== 'action');
   const moves = [], attacks = [];
   pieceMoves.forEach(m => {
@@ -527,12 +531,12 @@ function getLegal(piece, g) {
 function findMCEMove(g, fr, fc, tr, tc, flag) {
   const fromSq = MCE.sq(fr, fc, g);
   const toSq = MCE.sq(tr, tc, g);
-  const allMoves = MCE.variantLegalMoves(g);
+  const allMoves = variantLegalMoves(g);
   return allMoves.find(m => m.from === fromSq && m.to === toSq && (!flag || m.flag === flag));
 }
 
 function isInCheck(owner, g) {
-  return MCE.inCheck(g, owner);
+  return inCheck(g, owner);
 }
 
 function pickAiMove(g, difficulty) {
