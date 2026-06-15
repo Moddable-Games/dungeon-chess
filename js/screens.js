@@ -66,6 +66,7 @@ export function renderPlacementScreen() {
   drawPlaceSurroundOnce()
   document.getElementById('confirm-place-btn').disabled = true
   populatePlacePanels()
+  initPlaceTooltip()
 }
 
 function populatePlacePanels() {
@@ -174,7 +175,10 @@ export function renderTray() {
         PL.selectedTrayIdx = (PL.selectedTrayIdx === idx) ? null : idx
         renderTray()
         renderPlacementBoard()
+        updatePlaceHint()
       }
+      div.addEventListener('mousedown', (e) => startDrag(e, idx))
+      div.addEventListener('touchstart', (e) => startDrag(e.touches[0], idx), { passive: true })
     }
     list.appendChild(div)
   })
@@ -316,10 +320,6 @@ export function renderPlacementBoard() {
         const offset = (TILE - TILE*0.9) / 2
         const sz = TILE*0.9
         const pg = svgEl('g', { transform:`translate(${x},${y})`, class:'placed-piece' })
-        pg.appendChild(svgEl('rect', { x:0, y:0, width:TILE, height:TILE, fill:'transparent', 'pointer-events':'all' }))
-        const title = document.createElementNS('http://www.w3.org/2000/svg', 'title')
-        title.textContent = `${def.name} (${def.type} · ${def.cost}XP)`
-        pg.appendChild(title)
         pg.appendChild(svgEl('ellipse', { cx:TILE/2, cy:TILE-5, rx:TILE*0.3, ry:4, fill:'rgba(0,0,0,0.25)' }))
         if (G.pieceStyle !== 'classic') {
           const folder = G.pieceStyle === 'custom-a' ? 'pieces' : 'pieces-alt'
@@ -400,6 +400,105 @@ export function handlePlacementClick(r, c) {
   if (G.map) computeTile(G.map)
   renderTray()
   renderPlacementBoard()
+}
+
+let _dragIdx = null
+let _dragGhost = null
+
+function startDrag(e, idx) {
+  _dragIdx = idx
+  const def = UNITS[PL.placementPieces[idx].key]
+  _dragGhost = document.createElement('div')
+  _dragGhost.className = 'drag-ghost'
+  _dragGhost.textContent = def.name
+  document.body.appendChild(_dragGhost)
+  moveDragGhost(e.clientX, e.clientY)
+  document.addEventListener('mousemove', onDragMove)
+  document.addEventListener('mouseup', onDragEnd)
+  document.addEventListener('touchmove', onTouchDragMove, { passive: false })
+  document.addEventListener('touchend', onTouchDragEnd)
+}
+
+function moveDragGhost(cx, cy) {
+  if (!_dragGhost) return
+  _dragGhost.style.left = (cx + 12) + 'px'
+  _dragGhost.style.top = (cy - 16) + 'px'
+}
+
+function onDragMove(e) { moveDragGhost(e.clientX, e.clientY) }
+function onTouchDragMove(e) { e.preventDefault(); moveDragGhost(e.touches[0].clientX, e.touches[0].clientY) }
+
+function onDragEnd(e) { finishDrag(e.clientX, e.clientY) }
+function onTouchDragEnd(e) {
+  const t = e.changedTouches[0]
+  finishDrag(t.clientX, t.clientY)
+}
+
+function finishDrag(cx, cy) {
+  document.removeEventListener('mousemove', onDragMove)
+  document.removeEventListener('mouseup', onDragEnd)
+  document.removeEventListener('touchmove', onTouchDragMove)
+  document.removeEventListener('touchend', onTouchDragEnd)
+  if (_dragGhost) { _dragGhost.remove(); _dragGhost = null }
+  if (_dragIdx === null || !G.map) { _dragIdx = null; return }
+
+  const svg = document.getElementById('place-board')
+  if (!svg) { _dragIdx = null; return }
+  const rect = svg.getBoundingClientRect()
+  const { cols, rows } = G.map
+  const c = Math.floor((cx - rect.left) / rect.width * cols)
+  const r = Math.floor((cy - rect.top) / rect.height * rows)
+
+  if (r >= 0 && r < rows && c >= 0 && c < cols && PL.spawnRows.includes(r)) {
+    const cell = G.map.grid[r][c]
+    if (cell !== null && cell !== 'w' && !PL.placedSquares[`${r},${c}`]) {
+      PL.placedSquares[`${r},${c}`] = { idx: _dragIdx, key: PL.placementPieces[_dragIdx].key }
+      PL.placementPieces[_dragIdx].placed = true
+      PL.selectedTrayIdx = null
+      handlePlacementClick(r, c)
+    }
+  }
+  _dragIdx = null
+}
+
+function initPlaceTooltip() {
+  const svg = document.getElementById('place-board')
+  if (!svg) return
+  svg.addEventListener('mousemove', (e) => {
+    if (!G.map) return
+    const rect = svg.getBoundingClientRect()
+    const { cols, rows } = G.map
+    const svgW = rect.width, svgH = rect.height
+    const hoverC = Math.floor((e.clientX - rect.left) / svgW * cols)
+    const hoverR = Math.floor((e.clientY - rect.top) / svgH * rows)
+    if (hoverR < 0 || hoverR >= rows || hoverC < 0 || hoverC >= cols) { hidePlaceTip(); return }
+    const placed = PL.placedSquares[`${hoverR},${hoverC}`]
+    if (placed) {
+      const def = UNITS[placed.key]
+      showPlaceTip(`${def.name} · ${def.type} · ${def.cost}XP`, e.clientX, e.clientY)
+    } else { hidePlaceTip() }
+  })
+  svg.addEventListener('mouseleave', hidePlaceTip)
+}
+
+function showPlaceTip(text, cx, cy) {
+  let el = document.getElementById('place-tooltip')
+  if (!el) {
+    el = document.createElement('div')
+    el.id = 'place-tooltip'
+    el.className = 'unit-tooltip'
+    document.getElementById('place-board-wrap').appendChild(el)
+  }
+  el.textContent = text
+  el.classList.add('visible')
+  const wrap = document.getElementById('place-board-wrap').getBoundingClientRect()
+  el.style.left = (cx - wrap.left + 12) + 'px'
+  el.style.top = (cy - wrap.top - 10) + 'px'
+}
+
+function hidePlaceTip() {
+  const el = document.getElementById('place-tooltip')
+  if (el) el.classList.remove('visible')
 }
 
 registerScreenHook('place', renderPlacementScreen)
