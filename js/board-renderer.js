@@ -1,20 +1,44 @@
-'use strict'
-// ═══════════════════════════════════════════════════════════
-// CUSTOM SVG BOARD RENDERER
-// ═══════════════════════════════════════════════════════════
-const SVGns = 'http://www.w3.org/2000/svg'
+import { TILE, TILE_MIN, PIECE_SYMBOLS, SP, PT, FEN_CH, UNITS } from './data.js'
+import MCE from '../lib/mce/chess-engine.js'
+import { drawDungeonSurround } from './dungeon-surround.js'
+import { G } from './state.js'
 
-function svgEl(tag, attrs={}) {
+let _cursorRenderer = null
+export function registerCursorRenderer(fn) { _cursorRenderer = fn }
+
+export const SVGns = 'http://www.w3.org/2000/svg'
+
+export function svgEl(tag, attrs={}) {
   const el = document.createElementNS(SVGns, tag)
   for (const [k,v] of Object.entries(attrs)) el.setAttribute(k, v)
   return el
 }
 
-// Colours
-const SQ_LIGHT  = '#2a2a38'
-const SQ_DARK   = '#1a1a26'
-const SQ_WATER  = '#0f2f52'
-const SQ_WATER2 = '#081e35'  // water dark checker
+export function spToColor(sp) {
+  return sp === SP.U ? 'b' : 'w'
+}
+
+export const SP_PIECE_COLOR = {
+  [SP.H]: null,
+  [SP.U]: null,
+  [SP.R]: 'rgba(200,50,20,0.55)',
+  [SP.G]: 'rgba(40,140,30,0.55)',
+}
+
+export function appendPieceTint(parent, ownerSp, offset, sz) {
+  const col = SP_PIECE_COLOR[ownerSp]
+  if (col) {
+    parent.appendChild(svgEl('rect', {
+      x: offset, y: offset, width: sz, height: sz,
+      fill: col, style: 'pointer-events:none;mix-blend-mode:multiply'
+    }))
+  }
+}
+
+export const SQ_LIGHT  = '#2a2a38'
+export const SQ_DARK   = '#1a1a26'
+export const SQ_WATER  = '#0f2f52'
+export const SQ_WATER2 = '#081e35'
 const VOID_FILL = 'none'
 
 // ── Magic light colour palette ─────────────────────────────
@@ -40,7 +64,7 @@ function getAnimDelay(r, c) {
 }
 
 // ── Top-down candle renderer ────────────────────────────────
-function drawCandle(svg, cx, cy, col, flickClass, delay=0) {
+export function drawCandle(svg, cx, cy, col, flickClass, delay=0) {
   const gpClass = ['gpa','gpb','gpc'][['a','b','c'].indexOf(flickClass)]
   const fkClass = ['fka','fkb','fkc'][['a','b','c'].indexOf(flickClass)]
   const delayStyle = `animation-delay:${delay}s`
@@ -69,7 +93,7 @@ function drawCandle(svg, cx, cy, col, flickClass, delay=0) {
 }
 
 // ── Top-down lantern renderer ───────────────────────────────
-function drawLantern(svg, cx, cy, col, flickClass, delay=0) {
+export function drawLantern(svg, cx, cy, col, flickClass, delay=0) {
   const gpClass = ['gpa','gpb','gpc'][['a','b','c'].indexOf(flickClass)]
   const fkClass = ['fka','fkb','fkc'][['a','b','c'].indexOf(flickClass)]
   const delayStyle = `animation-delay:${delay}s`
@@ -101,7 +125,7 @@ function drawLantern(svg, cx, cy, col, flickClass, delay=0) {
 }
 
 // ── Stone texture helper — dark dungeon stone ──────────────
-function drawStoneTexture(g, isLight) {
+export function drawStoneTexture(g, isLight) {
   const T = TILE
   // Mortar gap — lighter line suggesting grout between stones
   const mortarCol = isLight ? 'rgba(255,220,160,0.12)' : 'rgba(0,0,0,0.55)'
@@ -154,7 +178,7 @@ function floorRng(s) {
   return (x >>> 0) / 0xffffffff
 }
 
-function drawFloorDetails(g, r, c, isLight) {
+export function drawFloorDetails(g, r, c, isLight) {
   const T = TILE
   const seed = r * 1327 + c * 7919 + r * c * 113
   const val = floorRng(seed)
@@ -242,7 +266,7 @@ let _staticLayerBuilt = false
 
 
 // ── Inline sprite injection (synchronous, no fetch needed) ──
-function ensureSpriteDefs(svg) {
+export function ensureSpriteDefs(svg) {
   let defs = svg.querySelector('defs')
   if (!defs) { defs = svgEl('defs'); svg.insertBefore(defs, svg.firstChild) }
 
@@ -318,7 +342,7 @@ function ensureSpriteDefs(svg) {
 const _tileCache = new Map()
 let _tileCacheKey = null
 
-function dcTilePainter(svg, sqIdx, dr, dc, tileSize, isLight, game) {
+export function dcTilePainter(svg, sqIdx, dr, dc, tileSize, isLight, game) {
   const map = G.map
   if (!map) return null
   if (!map.grid[dr]) return svgEl('g', {})
@@ -373,7 +397,7 @@ function dcTilePainter(svg, sqIdx, dr, dc, tileSize, isLight, game) {
   return g
 }
 
-function dcPieceProvider(game, sqIdx, tileSize) {
+export function dcPieceProvider(game, sqIdx, tileSize) {
   const pd = game.pieceData[sqIdx]
   if (!pd) return null
   const def = UNITS[pd.key]
@@ -404,7 +428,7 @@ function dcPieceProvider(game, sqIdx, tileSize) {
   return wrapper
 }
 
-function dcSurroundRenderer(container, game, boardRect) {
+export function dcSurroundRenderer(container, game, boardRect) {
   const map = G.map
   if (!map) return
   let canvas = container.querySelector('canvas.dc-surround')
@@ -425,7 +449,7 @@ function dcSurroundRenderer(container, game, boardRect) {
   drawDungeonSurround(canvas, map)
 }
 
-function dcEffectOverlay(svg, effect, x, y, tileSize, game) {
+export function dcEffectOverlay(svg, effect, x, y, tileSize, game) {
   if (effect.type !== 'hex') return null
   const g = svgEl('g', {})
   g.appendChild(svgEl('rect', {
@@ -443,7 +467,7 @@ function dcEffectOverlay(svg, effect, x, y, tileSize, game) {
   return g
 }
 
-function dcLegalMoveRenderer(svg, move, x, y, tileSize, isCapture, game) {
+export function dcLegalMoveRenderer(svg, move, x, y, tileSize, isCapture, game) {
   const isAttack = move.flag === 'capture' || move.attackOnly
   const cx = x + tileSize / 2, cy = y + tileSize / 2
 
@@ -476,7 +500,7 @@ function dcLegalMoveRenderer(svg, move, x, y, tileSize, isCapture, game) {
   return rg
 }
 
-function dcAfterRender(svg, game, tileSize, opts) {
+export function dcAfterRender(svg, game, tileSize, opts) {
   svg.id = 'dungeon-board'
   svg.classList.add('board-svg')
   svg.setAttribute('tabindex', '0')
@@ -503,10 +527,10 @@ function dcAfterRender(svg, game, tileSize, opts) {
     }
   }
 
-  if (typeof kbRenderCursor === 'function') kbRenderCursor(svg, tileSize)
+  if (_cursorRenderer) _cursorRenderer(svg, tileSize)
 }
 
-function getDCRenderOpts() {
+export function getDCRenderOpts() {
   const map = G.map
   if (!map) return {}
   return {
