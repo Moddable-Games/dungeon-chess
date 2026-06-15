@@ -73,9 +73,6 @@ export function createBattleController() {
       const [fr, fc] = MCE.rc(move.from, game)
       const [tr, tc] = MCE.rc(move.to, game)
       const captured = game.board[move.to]
-      const isHuman = pd.owner === 'player'
-
-      if (!isHuman) { done(); return }
 
       const excludes = [move.from]
       if (captured) excludes.push(move.to)

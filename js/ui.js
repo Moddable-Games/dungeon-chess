@@ -250,7 +250,12 @@ if (_params.get('embed') === '1') {
     const playersParam = _params.get('players')
 
     G.numPlayers = playersParam === '4' ? 4 : 2
-    G.map = (mapParam && MAPS.find(m => m.id === mapParam)) || MAPS[0]
+    if (G.numPlayers === 4) {
+      G.map = MAPS.find(m => m.players === 4)
+    } else {
+      const requested = mapParam && MAPS.find(m => m.id === mapParam && m.players === 2)
+      G.map = requested || MAPS.find(m => m.players === 2)
+    }
     G.playerSp = (factionParam && Object.values(SP).includes(factionParam)) ? factionParam : SP.H
 
     const others = Object.values(SP).filter(s => s !== G.playerSp)
