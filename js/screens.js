@@ -305,9 +305,9 @@ export function renderPlacementBoard() {
         if (isEmpty && selectedPiece) {
           dynLayer.appendChild(svgEl('rect', { x, y, width:TILE, height:TILE,
             fill:'rgba(176,141,45,0.25)', stroke:'rgba(176,141,45,0.6)', 'stroke-width':2 }))
-        } else if (!selectedPiece) {
+        } else if (isEmpty) {
           dynLayer.appendChild(svgEl('rect', { x, y, width:TILE, height:TILE,
-            fill:'rgba(176,141,45,0.08)' }))
+            fill:'rgba(176,141,45,0.12)', stroke:'rgba(176,141,45,0.3)', 'stroke-width':1 }))
         }
       }
 
@@ -315,7 +315,10 @@ export function renderPlacementBoard() {
         const def = UNITS[placed.key]
         const offset = (TILE - TILE*0.9) / 2
         const sz = TILE*0.9
-        const pg = svgEl('g', { transform:`translate(${x},${y})` })
+        const pg = svgEl('g', { transform:`translate(${x},${y})`, class:'placed-piece' })
+        const title = document.createElementNS('http://www.w3.org/2000/svg', 'title')
+        title.textContent = `${def.name} (${def.type} · ${def.cost}XP)`
+        pg.appendChild(title)
         pg.appendChild(svgEl('ellipse', { cx:TILE/2, cy:TILE-5, rx:TILE*0.3, ry:4, fill:'rgba(0,0,0,0.25)' }))
         if (G.pieceStyle !== 'classic') {
           const folder = G.pieceStyle === 'custom-a' ? 'pieces' : 'pieces-alt'
@@ -404,12 +407,12 @@ export function updatePlaceHint() {
   const remaining = PL.placementPieces.filter(p => !p.placed).length
   const hint = document.getElementById('place-hint')
   if (remaining === 0) {
-    hint.innerHTML = `All pieces placed! <span>Click Begin Battle</span> when ready.`
+    hint.innerHTML = `<span class="hint-done">✓ All pieces placed</span>`
   } else if (PL.selectedTrayIdx !== null) {
     const def = UNITS[PL.placementPieces[PL.selectedTrayIdx].key]
-    hint.innerHTML = `Placing <span>${def.name}</span> — click a <span>highlighted square</span> to place it. Click a placed piece to move it.`
+    hint.innerHTML = `<span class="hint-step">②</span> Click a <span>gold square</span> to place <span>${def.name}</span>`
   } else {
-    hint.innerHTML = `<span>${remaining} piece${remaining>1?'s':''} remaining</span> — click a piece from your roster to place it.`
+    hint.innerHTML = `<span class="hint-step">①</span> Select a piece from <span>Your Team</span> panel →`
   }
 }
 
