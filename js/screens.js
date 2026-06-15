@@ -442,37 +442,47 @@ function finishDrag(cx, cy) {
   if (_dragGhost) { _dragGhost.remove(); _dragGhost = null }
   if (_dragIdx === null || !G.map) { _dragIdx = null; return }
 
-  const svg = document.getElementById('place-board')
-  if (!svg) { _dragIdx = null; return }
-  const rect = svg.getBoundingClientRect()
-  const { cols, rows } = G.map
-  const c = Math.floor((cx - rect.left) / rect.width * cols)
-  const r = Math.floor((cy - rect.top) / rect.height * rows)
-
-  if (r >= 0 && r < rows && c >= 0 && c < cols && PL.spawnRows.includes(r)) {
-    const cell = G.map.grid[r][c]
-    if (cell !== null && cell !== 'w' && !PL.placedSquares[`${r},${c}`]) {
-      PL.placedSquares[`${r},${c}`] = { idx: _dragIdx, key: PL.placementPieces[_dragIdx].key }
+  const rc = placeMouseToRC(cx, cy)
+  if (rc && PL.spawnRows.includes(rc.r)) {
+    const cell = G.map.grid[rc.r][rc.c]
+    if (cell !== null && cell !== 'w' && !PL.placedSquares[`${rc.r},${rc.c}`]) {
+      PL.placedSquares[`${rc.r},${rc.c}`] = { idx: _dragIdx, key: PL.placementPieces[_dragIdx].key }
       PL.placementPieces[_dragIdx].placed = true
       PL.selectedTrayIdx = null
-      handlePlacementClick(r, c)
+      const allPlaced = PL.placementPieces.every(p => p.placed)
+      document.getElementById('confirm-place-btn').disabled = !allPlaced
+      computeTile(G.map)
+      renderTray()
+      renderPlacementBoard()
+      updatePlaceHint()
     }
   }
   _dragIdx = null
+}
+
+function placeMouseToRC(clientX, clientY) {
+  const svg = document.getElementById('place-board')
+  if (!svg || !G.map) return null
+  const rect = svg.getBoundingClientRect()
+  const { cols, rows } = G.map
+  const WALL = TILE * 2.2
+  const totalW = cols * TILE + WALL * 2
+  const totalH = rows * TILE + WALL * 2
+  const svgX = (clientX - rect.left) / rect.width * totalW - WALL
+  const svgY = (clientY - rect.top) / rect.height * totalH - WALL
+  const c = Math.floor(svgX / TILE)
+  const r = Math.floor(svgY / TILE)
+  if (r < 0 || r >= rows || c < 0 || c >= cols) return null
+  return { r, c }
 }
 
 function initPlaceTooltip() {
   const svg = document.getElementById('place-board')
   if (!svg) return
   svg.addEventListener('mousemove', (e) => {
-    if (!G.map) return
-    const rect = svg.getBoundingClientRect()
-    const { cols, rows } = G.map
-    const svgW = rect.width, svgH = rect.height
-    const hoverC = Math.floor((e.clientX - rect.left) / svgW * cols)
-    const hoverR = Math.floor((e.clientY - rect.top) / svgH * rows)
-    if (hoverR < 0 || hoverR >= rows || hoverC < 0 || hoverC >= cols) { hidePlaceTip(); return }
-    const placed = PL.placedSquares[`${hoverR},${hoverC}`]
+    const rc = placeMouseToRC(e.clientX, e.clientY)
+    if (!rc) { hidePlaceTip(); return }
+    const placed = PL.placedSquares[`${rc.r},${rc.c}`]
     if (placed) {
       const def = UNITS[placed.key]
       showPlaceTip(`${def.name} · ${def.type} · ${def.cost}XP`, e.clientX, e.clientY)
