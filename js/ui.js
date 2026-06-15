@@ -279,7 +279,7 @@ if (_params.get('embed') === '1') {
     })
 
     G.capturedByPlayer = []; G.capturedByAi = []; G.history = []
-    G.turn = Math.random() < 0.5 ? 'player' : 'ai'
+    G.turn = 'player'
     G.aiThinking = false; G.selR = null; G.selC = null
     G.legalMoves = []; G.legalAttacks = []
     DungeonMCE.registerAllUnits()
