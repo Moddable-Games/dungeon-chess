@@ -6,7 +6,7 @@ import { svgEl, getDCRenderOpts } from './board-renderer.js'
 import { drawDungeonSurround } from './dungeon-surround.js'
 import { startLightAnimation, renderAtmosphereCanvas } from './atmosphere.js'
 import { PL, autoPlace, renderTray, renderPlacementBoard, updatePlaceHint, invalidatePlacementStatic } from './screens.js'
-import { getController, createBattleController, destroyBattleController, lockTileSize, unlockTileSize, updateUI, endGame, addLog } from './battle-draw.js'
+import { getController, createBattleController, destroyBattleController, lockTileSize, unlockTileSize, updateUI, endGame, addLog, clearLastMove } from './battle-draw.js'
 import { rpSaveInitial, rpStart, rpGoToStart, rpStepBack, rpStepForward, rpGoToEnd, rpTogglePlay, rpPause } from './replay.js'
 import { kbInit } from './keyboard.js'
 import { kbEnsureLiveRegion } from './aria.js'
@@ -86,7 +86,7 @@ document.getElementById('undo-btn').onclick = () => {
   G.capturedByPlayer.pop()
   G.capturedByAi.pop()
   G.history.pop(); G.history.pop()
-  G_lastMove = null
+  clearLastMove()
   const el = document.getElementById('h-list')
   el.innerHTML = ''
   G.history.forEach(text => { const d = document.createElement('div'); d.className='h-entry'; d.textContent=text; el.insertBefore(d, el.firstChild) })
@@ -96,7 +96,7 @@ document.getElementById('undo-btn').onclick = () => {
 
 document.getElementById('play-again-btn').onclick = ()=>{
   destroyBattleController()
-  G_lastMove = null
+  clearLastMove()
   Object.assign(G,{numPlayers:2,playerSp:null,aiSp:null,ai2Sp:null,ai3Sp:null,playerDraft:[],aiDraft:[],ai2Draft:[],ai3Draft:[],map:null,pieces:[],mceGame:null,
     turn:'player',aiThinking:false,aiTimer:null,selR:null,selC:null,
     legalMoves:[],legalAttacks:[],capturedByPlayer:[],capturedByAi:[],history:[]})
@@ -107,7 +107,7 @@ document.getElementById('play-again-btn').onclick = ()=>{
 
 document.getElementById('rematch-btn').onclick = ()=>{
   destroyBattleController()
-  G_lastMove = null
+  clearLastMove()
   const savedMap = G.map, savedSp = G.playerSp, savedAiSp = G.aiSp
   const savedNum = G.numPlayers, savedAi2 = G.ai2Sp, savedAi3 = G.ai3Sp
   Object.assign(G,{pieces:[],mceGame:null,turn:'player',aiThinking:false,aiTimer:null,selR:null,selC:null,
@@ -122,7 +122,7 @@ document.getElementById('rematch-btn').onclick = ()=>{
 
 document.getElementById('rematch-same-btn').onclick = ()=>{
   destroyBattleController()
-  G_lastMove = null
+  clearLastMove()
   const savedDraft = [...G.playerDraft], savedAiDraft = [...G.aiDraft]
   const savedAi2Draft = G.ai2Draft ? [...G.ai2Draft] : []
   const savedAi3Draft = G.ai3Draft ? [...G.ai3Draft] : []

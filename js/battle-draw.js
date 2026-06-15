@@ -13,6 +13,7 @@ import { kbAnnounce } from './aria.js'
 let G_lastMove = null
 let G_controller = null
 export function getController() { return G_controller }
+export function clearLastMove() { G_lastMove = null }
 
 let _lastTile = null
 let _tileLocked = false
