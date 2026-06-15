@@ -180,6 +180,7 @@ export function renderTray() {
       }
       div.addEventListener('mousedown', (e) => startDrag(e, idx))
       div.addEventListener('touchstart', (e) => startDrag(e.touches[0], idx), { passive: true })
+      div.setAttribute('draggable', 'false')
     }
     list.appendChild(div)
   })
@@ -472,6 +473,7 @@ function finishDrag(cx, cy) {
     }
   }
   _dragIdx = null
+  setTimeout(() => { _dragActive = false }, 0)
 }
 
 function placeMouseToRC(clientX, clientY) {
