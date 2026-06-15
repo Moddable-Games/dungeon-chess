@@ -404,76 +404,56 @@ export function handlePlacementClick(r, c) {
   renderPlacementBoard()
 }
 
-let _dragIdx = null
-let _dragGhost = null
-let _dragStartX = 0, _dragStartY = 0
 let _dragActive = false
-const DRAG_THRESHOLD = 6
 
-function startDrag(e, idx) {
-  _dragIdx = idx
-  _dragStartX = e.clientX
-  _dragStartY = e.clientY
-  _dragActive = false
-  document.addEventListener('mousemove', onDragMove)
-  document.addEventListener('mouseup', onDragEnd)
-  document.addEventListener('touchmove', onTouchDragMove, { passive: false })
-  document.addEventListener('touchend', onTouchDragEnd)
-}
+function startDrag(startEvt, idx) {
+  const startX = startEvt.clientX, startY = startEvt.clientY
+  let ghost = null
+  let activated = false
 
-function activateDrag() {
-  _dragActive = true
-  const def = UNITS[PL.placementPieces[_dragIdx].key]
-  _dragGhost = document.createElement('div')
-  _dragGhost.className = 'drag-ghost'
-  _dragGhost.textContent = def.name
-  document.body.appendChild(_dragGhost)
-}
-
-function moveDragGhost(cx, cy) {
-  if (!_dragActive) {
-    const dx = cx - _dragStartX, dy = cy - _dragStartY
-    if (Math.abs(dx) + Math.abs(dy) > DRAG_THRESHOLD) activateDrag()
-    else return
-  }
-  _dragGhost.style.left = (cx + 12) + 'px'
-  _dragGhost.style.top = (cy - 16) + 'px'
-}
-
-function onDragMove(e) { moveDragGhost(e.clientX, e.clientY) }
-function onTouchDragMove(e) { e.preventDefault(); moveDragGhost(e.touches[0].clientX, e.touches[0].clientY) }
-
-function onDragEnd(e) { finishDrag(e.clientX, e.clientY) }
-function onTouchDragEnd(e) {
-  const t = e.changedTouches[0]
-  finishDrag(t.clientX, t.clientY)
-}
-
-function finishDrag(cx, cy) {
-  document.removeEventListener('mousemove', onDragMove)
-  document.removeEventListener('mouseup', onDragEnd)
-  document.removeEventListener('touchmove', onTouchDragMove)
-  document.removeEventListener('touchend', onTouchDragEnd)
-  if (_dragGhost) { _dragGhost.remove(); _dragGhost = null }
-  if (_dragIdx === null || !G.map) { _dragIdx = null; return }
-
-  const rc = placeMouseToRC(cx, cy)
-  if (rc && PL.spawnRows.includes(rc.r)) {
-    const cell = G.map.grid[rc.r][rc.c]
-    if (cell !== null && cell !== 'w' && !PL.placedSquares[`${rc.r},${rc.c}`]) {
-      PL.placedSquares[`${rc.r},${rc.c}`] = { idx: _dragIdx, key: PL.placementPieces[_dragIdx].key }
-      PL.placementPieces[_dragIdx].placed = true
-      PL.selectedTrayIdx = null
-      const allPlaced = PL.placementPieces.every(p => p.placed)
-      document.getElementById('confirm-place-btn').disabled = !allPlaced
-      computeTile(G.map)
-      renderTray()
-      renderPlacementBoard()
-      updatePlaceHint()
+  function onMove(e) {
+    const dx = e.clientX - startX, dy = e.clientY - startY
+    if (!activated && Math.abs(dx) + Math.abs(dy) > 6) {
+      activated = true
+      _dragActive = true
+      const def = UNITS[PL.placementPieces[idx].key]
+      ghost = document.createElement('div')
+      ghost.className = 'drag-ghost'
+      ghost.textContent = def.name
+      document.body.appendChild(ghost)
+    }
+    if (ghost) {
+      ghost.style.left = (e.clientX + 12) + 'px'
+      ghost.style.top = (e.clientY - 16) + 'px'
     }
   }
-  _dragIdx = null
-  setTimeout(() => { _dragActive = false }, 0)
+
+  function onUp(e) {
+    document.removeEventListener('mousemove', onMove)
+    document.removeEventListener('mouseup', onUp)
+    if (ghost) { ghost.remove(); ghost = null }
+    if (!activated) return
+
+    const rc = placeMouseToRC(e.clientX, e.clientY)
+    if (rc && PL.spawnRows.includes(rc.r)) {
+      const cell = G.map.grid[rc.r][rc.c]
+      if (cell !== null && cell !== 'w' && !PL.placedSquares[`${rc.r},${rc.c}`]) {
+        PL.placedSquares[`${rc.r},${rc.c}`] = { idx, key: PL.placementPieces[idx].key }
+        PL.placementPieces[idx].placed = true
+        PL.selectedTrayIdx = null
+        const allPlaced = PL.placementPieces.every(p => p.placed)
+        document.getElementById('confirm-place-btn').disabled = !allPlaced
+        computeTile(G.map)
+        renderTray()
+        renderPlacementBoard()
+        updatePlaceHint()
+      }
+    }
+    setTimeout(() => { _dragActive = false }, 0)
+  }
+
+  document.addEventListener('mousemove', onMove)
+  document.addEventListener('mouseup', onUp)
 }
 
 function placeMouseToRC(clientX, clientY) {
