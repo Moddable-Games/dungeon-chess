@@ -113,7 +113,11 @@ export function createBattleController() {
           overlay.setAttribute('height', G.map.rows * TILE)
           overlay.style.top = WALL + 'px'
           overlay.style.left = WALL + 'px'
-          animateMove(pd, fr, fc, tr, tc, !!captured, () => {}, overlay)
+          _dcOpts.excludePieces = [move.to]
+          animateMove(pd, fr, fc, tr, tc, !!captured, () => {
+            delete _dcOpts.excludePieces
+            G_controller.render()
+          }, overlay)
         }
         if (captured) flashCapture(tr, tc)
       }
