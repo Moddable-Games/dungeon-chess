@@ -8,7 +8,8 @@ import { startLightAnimation, renderAtmosphereCanvas } from './atmosphere.js'
 import { PL, autoPlace, renderTray, renderPlacementBoard, updatePlaceHint, invalidatePlacementStatic } from './screens.js'
 import { getController, createBattleController, destroyBattleController, lockTileSize, unlockTileSize, updateUI, endGame, addLog } from './battle-draw.js'
 import { rpSaveInitial, rpStart, rpGoToStart, rpStepBack, rpStepForward, rpGoToEnd, rpTogglePlay, rpPause } from './replay.js'
-import { kbInit, kbEnsureLiveRegion } from './keyboard.js'
+import { kbInit } from './keyboard.js'
+import { kbEnsureLiveRegion } from './aria.js'
 import { ttInit } from './tooltip.js'
 
 registerScreenHook('rules', () => renderRulesUnitTable())
