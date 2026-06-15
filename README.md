@@ -121,6 +121,14 @@ Pure client-side JavaScript. No frameworks, no build tools, no runtime dependenc
 
 ## Changelog
 
+#### 2026-06-15
+- **ESM migration** — all DC files converted to native ES modules, single entry point (`main.js`)
+- **Embed mode** — `?embed=1` URL param for iframe embedding, auto-drafts and starts game
+- **MCE animation** — replaced 150+ lines of custom animation with MCE built-in arc animation
+- **Checkmate detection** — game now ends correctly when a player has no legal moves while in check
+- **MCE synced** — pulled MCE v0.9.0 ESM, contributed animation timing fix and capture burst fix upstream
+- Game data extracted to JSON config files (`data/factions.json`, `data/maps.json`, `data/draft-rules.json`)
+
 #### 2026-06-01
 - **MCE AI integration** — replace hand-rolled heuristic AI with MCE's negamax search (alpha-beta, quiescence, transposition table, iterative deepening, time-budgeted difficulty)
 - Register Dungeon Chess as MCE variant plugin with `beforeMove`, `afterMove`, `evaluate`, and `restoreState` hooks
