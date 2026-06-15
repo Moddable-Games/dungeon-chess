@@ -42,130 +42,26 @@ const PIECE_SYMBOLS = {
 
 
 // ═══════════════════════════════════════════════════════════
-// GAME DATA
+// GAME DATA — structural constants (unchanged by mods)
 // ═══════════════════════════════════════════════════════════
 const SP = { H:'human', U:'undead', R:'redskin', G:'greenskin' }
 const PT = { P:'pawn',  C:'castle', N:'knight',  B:'bishop', Q:'queen', K:'king' }
 const FEN_CH = { [PT.P]:'p', [PT.C]:'r', [PT.N]:'n', [PT.B]:'b', [PT.Q]:'q', [PT.K]:'k' }
 
-const UNITS = {
-  hero:       { type:PT.P, sp:SP.H, cost:2,  name:'Hero',        cannon:null },
-  stronghold: { type:PT.C, sp:SP.H, cost:10, name:'Stronghold',  cannon:null },
-  knight_h:   { type:PT.N, sp:SP.H, cost:12, name:'Knight',      cannon:null },
-  archer:     { type:PT.B, sp:SP.H, cost:18, name:'Archer',      cannon:null },
-  wizard:     { type:PT.Q, sp:SP.H, cost:20, name:'Wizard',      cannon:null },
-  princess:   { type:PT.K, sp:SP.H, cost:15, name:'Princess',    cannon:null },
-  skeleton:   { type:PT.P, sp:SP.U, cost:1,  name:'Skeleton',    cannon:null },
-  tomb:       { type:PT.C, sp:SP.U, cost:12, name:'Tomb',        cannon:null },
-  reaper:     { type:PT.N, sp:SP.U, cost:15, name:'Reaper',      cannon:null },
-  wraith:     { type:PT.B, sp:SP.U, cost:15, name:'Wraith',      cannon:null },
-  vampire:    { type:PT.Q, sp:SP.U, cost:20, name:'Vampire',     cannon:null },
-  warlock:    { type:PT.K, sp:SP.U, cost:20, name:'Warlock',     cannon:null },
-  kobold:     { type:PT.P, sp:SP.R, cost:5,  name:'Kobold',      cannon:'pawn' },
-  iron_golem: { type:PT.C, sp:SP.R, cost:18, name:'Iron Golem',  cannon:'castle' },
-  salamander: { type:PT.N, sp:SP.R, cost:18, name:'Salamander',  cannon:null },
-  fire_elem:  { type:PT.B, sp:SP.R, cost:12, name:'Fire Elem.',  cannon:null },
-  demonics:   { type:PT.Q, sp:SP.R, cost:22, name:'Demonics',    cannon:null },
-  red_dragon: { type:PT.K, sp:SP.R, cost:20, name:'Red Dragon',  cannon:null },
-  goblin:     { type:PT.P, sp:SP.G, cost:5,  name:'Goblin',      cannon:'pawn' },
-  ogre:       { type:PT.C, sp:SP.G, cost:14, name:'Ogre',        cannon:'castle' },
-  orc:        { type:PT.N, sp:SP.G, cost:14, name:'Orc',         cannon:null },
-  troll:      { type:PT.B, sp:SP.G, cost:16, name:'Troll',       cannon:null },
-  shaman:     { type:PT.Q, sp:SP.G, cost:20, name:'Shaman',      cannon:null },
-  warlord:    { type:PT.K, sp:SP.G, cost:15, name:'Warlord',     cannon:null },
-}
-const SP_UNITS = {
-  [SP.H]: ['hero','stronghold','knight_h','archer','wizard','princess'],
-  [SP.U]: ['skeleton','tomb','reaper','wraith','vampire','warlock'],
-  [SP.R]: ['kobold','iron_golem','salamander','fire_elem','demonics','red_dragon'],
-  [SP.G]: ['goblin','ogre','orc','troll','shaman','warlord'],
-}
-const SP_INFO = {
-  [SP.H]: { label:'Humans',     accent:'#B08D2D', emoji:'⚔️',  desc:'Heroes, knights & archers. Balanced and versatile.' },
-  [SP.U]: { label:'Undead',     accent:'#7c3aed', emoji:'💀',  desc:'Skeletons & vampires. Masters of movement across gaps.' },
-  [SP.R]: { label:'Redskins',   accent:'#c0392b', emoji:'👹',  desc:'Kobolds & iron golems. Cannon attacks and fire power.' },
-  [SP.G]: { label:'Greenskins', accent:'#16a34a', emoji:'🐲',  desc:'Goblins, ogres & trolls. Brute force and cannon attacks.' },
-}
-
 // ═══════════════════════════════════════════════════════════
-// MAP DEFINITIONS
-// Grid cell values:
-//   null  = void (off-board, no square drawn)
-//   0     = normal square
-//   'w'   = water square
-//   object = token square { type, ...props }
+// DATA GLOBALS — populated from JSON at startup via DATA_READY
 // ═══════════════════════════════════════════════════════════
-function makeGrid(rows, cols, fill=null) {
-  return Array.from({length:rows}, ()=>Array(cols).fill(fill))
-}
+let UNITS, SP_UNITS, SP_INFO, MAPS, DRAFT_RULES
 
-const MAPS = (() => {
-  const N=0, W='w', _=null
-
-  // ── MAP 1: Compact 10×10 ────────────────────────────────
-  // 10×10 grid, 4×4 water in the middle (rows 3-6, cols 3-6)
-  const compact = makeGrid(10,10,N)
-  for(let r=3;r<=6;r++) for(let c=3;c<=6;c++) compact[r][c]=W
-
-  // ── MAP 2: Two-Player Cross ──────────────────────────────
-  //
-  // Sections (confirmed dimensions):
-  //   Top section:      8 wide × 3 tall
-  //   Top connector:    2 wide × 4 tall   (centred on top section & centre)
-  //   Centre:           8 wide × 8 tall   (water 4×4 in middle)
-  //   Bottom connector: 2 wide × 4 tall
-  //   Bottom section:   8 wide × 3 tall
-  //   NO left/right sections (those are four-player only)
-  //
-  // Grid layout (20 rows × 10 cols, centred on cols 1-8):
-  //   Centre:           rows 6–13,  cols 1–8
-  //   Water:            rows 8–11,  cols 3–6   (middle 4×4 of centre)
-  //   Top connector:    rows 2–5,   cols 4–5   (2 wide, 4 tall)
-  //   Top section:      rows 0–2,   cols 1–8   (8 wide, 3 tall)
-  //   Bottom connector: rows 14–17, cols 4–5
-  //   Bottom section:   rows 17–19, cols 1–8
-
-  const two = makeGrid(20,8,_)
-  // Centre 8×8 (cols 0-7)
-  for(let r=6;r<=13;r++) for(let c=0;c<=7;c++) two[r][c]=N
-  // Water 4×4 in middle of centre
-  for(let r=8;r<=11;r++) for(let c=2;c<=5;c++) two[r][c]=W
-  // Top connector 2×4
-  for(let r=2;r<=5;r++) for(let c=3;c<=4;c++) two[r][c]=N
-  // Top section 8×3
-  for(let r=0;r<=2;r++) for(let c=0;c<=7;c++) two[r][c]=N
-  // Bottom connector 2×4
-  for(let r=14;r<=17;r++) for(let c=3;c<=4;c++) two[r][c]=N
-  // Bottom section 8×3
-  for(let r=17;r<=19;r++) for(let c=0;c<=7;c++) two[r][c]=N
-
-  // ── MAP 3: Four-Player Cross ─────────────────────────────
-  // Identical to two-player but with left AND right sections and connectors.
-  // (Two-player map already has left + right — four-player is the same shape,
-  //  just with all four spawn zones active.)
-  // For Phase 1 the grid is identical; the 4-player designation means all four
-  // outer sections serve as spawn areas. Layout is the same 20×20 grid.
-  const four = makeGrid(20,20,_)
-  // Centre
-  for(let r=6;r<=13;r++) for(let c=6;c<=13;c++) four[r][c]=N
-  // Water
-  for(let r=8;r<=11;r++) for(let c=8;c<=11;c++) four[r][c]=W
-  // Top connector + section
-  for(let r=2;r<=5;r++) for(let c=9;c<=10;c++) four[r][c]=N
-  for(let r=0;r<=2;r++) for(let c=6;c<=13;c++) four[r][c]=N
-  // Bottom connector + section
-  for(let r=14;r<=17;r++) for(let c=9;c<=10;c++) four[r][c]=N
-  for(let r=17;r<=19;r++) for(let c=6;c<=13;c++) four[r][c]=N
-  // Left connector + section
-  for(let r=9;r<=10;r++) for(let c=2;c<=5;c++) four[r][c]=N
-  for(let r=6;r<=13;r++) for(let c=0;c<=2;c++) four[r][c]=N
-  // Right connector + section
-  for(let r=9;r<=10;r++) for(let c=14;c<=17;c++) four[r][c]=N
-  for(let r=6;r<=13;r++) for(let c=17;c<=19;c++) four[r][c]=N
-
-  return [
-    { id:'compact',    name:'Compact Skirmish',   icon:'⚔',  players:2, grid:compact, rows:10, cols:10, desc:'10×10 dungeon — 4×4 water hazard in centre' },
-    { id:'two_player', name:'Two Player Dungeon',  icon:'🗡', players:2, grid:two,     rows:20, cols:8,  desc:'Cross-shaped dungeon — top & bottom spawns, central water' },
-    { id:'four_player',name:'Four Player Dungeon', icon:'🏰', players:4, grid:four,    rows:20, cols:20, desc:'Symmetric cross — four spawn zones, central water' },
-  ]
+const DATA_READY = (async () => {
+  const [f, m, d] = await Promise.all([
+    fetch('data/factions.json').then(r => r.json()),
+    fetch('data/maps.json').then(r => r.json()),
+    fetch('data/draft-rules.json').then(r => r.json()),
+  ])
+  UNITS       = f.units
+  SP_UNITS    = f.spUnits
+  SP_INFO     = f.spInfo
+  MAPS        = m.maps
+  DRAFT_RULES = d
 })()
