@@ -103,6 +103,13 @@ export function createBattleController() {
 
       if (move.flag === 'action') return
 
+      if (owner !== 'player') {
+        const [fr, fc] = MCE.rc(move.from, game)
+        const [tr, tc] = MCE.rc(move.to, game)
+        animateMove(pd, fr, fc, tr, tc, !!captured, () => {})
+        if (captured) flashCapture(tr, tc)
+      }
+
       const ownerLabel = owner === 'player' ? SP_INFO[G.playerSp].emoji + ' You'
         : owner === 'ai' ? SP_INFO[G.aiSp].emoji + ' AI'
         : owner === 'ai2' ? SP_INFO[G.ai2Sp].emoji + ' AI2'
