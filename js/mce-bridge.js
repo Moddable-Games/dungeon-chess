@@ -1,11 +1,11 @@
-'use strict';
-const DungeonMCE = (function() {
+import MCE from '../lib/mce/chess-engine.js'
+import { PT, UNITS } from './data.js'
 
-const PIECE_CHAR = 'X';
-const RD = MCE.ROOK_DIRS;
-const BD = MCE.BISHOP_DIRS;
-const AD = MCE.QUEEN_DIRS;
-const KNIGHT = MCE.KNIGHT_OFFSETS;
+const PIECE_CHAR = 'X'
+const RD = MCE.ROOK_DIRS
+const BD = MCE.BISHOP_DIRS
+const AD = MCE.QUEEN_DIRS
+const KNIGHT = MCE.KNIGHT_OFFSETS
 
 const unitHandlers = {};
 
@@ -567,5 +567,4 @@ function allPieces(g) {
   return result;
 }
 
-return { registerAllUnits, createDungeonGame, syncPiecesFromMCE, getLegal, findMCEMove, isInCheck, pickAiMove, getPieceAt, countPieces, allPieces };
-})();
+export const DungeonMCE = { registerAllUnits, createDungeonGame, syncPiecesFromMCE, getLegal, findMCEMove, isInCheck, pickAiMove, getPieceAt, countPieces, allPieces }

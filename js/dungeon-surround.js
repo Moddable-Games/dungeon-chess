@@ -1,13 +1,9 @@
-'use strict'
-// ═══════════════════════════════════════════════════════════
-// DUNGEON SURROUND — 3D perspective walls, portcullises, vines, cobwebs
-// ═══════════════════════════════════════════════════════════
+import { TILE } from './data.js'
 
-// Surround cache — avoids redrawing the expensive wall/brick/vine canvas
 let _surroundCache = { mapId: null, tile: null, canvas: null }
 
 // Shared dungeon surround renderer — draws on a <canvas> behind the SVG
-function drawDungeonSurround(canvasEl, map) {
+export function drawDungeonSurround(canvasEl, map) {
   const { grid, rows, cols } = map
   const W = cols * TILE, H = rows * TILE
 

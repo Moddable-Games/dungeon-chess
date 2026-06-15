@@ -1,30 +1,26 @@
-'use strict'
-
 // ═══════════════════════════════════════════════════════════
 // INLINE PIECE SPRITES — Cburnett set (CC BY-SA 3.0)
 // Same pieces used by Wikipedia, Lichess, and cm-chessboard's
 // "standard.svg" set. Inlined here so no CDN fetch is needed.
 // Each symbol uses viewBox="0 0 45 45".
 // ═══════════════════════════════════════════════════════════
-let TILE = 56  // px per square — recomputed dynamically
+export let TILE = 56
 
-const SIDE_W = 148   // meta column width px
-const TILE_MIN = 24, TILE_MAX = 62
+export const SIDE_W = 148
+export const TILE_MIN = 24
+export const TILE_MAX = 62
 
-function computeTile(map) {
-  const sidePad = (SIDE_W + 12) * 2 + 40  // 2 cols + gaps + screen padding
+export function computeTile(map) {
+  const sidePad = (SIDE_W + 12) * 2 + 40
   const WALL = 2.2
   const avW = Math.max(200, window.innerWidth - sidePad)
-  // Only constrain by width — let the page scroll vertically if needed
   const tileFromW = Math.floor(avW / (map.cols + WALL*2))
   TILE = Math.max(TILE_MIN, Math.min(TILE_MAX, tileFromW))
 }
 
-// Piece letter → sprite id suffix
-const PIECE_TO_SPRITE = { p:'p', r:'r', n:'n', b:'b', q:'q', k:'k' }
+export const PIECE_TO_SPRITE = { p:'p', r:'r', n:'n', b:'b', q:'q', k:'k' }
 
-// All 12 piece symbols as inline SVG strings (id = piece-wp, piece-bp, etc.)
-const PIECE_SYMBOLS = {
+export const PIECE_SYMBOLS = {
 'wp': `<symbol id="piece-wp" viewBox="0 0 45 45"><path d="M 22,9 C 19.79,9 18,10.79 18,13 C 18,13.89 18.29,14.71 18.78,15.38 C 16.83,16.5 15.5,18.59 15.5,21 C 15.5,23.03 16.44,24.84 17.91,26.03 C 14.91,27.09 10.5,31.58 10.5,39.5 L 33.5,39.5 C 33.5,31.58 29.09,27.09 26.09,26.03 C 27.56,24.84 28.5,23.03 28.5,21 C 28.5,18.59 27.17,16.5 25.22,15.38 C 25.71,14.71 26,13.89 26,13 C 26,10.79 24.21,9 22,9 z" style="fill:#fff;stroke:#000;stroke-width:1.5;stroke-linecap:round"/></symbol>`,
 'bp': `<symbol id="piece-bp" viewBox="0 0 45 45"><path d="M 22,9 C 19.79,9 18,10.79 18,13 C 18,13.89 18.29,14.71 18.78,15.38 C 16.83,16.5 15.5,18.59 15.5,21 C 15.5,23.03 16.44,24.84 17.91,26.03 C 14.91,27.09 10.5,31.58 10.5,39.5 L 33.5,39.5 C 33.5,31.58 29.09,27.09 26.09,26.03 C 27.56,24.84 28.5,23.03 28.5,21 C 28.5,18.59 27.17,16.5 25.22,15.38 C 25.71,14.71 26,13.89 26,13 C 26,10.79 24.21,9 22,9 z" style="fill:#000;stroke:#000;stroke-width:1.5;stroke-linecap:round"/></symbol>`,
 'wr': `<symbol id="piece-wr" viewBox="0 0 45 45"><g style="opacity:1;fill:#fff;fill-opacity:1;fill-rule:evenodd;stroke:#000;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"><path d="M 9,39 L 36,39 L 36,36 L 9,36 L 9,39 z"/><path d="M 12,36 L 12,32 L 33,32 L 33,36 L 12,36 z"/><path d="M 11,14 L 11,9 L 15,9 L 15,11 L 20,11 L 20,9 L 25,9 L 25,11 L 30,11 L 30,9 L 34,9 L 34,14"/><path d="M 34,14 L 31,17 L 14,17 L 11,14"/><path d="M 31,17 L 31,29.5 L 14,29.5 L 14,17"/><path d="M 31,29.5 L 32.5,32 L 12.5,32 L 14,29.5"/><path d="M 11,14 L 34,14" style="fill:none"/></g></symbol>`,
@@ -44,16 +40,17 @@ const PIECE_SYMBOLS = {
 // ═══════════════════════════════════════════════════════════
 // GAME DATA — structural constants (unchanged by mods)
 // ═══════════════════════════════════════════════════════════
-const SP = { H:'human', U:'undead', R:'redskin', G:'greenskin' }
-const PT = { P:'pawn',  C:'castle', N:'knight',  B:'bishop', Q:'queen', K:'king' }
-const FEN_CH = { [PT.P]:'p', [PT.C]:'r', [PT.N]:'n', [PT.B]:'b', [PT.Q]:'q', [PT.K]:'k' }
+export const SP = { H:'human', U:'undead', R:'redskin', G:'greenskin' }
+export const PT = { P:'pawn',  C:'castle', N:'knight',  B:'bishop', Q:'queen', K:'king' }
+export const FEN_CH = { [PT.P]:'p', [PT.C]:'r', [PT.N]:'n', [PT.B]:'b', [PT.Q]:'q', [PT.K]:'k' }
 
 // ═══════════════════════════════════════════════════════════
 // DATA GLOBALS — populated from JSON at startup via DATA_READY
+// ESM live bindings: importers see updated values after DATA_READY resolves
 // ═══════════════════════════════════════════════════════════
-let UNITS, SP_UNITS, SP_INFO, MAPS, DRAFT_RULES
+export let UNITS, SP_UNITS, SP_INFO, MAPS, DRAFT_RULES
 
-const DATA_READY = (async () => {
+export const DATA_READY = (async () => {
   const [f, m, d] = await Promise.all([
     fetch('data/factions.json').then(r => r.json()),
     fetch('data/maps.json').then(r => r.json()),
