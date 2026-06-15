@@ -67,6 +67,7 @@ export function renderPlacementScreen() {
   document.getElementById('confirm-place-btn').disabled = true
   populatePlacePanels()
   initPlaceTooltip()
+  updatePlaceHint()
 }
 
 function populatePlacePanels() {
