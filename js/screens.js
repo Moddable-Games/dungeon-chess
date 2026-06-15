@@ -316,6 +316,7 @@ export function renderPlacementBoard() {
         const offset = (TILE - TILE*0.9) / 2
         const sz = TILE*0.9
         const pg = svgEl('g', { transform:`translate(${x},${y})`, class:'placed-piece' })
+        pg.appendChild(svgEl('rect', { x:0, y:0, width:TILE, height:TILE, fill:'transparent', 'pointer-events':'all' }))
         const title = document.createElementNS('http://www.w3.org/2000/svg', 'title')
         title.textContent = `${def.name} (${def.type} · ${def.cost}XP)`
         pg.appendChild(title)
