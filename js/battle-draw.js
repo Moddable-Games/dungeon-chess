@@ -280,11 +280,8 @@ export function updateUI() {
   tl.classList.toggle('t-label--check', inCheck)
   tl.classList.toggle('t-label--player', !inCheck && G.turn==='player')
   tl.classList.toggle('t-label--enemy', !inCheck && G.turn!=='player')
-  // Announce turn changes for screen readers
-  if (typeof kbAnnounce === 'function') {
-    if (inCheck) kbAnnounce('Warning: your king is in check!')
-    else if (G.turn === 'player' && !G.aiThinking) kbAnnounce('Your turn')
-  }
+  if (inCheck) kbAnnounce('Warning: your king is in check!')
+  else if (G.turn === 'player' && !G.aiThinking) kbAnnounce('Your turn')
   const pi2=SP_INFO[G.playerSp], ai2i=SP_INFO[G.aiSp]
   document.getElementById('p-label').textContent=`${pi2.emoji} YOU`
   document.getElementById('a-label').textContent=`${ai2i.emoji} AI${G.numPlayers===4?' 1':''}`
@@ -355,10 +352,7 @@ export function addLog(text){
 export function endGame(winner){
   destroyBattleController()
   G.aiThinking=false
-  // Announce game result for screen readers
-  if (typeof kbAnnounce === 'function') {
-    kbAnnounce(winner === 'player' ? 'Victory! You won the battle.' : 'Defeat. The enemy has conquered.')
-  }
+  kbAnnounce(winner === 'player' ? 'Victory! You won the battle.' : 'Defeat. The enemy has conquered.')
   const pw=winner==='player'
   const pi=SP_INFO[G.playerSp]
   const winnerSp = winner==='player'?G.playerSp:winner==='ai'?G.aiSp:winner==='ai2'?G.ai2Sp:G.ai3Sp
