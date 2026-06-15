@@ -1,10 +1,11 @@
-'use strict'
-// ═══════════════════════════════════════════════════════════
-// UNIT TOOLTIPS — hover/focus shows name, species, cost
-// ═══════════════════════════════════════════════════════════
-const TT = { visible: false, pieceKey: null }
+import { TILE, UNITS, SP_INFO } from './data.js'
+import { G } from './state.js'
+import { DungeonMCE } from './mce-bridge.js'
+import { KB } from './keyboard.js'
 
-function ttInit() {
+export const TT = { visible: false, pieceKey: null }
+
+export function ttInit() {
   const svg = document.getElementById('dungeon-board')
   if (!svg) return
 
@@ -125,7 +126,7 @@ const TT_ABILITIES = {
 function ttGetAbilities(unitKey) { return TT_ABILITIES[unitKey] || '' }
 
 // Show tooltip on keyboard cursor focus
-function ttShowForCursor() {
+export function ttShowForCursor() {
   if (!KB.active || !G.map) return
   const piece = G.mceGame ? DungeonMCE.getPieceAt(G.mceGame, KB.cursorR, KB.cursorC) : null
   if (!piece) {

@@ -1,15 +1,17 @@
-'use strict'
-// ═══════════════════════════════════════════════════════════
-// KEYBOARD NAVIGATION & ACCESSIBILITY
-// ═══════════════════════════════════════════════════════════
+import { TILE } from './data.js'
+import { G } from './state.js'
+import MCE from '../lib/mce/chess-engine.js'
+import { svgEl, registerCursorRenderer } from './board-renderer.js'
+import { kbAnnounceSquare, kbAnnounceAction, kbAnnounce } from './aria.js'
+import { getController } from './battle-draw.js'
 
-const KB = {
+export const KB = {
   cursorR: 0,
   cursorC: 0,
   active: false,
 }
 
-function kbInit() {
+export function kbInit() {
   document.addEventListener('keydown', kbHandleKey)
 }
 
@@ -74,17 +76,17 @@ function kbMoveCursor(key, map) {
     KB.cursorC = nextC
   }
 
-  if (G_controller) G_controller.render()
+  if (getController()) getController().render()
   kbAnnounceSquare()
 }
 
 function kbActivate() {
   if (!KB.active) {
     KB.active = true
-    if (G_controller) G_controller.render()
+    if (getController()) getController().render()
     return
   }
-  if (G_controller) G_controller.handleClick(MCE.sq(KB.cursorR, KB.cursorC, G.mceGame))
+  if (getController()) getController().handleClick(MCE.sq(KB.cursorR, KB.cursorC, G.mceGame))
   kbAnnounceAction()
 }
 
@@ -96,7 +98,7 @@ function kbDeselect() {
     G.legalAttacks = []
     document.getElementById('sel-info').innerHTML =
       '<span class="sel-info">Click a piece</span>'
-    if (G_controller) G_controller.render()
+    if (getController()) getController().render()
     kbAnnounce('Selection cleared')
   }
 }
@@ -120,7 +122,9 @@ function kbCyclePanel(e) {
 // ═══════════════════════════════════════════════════════════
 // CURSOR RENDERING (called by renderBoard)
 // ═══════════════════════════════════════════════════════════
-function kbRenderCursor(svg, map) {
+registerCursorRenderer(kbRenderCursor)
+
+export function kbRenderCursor(svg, map) {
   if (!KB.active) return
   const { cursorR, cursorC } = KB
   if (!map.grid[cursorR] || map.grid[cursorR][cursorC] === null) return

@@ -1,9 +1,10 @@
-'use strict'
-// ═══════════════════════════════════════════════════════════
-// ARIA ANNOUNCEMENTS FOR SCREEN READERS
-// ═══════════════════════════════════════════════════════════
+import { UNITS } from './data.js'
+import { G } from './state.js'
+import { DungeonMCE } from './mce-bridge.js'
+import { KB } from './keyboard.js'
+import { ttShowForCursor } from './tooltip.js'
 
-function kbEnsureLiveRegion() {
+export function kbEnsureLiveRegion() {
   let region = document.getElementById('aria-live-region')
   if (!region) {
     region = document.createElement('div')
@@ -16,13 +17,13 @@ function kbEnsureLiveRegion() {
   return region
 }
 
-function kbAnnounce(msg) {
+export function kbAnnounce(msg) {
   const region = kbEnsureLiveRegion()
   region.textContent = ''
   requestAnimationFrame(() => { region.textContent = msg })
 }
 
-function kbAnnounceSquare() {
+export function kbAnnounceSquare() {
   const { cursorR, cursorC } = KB
   const file = String.fromCharCode(97 + cursorC)
   const rank = cursorR + 1
@@ -43,10 +44,10 @@ function kbAnnounceSquare() {
   if (isAttack) msg += ', can attack'
   kbAnnounce(msg)
   // Show tooltip for keyboard-focused piece
-  if (typeof ttShowForCursor === 'function') ttShowForCursor()
+  ttShowForCursor()
 }
 
-function kbAnnounceAction() {
+export function kbAnnounceAction() {
   const { cursorR, cursorC } = KB
   const pd = G.mceGame ? DungeonMCE.getPieceAt(G.mceGame, cursorR, cursorC) : null
   const piece = pd && pd.owner === 'player' ? pd : null

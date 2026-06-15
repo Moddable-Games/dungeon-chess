@@ -1,17 +1,18 @@
-'use strict'
-// ═══════════════════════════════════════════════════════════
-// GAME REPLAY — step through recorded moves via MCE
-// ═══════════════════════════════════════════════════════════
+import MCE from '../lib/mce/chess-engine.js'
+import { computeTile } from './data.js'
+import { G, show, registerScreenHook } from './state.js'
+import { DungeonMCE } from './mce-bridge.js'
+import { getDCRenderOpts } from './board-renderer.js'
 
-const RP = { game: null, moves: [], undoStack: [], currentIdx: -1,
+export const RP = { game: null, moves: [], undoStack: [], currentIdx: -1,
   playing: false, timer: null, speed: 800, initialPieces: [] }
 
-function rpSaveInitial() {
+export function rpSaveInitial() {
   if (!G.mceGame) return
   RP.initialPieces = DungeonMCE.allPieces(G.mceGame)
 }
 
-function rpStart() {
+export function rpStart() {
   if (!G.mceGame || !G.map) return
   RP.moves = G.mceGame.history.slice()
   DungeonMCE.registerAllUnits()
@@ -46,7 +47,7 @@ function rpRender() {
   MCE.renderBoard(container, RP.game, opts)
 }
 
-function rpStepForward() {
+export function rpStepForward() {
   if (RP.currentIdx >= RP.moves.length - 1) {
     rpPause()
     return
@@ -55,7 +56,7 @@ function rpStepForward() {
   rpGoToMove(RP.currentIdx)
 }
 
-function rpStepBack() {
+export function rpStepBack() {
   if (RP.currentIdx < 0) return
   RP.currentIdx--
   rpGoToMove(RP.currentIdx)
@@ -74,7 +75,7 @@ function rpGoToMove(target) {
   rpHighlightLog()
 }
 
-function rpGoToStart() {
+export function rpGoToStart() {
   rpPause()
   RP.currentIdx = -1
   DungeonMCE.registerAllUnits()
@@ -86,7 +87,7 @@ function rpGoToStart() {
   rpHighlightLog()
 }
 
-function rpGoToEnd() {
+export function rpGoToEnd() {
   rpPause()
   RP.currentIdx = RP.moves.length - 1
   rpGoToMove(RP.currentIdx)
@@ -99,8 +100,8 @@ function rpPlay() {
   RP.timer = setInterval(() => rpStepForward(), RP.speed)
 }
 
-function rpPause() { RP.playing = false; if (RP.timer) { clearInterval(RP.timer); RP.timer = null }; rpUpdateControls() }
-function rpTogglePlay() { RP.playing ? rpPause() : rpPlay() }
+export function rpPause() { RP.playing = false; if (RP.timer) { clearInterval(RP.timer); RP.timer = null }; rpUpdateControls() }
+export function rpTogglePlay() { RP.playing ? rpPause() : rpPlay() }
 
 function rpUpdateControls() {
   const idx = RP.currentIdx
@@ -124,7 +125,9 @@ function rpHighlightLog() {
   if (active) active.scrollIntoView({ block: 'nearest' })
 }
 
-function rpBuildLog() {
+registerScreenHook('replay', rpBuildLog)
+
+export function rpBuildLog() {
   const list = document.getElementById('rp-log')
   if (!list) return
   list.innerHTML = RP.moves.map((m, i) => {
