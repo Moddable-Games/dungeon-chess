@@ -540,12 +540,7 @@ export function getDCRenderOpts() {
     legalMoveRenderer: dcLegalMoveRenderer,
     effectOverlay: dcEffectOverlay,
     afterRender: dcAfterRender,
-    suppressHighlights: true,
-    animate: true,
-    animStyle: 'arc',
-    animDuration: 350,
-    animArcHeight: 0.25,
-    animCaptureBurst: true
+    suppressHighlights: true
   }
 }
 
