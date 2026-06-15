@@ -106,7 +106,15 @@ export function createBattleController() {
       if (owner !== 'player') {
         const [fr, fc] = MCE.rc(move.from, game)
         const [tr, tc] = MCE.rc(move.to, game)
-        animateMove(pd, fr, fc, tr, tc, !!captured, () => {})
+        const overlay = document.getElementById('anim-overlay')
+        if (overlay) {
+          const WALL = TILE * 2.2
+          overlay.setAttribute('width', G.map.cols * TILE)
+          overlay.setAttribute('height', G.map.rows * TILE)
+          overlay.style.top = WALL + 'px'
+          overlay.style.left = WALL + 'px'
+          animateMove(pd, fr, fc, tr, tc, !!captured, () => {}, overlay)
+        }
         if (captured) flashCapture(tr, tc)
       }
 
@@ -168,8 +176,8 @@ export function destroyBattleController() {
 // ═══════════════════════════════════════════════════════════
 const MOVE_DURATION = 350
 
-export function animateMove(pd, fr, fc, tr, tc, isCapture, callback) {
-  const svg = document.getElementById('dungeon-board')
+export function animateMove(pd, fr, fc, tr, tc, isCapture, callback, targetSvg) {
+  const svg = targetSvg || document.getElementById('dungeon-board')
   if (!svg || !G.map) { callback(); return }
 
   const fromX = fc * TILE
