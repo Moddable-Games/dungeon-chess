@@ -172,6 +172,7 @@ export function renderTray() {
     `
     if (!p.placed) {
       div.onclick = () => {
+        if (_dragActive) return
         PL.selectedTrayIdx = (PL.selectedTrayIdx === idx) ? null : idx
         renderTray()
         renderPlacementBoard()
@@ -404,23 +405,36 @@ export function handlePlacementClick(r, c) {
 
 let _dragIdx = null
 let _dragGhost = null
+let _dragStartX = 0, _dragStartY = 0
+let _dragActive = false
+const DRAG_THRESHOLD = 6
 
 function startDrag(e, idx) {
   _dragIdx = idx
-  const def = UNITS[PL.placementPieces[idx].key]
-  _dragGhost = document.createElement('div')
-  _dragGhost.className = 'drag-ghost'
-  _dragGhost.textContent = def.name
-  document.body.appendChild(_dragGhost)
-  moveDragGhost(e.clientX, e.clientY)
+  _dragStartX = e.clientX
+  _dragStartY = e.clientY
+  _dragActive = false
   document.addEventListener('mousemove', onDragMove)
   document.addEventListener('mouseup', onDragEnd)
   document.addEventListener('touchmove', onTouchDragMove, { passive: false })
   document.addEventListener('touchend', onTouchDragEnd)
 }
 
+function activateDrag() {
+  _dragActive = true
+  const def = UNITS[PL.placementPieces[_dragIdx].key]
+  _dragGhost = document.createElement('div')
+  _dragGhost.className = 'drag-ghost'
+  _dragGhost.textContent = def.name
+  document.body.appendChild(_dragGhost)
+}
+
 function moveDragGhost(cx, cy) {
-  if (!_dragGhost) return
+  if (!_dragActive) {
+    const dx = cx - _dragStartX, dy = cy - _dragStartY
+    if (Math.abs(dx) + Math.abs(dy) > DRAG_THRESHOLD) activateDrag()
+    else return
+  }
   _dragGhost.style.left = (cx + 12) + 'px'
   _dragGhost.style.top = (cy - 16) + 'px'
 }
@@ -486,6 +500,13 @@ function initPlaceTooltip() {
     if (placed) {
       const def = UNITS[placed.key]
       showPlaceTip(`${def.name} · ${def.type} · ${def.cost}XP`, e.clientX, e.clientY)
+      return
+    }
+    const aiPiece = G.pieces.find(p => p.r === rc.r && p.c === rc.c)
+    if (aiPiece) {
+      const def = UNITS[aiPiece.key]
+      const ownerLabel = SP_INFO[aiPiece.owner === 'ai' ? G.aiSp : aiPiece.owner === 'ai2' ? G.ai2Sp : G.ai3Sp]?.label || 'AI'
+      showPlaceTip(`${def.name} · ${ownerLabel}`, e.clientX, e.clientY)
     } else { hidePlaceTip() }
   })
   svg.addEventListener('mouseleave', hidePlaceTip)
