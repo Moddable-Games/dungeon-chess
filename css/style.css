@@ -935,3 +935,13 @@ h1,h2,h3,h4 { font-family:'Cinzel',serif; }
   .rules-unit-table td { padding:0.3rem 0.4rem; }
   .rules-terrain-card { padding:0.5rem 0.75rem; }
 }
+
+/* ── EMBED MODE ── */
+.embed-mode .screen:not(#screen-battle) { display:none !important; }
+.embed-mode #screen-battle { padding:0 !important; }
+.embed-mode .b-left,
+.embed-mode .b-right { display:none !important; }
+.embed-mode .b-centre { flex:1; display:flex; align-items:center; justify-content:center; }
+.embed-mode .site-version { display:none; }
+.embed-mode { overflow:hidden; }
+.embed-mode #screen-battle { height:100vh; width:100vw; align-items:center; justify-content:center; }

@@ -5,7 +5,7 @@ import MCE from '../lib/mce/chess-engine.js'
 import { svgEl, getDCRenderOpts } from './board-renderer.js'
 import { drawDungeonSurround } from './dungeon-surround.js'
 import { startLightAnimation, renderAtmosphereCanvas } from './atmosphere.js'
-import { PL, autoPlace, renderTray, renderPlacementBoard, updatePlaceHint, invalidatePlacementStatic } from './screens.js'
+import { PL, autoPlace, renderPlacementScreen, renderTray, renderPlacementBoard, updatePlaceHint, invalidatePlacementStatic } from './screens.js'
 import { getController, createBattleController, destroyBattleController, lockTileSize, unlockTileSize, updateUI, endGame, addLog, clearLastMove } from './battle-draw.js'
 import { rpSaveInitial, rpStart, rpGoToStart, rpStepBack, rpStepForward, rpGoToEnd, rpTogglePlay, rpPause } from './replay.js'
 import { kbInit } from './keyboard.js'
@@ -237,3 +237,64 @@ window.addEventListener('load', () => {
   kbEnsureLiveRegion()
   ttInit()
 })
+
+// ═══════════════════════════════════════════════════════════
+// EMBED MODE
+// ═══════════════════════════════════════════════════════════
+const _params = new URLSearchParams(window.location.search)
+if (_params.get('embed') === '1') {
+  document.body.classList.add('embed-mode')
+  DATA_READY.then(() => {
+    const factionParam = _params.get('faction')
+    const mapParam = _params.get('map')
+    const playersParam = _params.get('players')
+
+    G.numPlayers = playersParam === '4' ? 4 : 2
+    G.map = (mapParam && MAPS.find(m => m.id === mapParam)) || MAPS[0]
+    G.playerSp = (factionParam && Object.values(SP).includes(factionParam)) ? factionParam : SP.H
+
+    const others = Object.values(SP).filter(s => s !== G.playerSp)
+    const shuffled = [...others].sort(() => Math.random() - 0.5)
+    G.aiSp = shuffled[0]
+    G.ai2Sp = G.numPlayers === 4 ? shuffled[1] : null
+    G.ai3Sp = G.numPlayers === 4 ? shuffled[2] : null
+
+    G.playerDraft = buildAiDraft(G.playerSp)
+    G.aiDraft = buildAiDraft(G.aiSp)
+    G.ai2Draft = G.numPlayers === 4 ? buildAiDraft(G.ai2Sp) : []
+    G.ai3Draft = G.numPlayers === 4 ? buildAiDraft(G.ai3Sp) : []
+
+    renderPlacementScreen()
+    autoPlace()
+    const initPieces = [...G.pieces]
+    let id = Math.max(...initPieces.map(p => p.id), 0) + 1
+    Object.entries(PL.placedSquares).forEach(([sqKey, { key }]) => {
+      const [r, c] = sqKey.split(',').map(Number)
+      initPieces.push({ id: id++, key, r, c, owner: 'player' })
+    })
+
+    G.capturedByPlayer = []; G.capturedByAi = []; G.history = []
+    G.turn = Math.random() < 0.5 ? 'player' : 'ai'
+    G.aiThinking = false; G.selR = null; G.selC = null
+    G.legalMoves = []; G.legalAttacks = []
+    DungeonMCE.registerAllUnits()
+    const players = G.numPlayers === 4 ? ['player', 'ai', 'ai2', 'ai3'] : ['player', 'ai']
+    G.mceGame = DungeonMCE.createDungeonGame(G.map, initPieces, players)
+    G.mceGame.turn = G.turn
+    G.mceGame.turnIndex = G.mceGame.players.indexOf(G.turn)
+    rpSaveInitial()
+    show('battle')
+    lockTileSize()
+    const bCanvas = document.getElementById('dungeon-canvas')
+    if (bCanvas && G.map) drawDungeonSurround(bCanvas, G.map)
+    const bLights = document.getElementById('dungeon-lights')
+    if (bLights && G.map) startLightAnimation(bLights, G.map, TILE * 2.2)
+    createBattleController()
+  })
+
+  window.addEventListener('message', (e) => {
+    if (!e.data || typeof e.data !== 'object') return
+    const { action } = e.data
+    if (action === 'newGame') window.location.reload()
+  })
+}
