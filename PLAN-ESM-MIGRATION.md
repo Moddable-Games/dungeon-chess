@@ -71,21 +71,30 @@ Single entry point `js/main.js` loaded as `<script type="module">`. Each file ge
 - **Problem:** ui.js calls functions from battle-draw.js (`updateUI`, `addLog`, etc.). battle-draw uses `show()` from state.js (not from ui.js directly).
 - **Fix:** No actual cycle — ui.js imports from battle-draw.js, battle-draw imports from state.js. ui.js wires DOM and is the leaf entry point.
 
-## Completed Steps
+## Completed Steps (all pushed to origin/dev)
 
-- [x] `js/data.js` — all exports added (export let TILE, export let UNITS, etc.)
-- [x] `js/mce-bridge.js` — imports MCE + data, unwrapped IIFE, exports DungeonMCE
+- [x] MCE pulled (ESM v0.9.0) and committed
+- [x] `js/data.js` — `export let TILE`, `export let UNITS`, etc. Standard ESM live bindings.
+- [x] `js/mce-bridge.js` — imports MCE + data, unwrapped IIFE, `export const DungeonMCE = {...}`
 - [x] `js/dungeon-surround.js` — imports TILE from data, exports drawDungeonSurround
-- [x] MCE pulled (ESM v0.9.0) and committed on dev
+- [x] `js/atmosphere.js` — NEW FILE extracted from ui.js (lightAnimState, startLightAnimation, renderAtmosphereCanvas)
+- [x] `js/board-renderer.js` — imports from data/MCE/surround/state. Moved spToColor/appendPieceTint here. registerCursorRenderer pattern. All render hooks exported.
+- [x] `js/state.js` — imports from data/atmosphere. Exports G, show, draft/screen functions. registerScreenHook pattern replaces late-bound typeof checks.
 
 ## Next Steps (resume here)
 
-1. Create `js/atmosphere.js` — extract from battle-draw.js (lightAnimState, startLightAnimation, renderAtmosphereCanvas)
-2. Convert `js/board-renderer.js` — add imports, move spToColor/appendPieceTint here, add registerCursorRenderer, export all public functions
-3. Convert `js/state.js` — import from data/board-renderer/atmosphere, export G/show/draft functions
-4. Convert remaining files in dependency order (engine → battle → screens → battle-draw → replay → aria → keyboard → tooltip → ui)
-5. Create `js/main.js` entry point
-6. Update index.html
+1. Convert `js/engine.js` — imports DungeonMCE, G, MCE. Exports getLegal, wouldLeaveInCheck, isInCheck.
+2. Convert `js/battle.js` — imports data/state/DungeonMCE. Exports buildStarting, placeAiPiecesColumn.
+3. Convert `js/screens.js` — imports data/state/renderer/surround/atmosphere. Exports PL + placement functions. Registers 'place' screen hook.
+4. Convert `js/battle-draw.js` — imports data/state/MCE/DungeonMCE/renderer/engine/atmosphere. Exports G_controller, createBattleController, destroyBattleController, animateMove, flashCapture, updateUI, showSelected, playerHex, cancelHex, addLog, endGame, lockTileSize, unlockTileSize.
+5. Convert `js/replay.js` — imports DungeonMCE/MCE/state/data/renderer. Exports RP + replay functions. Registers 'replay' screen hook.
+6. Convert `js/aria.js` — imports KB/G/DungeonMCE/UNITS. Exports announce functions.
+7. Convert `js/keyboard.js` — imports G/MCE/data/svgEl/board-renderer(registerCursorRenderer)/aria/tooltip. Exports KB, kbInit, kbRenderCursor.
+8. Convert `js/tooltip.js` — imports G/TILE/DungeonMCE/UNITS/SP_INFO/KB. Exports TT, ttInit, ttShowForCursor. Registers 'battle' screen hook.
+9. Convert `js/ui.js` — imports everything, wires DOM buttons, removes atmosphere code (now in atmosphere.js). Registers 'rules' screen hook.
+10. Create `js/main.js` — single entry: `import './ui.js'`
+11. Update `index.html` — replace 23 script tags with `<script type="module" src="js/main.js?v=...">`
+12. Version bump to 1.3.0, test in browser
 
 ## Rollback
 
