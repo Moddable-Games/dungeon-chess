@@ -72,7 +72,7 @@ document.getElementById('species-back').onclick   = ()=>show('map')
 document.getElementById('draft-back').onclick     = ()=>show('species')
 document.getElementById('forfeit-btn').onclick = () => {
   if (!confirm('Are you sure you want to forfeit?')) return
-  if (G_controller) G_controller.forfeit()
+  if (getController()) getController().forfeit()
   const aiOwners = G.numPlayers===4 ? ['ai','ai2','ai3'] : ['ai']
   const winner = aiOwners.reduce((best,o) =>
     DungeonMCE.countPieces(G.mceGame,o) > DungeonMCE.countPieces(G.mceGame,best) ? o : best
@@ -80,8 +80,8 @@ document.getElementById('forfeit-btn').onclick = () => {
   endGame(winner)
 }
 document.getElementById('undo-btn').onclick = () => {
-  if (!G_controller || G.turn !== 'player') return
-  G_controller.undo()
+  if (!getController() || G.turn !== 'player') return
+  getController().undo()
   G.turn = G.mceGame.turn
   G.capturedByPlayer.pop()
   G.capturedByAi.pop()
@@ -90,7 +90,7 @@ document.getElementById('undo-btn').onclick = () => {
   const el = document.getElementById('h-list')
   el.innerHTML = ''
   G.history.forEach(text => { const d = document.createElement('div'); d.className='h-entry'; d.textContent=text; el.insertBefore(d, el.firstChild) })
-  if (G_controller) G_controller.render()
+  if (getController()) getController().render()
   updateUI()
 }
 
@@ -146,7 +146,7 @@ document.querySelectorAll('.piece-style-toggle').forEach(toggle => {
     G.pieceStyle = style
     document.querySelectorAll('.pst-btn').forEach(b => b.classList.toggle('active', b.dataset.style === style))
     invalidatePlacementStatic()
-    if (G_controller) G_controller.render()
+    if (getController()) getController().render()
   })
 })
 
