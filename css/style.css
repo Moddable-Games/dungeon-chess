@@ -452,8 +452,7 @@ h1,h2,h3,h4 { font-family:'Cinzel',serif; }
 #mce-board-area svg { display:block; overflow:visible; touch-action:manipulation; }
 .board-canvas { display:block; }
 .board-svg { position:absolute; top:0; left:0; pointer-events:all; overflow:visible; touch-action:manipulation; }
-.board-lights { position:absolute; top:0; left:0; pointer-events:none; mix-blend-mode:screen; z-index:3; }
-.anim-overlay { position:absolute; pointer-events:none; z-index:2; overflow:visible; }
+.board-lights { position:absolute; top:0; left:0; pointer-events:none; mix-blend-mode:screen; z-index:2; }
 
 /* ── BATTLE PANELS ── */
 .info-panel--selected { border-color:var(--gold); min-height:85px; }
