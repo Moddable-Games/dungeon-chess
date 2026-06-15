@@ -172,15 +172,11 @@ export function renderTray() {
     `
     if (!p.placed) {
       div.onclick = () => {
-        if (_dragActive) return
         PL.selectedTrayIdx = (PL.selectedTrayIdx === idx) ? null : idx
         renderTray()
         renderPlacementBoard()
         updatePlaceHint()
       }
-      div.addEventListener('mousedown', (e) => startDrag(e, idx))
-      div.addEventListener('touchstart', (e) => startDrag(e.touches[0], idx), { passive: true })
-      div.setAttribute('draggable', 'false')
     }
     list.appendChild(div)
   })
@@ -404,58 +400,6 @@ export function handlePlacementClick(r, c) {
   renderPlacementBoard()
 }
 
-let _dragActive = false
-
-function startDrag(startEvt, idx) {
-  const startX = startEvt.clientX, startY = startEvt.clientY
-  let ghost = null
-  let activated = false
-
-  function onMove(e) {
-    const dx = e.clientX - startX, dy = e.clientY - startY
-    if (!activated && Math.abs(dx) + Math.abs(dy) > 6) {
-      activated = true
-      _dragActive = true
-      const def = UNITS[PL.placementPieces[idx].key]
-      ghost = document.createElement('div')
-      ghost.className = 'drag-ghost'
-      ghost.textContent = def.name
-      document.body.appendChild(ghost)
-    }
-    if (ghost) {
-      ghost.style.left = (e.clientX + 12) + 'px'
-      ghost.style.top = (e.clientY - 16) + 'px'
-    }
-  }
-
-  function onUp(e) {
-    document.removeEventListener('mousemove', onMove)
-    document.removeEventListener('mouseup', onUp)
-    if (ghost) { ghost.remove(); ghost = null }
-    if (!activated) return
-
-    const rc = placeMouseToRC(e.clientX, e.clientY)
-    if (rc && PL.spawnRows.includes(rc.r)) {
-      const cell = G.map.grid[rc.r][rc.c]
-      if (cell !== null && cell !== 'w' && !PL.placedSquares[`${rc.r},${rc.c}`]) {
-        PL.placedSquares[`${rc.r},${rc.c}`] = { idx, key: PL.placementPieces[idx].key }
-        PL.placementPieces[idx].placed = true
-        PL.selectedTrayIdx = null
-        const allPlaced = PL.placementPieces.every(p => p.placed)
-        document.getElementById('confirm-place-btn').disabled = !allPlaced
-        computeTile(G.map)
-        renderTray()
-        renderPlacementBoard()
-        updatePlaceHint()
-      }
-    }
-    setTimeout(() => { _dragActive = false }, 0)
-  }
-
-  document.addEventListener('mousemove', onMove)
-  document.addEventListener('mouseup', onUp)
-}
-
 function placeMouseToRC(clientX, clientY) {
   const svg = document.getElementById('place-board')
   if (!svg || !G.map) return null
@@ -525,7 +469,7 @@ export function updatePlaceHint() {
     const def = UNITS[PL.placementPieces[PL.selectedTrayIdx].key]
     hint.innerHTML = `<span class="hint-step">②</span> Click a <span>gold square</span> to place <span>${def.name}</span>`
   } else {
-    hint.innerHTML = `<span class="hint-step">①</span> Select a piece from <span>Your Team</span> panel →`
+    hint.innerHTML = `<span class="hint-step">①</span> Select a piece from <span>Your Team</span> · Click a placed piece to move it`
   }
 }
 
