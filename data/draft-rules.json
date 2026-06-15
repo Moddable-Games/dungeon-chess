@@ -1,0 +1,11 @@
+{
+  "budget": 80,
+  "constraints": {
+    "mustHaveKing": true,
+    "mustHavePawn": true
+  },
+  "ai": {
+    "firstPickTypes": ["king", "pawn", "queen", "bishop", "knight", "castle"],
+    "fillWithPawns": true
+  }
+}

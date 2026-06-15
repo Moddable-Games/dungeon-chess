@@ -213,7 +213,7 @@ function renderDraftScreen() {
 }
 
 function refreshDraft() {
-  const spent=draftList.reduce((s,k)=>s+UNITS[k].cost,0), left=80-spent
+  const spent=draftList.reduce((s,k)=>s+UNITS[k].cost,0), left=DRAFT_RULES.budget-spent
   const el=document.getElementById('xp-left')
   el.textContent=left; el.className='xp-num '+(left<10?'low':'ok')
   document.getElementById('draft-count').textContent=draftList.length
@@ -251,7 +251,7 @@ function refreshDraft() {
   document.getElementById('begin-btn').disabled=!(hasK&&hasP&&left>=0)
 }
 
-function buildAiDraft(sp,budget=80) {
+function buildAiDraft(sp,budget=DRAFT_RULES.budget) {
   if (!sp || !SP_UNITS[sp]) return []
   const avail=SP_UNITS[sp],draft=[]; let xp=budget
   const take=k=>{draft.push(k);xp-=UNITS[k].cost}
@@ -263,4 +263,3 @@ function buildAiDraft(sp,budget=80) {
   while(pawnKey&&xp>=UNITS[pawnKey].cost){take(pawnKey)}
   return draft
 }
-

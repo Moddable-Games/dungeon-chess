@@ -1,0 +1,87 @@
+{
+  "maps": [
+    {
+      "id": "compact",
+      "name": "Compact Skirmish",
+      "icon": "⚔",
+      "players": 2,
+      "rows": 10,
+      "cols": 10,
+      "desc": "10×10 dungeon — 4×4 water hazard in centre",
+      "grid": [
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,"w","w","w","w",0,0,0],
+        [0,0,0,"w","w","w","w",0,0,0],
+        [0,0,0,"w","w","w","w",0,0,0],
+        [0,0,0,"w","w","w","w",0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0]
+      ]
+    },
+    {
+      "id": "two_player",
+      "name": "Two Player Dungeon",
+      "icon": "🗡",
+      "players": 2,
+      "rows": 20,
+      "cols": 8,
+      "desc": "Cross-shaped dungeon — top & bottom spawns, central water",
+      "grid": [
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [null,null,null,0,0,null,null,null],
+        [null,null,null,0,0,null,null,null],
+        [null,null,null,0,0,null,null,null],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [0,0,"w","w","w","w",0,0],
+        [0,0,"w","w","w","w",0,0],
+        [0,0,"w","w","w","w",0,0],
+        [0,0,"w","w","w","w",0,0],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [null,null,null,0,0,null,null,null],
+        [null,null,null,0,0,null,null,null],
+        [null,null,null,0,0,null,null,null],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0]
+      ]
+    },
+    {
+      "id": "four_player",
+      "name": "Four Player Dungeon",
+      "icon": "🏰",
+      "players": 4,
+      "rows": 20,
+      "cols": 20,
+      "desc": "Symmetric cross — four spawn zones, central water",
+      "grid": [
+        [null,null,null,null,null,null,0,0,0,0,0,0,0,0,null,null,null,null,null,null],
+        [null,null,null,null,null,null,0,0,0,0,0,0,0,0,null,null,null,null,null,null],
+        [null,null,null,null,null,null,0,0,0,0,0,0,0,0,null,null,null,null,null,null],
+        [null,null,null,null,null,null,null,null,null,0,0,null,null,null,null,null,null,null,null,null],
+        [null,null,null,null,null,null,null,null,null,0,0,null,null,null,null,null,null,null,null,null],
+        [null,null,null,null,null,null,null,null,null,0,0,null,null,null,null,null,null,null,null,null],
+        [0,0,0,null,null,null,0,0,0,0,0,0,0,0,null,null,null,0,0,0],
+        [0,0,0,null,null,null,0,0,0,0,0,0,0,0,null,null,null,0,0,0],
+        [0,0,0,null,null,null,0,0,"w","w","w","w",0,0,null,null,null,0,0,0],
+        [0,0,0,0,0,0,0,0,"w","w","w","w",0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,"w","w","w","w",0,0,0,0,0,0,0,0],
+        [0,0,0,null,null,null,0,0,"w","w","w","w",0,0,null,null,null,0,0,0],
+        [0,0,0,null,null,null,0,0,0,0,0,0,0,0,null,null,null,0,0,0],
+        [0,0,0,null,null,null,0,0,0,0,0,0,0,0,null,null,null,0,0,0],
+        [null,null,null,null,null,null,null,null,null,0,0,null,null,null,null,null,null,null,null,null],
+        [null,null,null,null,null,null,null,null,null,0,0,null,null,null,null,null,null,null,null,null],
+        [null,null,null,null,null,null,null,null,null,0,0,null,null,null,null,null,null,null,null,null],
+        [null,null,null,null,null,null,0,0,0,0,0,0,0,0,null,null,null,null,null,null],
+        [null,null,null,null,null,null,0,0,0,0,0,0,0,0,null,null,null,null,null,null],
+        [null,null,null,null,null,null,0,0,0,0,0,0,0,0,null,null,null,null,null,null]
+      ]
+    }
+  ]
+}

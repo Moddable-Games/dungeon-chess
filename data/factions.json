@@ -1,0 +1,62 @@
+{
+  "sp": {
+    "H": "human",
+    "U": "undead",
+    "R": "redskin",
+    "G": "greenskin"
+  },
+  "pt": {
+    "P": "pawn",
+    "C": "castle",
+    "N": "knight",
+    "B": "bishop",
+    "Q": "queen",
+    "K": "king"
+  },
+  "fenCh": {
+    "pawn":   "p",
+    "castle": "r",
+    "knight": "n",
+    "bishop": "b",
+    "queen":  "q",
+    "king":   "k"
+  },
+  "units": {
+    "hero":       { "type": "pawn",   "sp": "human",     "cost": 2,  "name": "Hero",        "cannon": null },
+    "stronghold": { "type": "castle", "sp": "human",     "cost": 10, "name": "Stronghold",  "cannon": null },
+    "knight_h":   { "type": "knight", "sp": "human",     "cost": 12, "name": "Knight",      "cannon": null },
+    "archer":     { "type": "bishop", "sp": "human",     "cost": 18, "name": "Archer",      "cannon": null },
+    "wizard":     { "type": "queen",  "sp": "human",     "cost": 20, "name": "Wizard",      "cannon": null },
+    "princess":   { "type": "king",   "sp": "human",     "cost": 15, "name": "Princess",    "cannon": null },
+    "skeleton":   { "type": "pawn",   "sp": "undead",    "cost": 1,  "name": "Skeleton",    "cannon": null },
+    "tomb":       { "type": "castle", "sp": "undead",    "cost": 12, "name": "Tomb",        "cannon": null },
+    "reaper":     { "type": "knight", "sp": "undead",    "cost": 15, "name": "Reaper",      "cannon": null },
+    "wraith":     { "type": "bishop", "sp": "undead",    "cost": 15, "name": "Wraith",      "cannon": null },
+    "vampire":    { "type": "queen",  "sp": "undead",    "cost": 20, "name": "Vampire",     "cannon": null },
+    "warlock":    { "type": "king",   "sp": "undead",    "cost": 20, "name": "Warlock",     "cannon": null },
+    "kobold":     { "type": "pawn",   "sp": "redskin",   "cost": 5,  "name": "Kobold",      "cannon": "pawn" },
+    "iron_golem": { "type": "castle", "sp": "redskin",   "cost": 18, "name": "Iron Golem",  "cannon": "castle" },
+    "salamander": { "type": "knight", "sp": "redskin",   "cost": 18, "name": "Salamander",  "cannon": null },
+    "fire_elem":  { "type": "bishop", "sp": "redskin",   "cost": 12, "name": "Fire Elem.",  "cannon": null },
+    "demonics":   { "type": "queen",  "sp": "redskin",   "cost": 22, "name": "Demonics",    "cannon": null },
+    "red_dragon": { "type": "king",   "sp": "redskin",   "cost": 20, "name": "Red Dragon",  "cannon": null },
+    "goblin":     { "type": "pawn",   "sp": "greenskin", "cost": 5,  "name": "Goblin",      "cannon": "pawn" },
+    "ogre":       { "type": "castle", "sp": "greenskin", "cost": 14, "name": "Ogre",        "cannon": "castle" },
+    "orc":        { "type": "knight", "sp": "greenskin", "cost": 14, "name": "Orc",         "cannon": null },
+    "troll":      { "type": "bishop", "sp": "greenskin", "cost": 16, "name": "Troll",       "cannon": null },
+    "shaman":     { "type": "queen",  "sp": "greenskin", "cost": 20, "name": "Shaman",      "cannon": null },
+    "warlord":    { "type": "king",   "sp": "greenskin", "cost": 15, "name": "Warlord",     "cannon": null }
+  },
+  "spUnits": {
+    "human":     ["hero", "stronghold", "knight_h", "archer", "wizard", "princess"],
+    "undead":    ["skeleton", "tomb", "reaper", "wraith", "vampire", "warlock"],
+    "redskin":   ["kobold", "iron_golem", "salamander", "fire_elem", "demonics", "red_dragon"],
+    "greenskin": ["goblin", "ogre", "orc", "troll", "shaman", "warlord"]
+  },
+  "spInfo": {
+    "human":     { "label": "Humans",     "accent": "#B08D2D", "emoji": "⚔️",  "desc": "Heroes, knights & archers. Balanced and versatile." },
+    "undead":    { "label": "Undead",     "accent": "#7c3aed", "emoji": "💀",  "desc": "Skeletons & vampires. Masters of movement across gaps." },
+    "redskin":   { "label": "Redskins",   "accent": "#c0392b", "emoji": "👹",  "desc": "Kobolds & iron golems. Cannon attacks and fire power." },
+    "greenskin": { "label": "Greenskins", "accent": "#16a34a", "emoji": "🐲",  "desc": "Goblins, ogres & trolls. Brute force and cannon attacks." }
+  }
+}
