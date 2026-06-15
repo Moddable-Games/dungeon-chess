@@ -1,5 +1,6 @@
 import { TILE, TILE_MIN, computeTile, SP_INFO, UNITS, PT, FEN_CH } from './data.js'
 import { G, show, registerScreenHook } from './state.js'
+import { placeAiPiecesColumn } from './battle.js'
 import { svgEl, SQ_LIGHT, SQ_DARK, SQ_WATER, SQ_WATER2, spToColor, appendPieceTint,
          drawStoneTexture, drawFloorDetails, ensureSpriteDefs } from './board-renderer.js'
 import { drawDungeonSurround } from './dungeon-surround.js'
