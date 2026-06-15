@@ -1,21 +1,26 @@
-'use strict'
-// ═══════════════════════════════════════════════════════════
-// BATTLE CONTROLLER + ANIMATION
-// ═══════════════════════════════════════════════════════════
+import { TILE, UNITS, PT, SP_INFO, FEN_CH } from './data.js'
+import { G, show } from './state.js'
+import MCE from '../lib/mce/chess-engine.js'
+import { DungeonMCE } from './mce-bridge.js'
+import { svgEl, spToColor, appendPieceTint, getDCRenderOpts } from './board-renderer.js'
+import { getLegal, wouldLeaveInCheck, isInCheck } from './engine.js'
+import { kbAnnounce } from './aria.js'
+
 let G_lastMove = null
 let G_controller = null
+export function getController() { return G_controller }
 
 let _lastTile = null
 let _tileLocked = false
-function lockTileSize() { _tileLocked = true }
-function unlockTileSize() { _tileLocked = false }
+export function lockTileSize() { _tileLocked = true }
+export function unlockTileSize() { _tileLocked = false }
 
 // ═══════════════════════════════════════════════════════════
 // GAME CONTROLLER SETUP — MCE.renderBoard with DC hooks
 // ═══════════════════════════════════════════════════════════
 let _dcOpts = null
 
-function createBattleController() {
+export function createBattleController() {
   const players = {}
   G.mceGame.players.forEach(p => { players[p] = p === 'player' ? 'human' : 'ai' })
 
@@ -141,7 +146,7 @@ function createBattleController() {
   G_controller.render()
 }
 
-function destroyBattleController() {
+export function destroyBattleController() {
   if (G_controller) {
     G_controller.destroy()
     G_controller = null
@@ -154,7 +159,7 @@ function destroyBattleController() {
 // ═══════════════════════════════════════════════════════════
 const MOVE_DURATION = 350
 
-function animateMove(pd, fr, fc, tr, tc, isCapture, callback) {
+export function animateMove(pd, fr, fc, tr, tc, isCapture, callback) {
   const svg = document.getElementById('dungeon-board')
   if (!svg || !G.map) { callback(); return }
 
@@ -216,7 +221,7 @@ function animateMove(pd, fr, fc, tr, tc, isCapture, callback) {
   requestAnimationFrame(frame)
 }
 
-function flashCapture(tr, tc) {
+export function flashCapture(tr, tc) {
   const svg = document.getElementById('dungeon-board')
   if (!svg) return
   const cx = tc * TILE + TILE / 2
