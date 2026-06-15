@@ -266,3 +266,139 @@ export function flashCapture(tr, tc) {
   }
   requestAnimationFrame(frameFlash)
 }
+export function updateUI() {
+  const pi=SP_INFO[G.playerSp], ai=SP_INFO[G.aiSp]
+  const tp=document.getElementById('turn-panel')
+  tp.classList.toggle('turn-panel--player', G.turn==='player')
+  tp.classList.toggle('turn-panel--enemy', G.turn!=='player')
+  document.getElementById('t-emoji').textContent=G.aiThinking?'⏳':G.turn==='player'?pi.emoji:ai.emoji
+  const tl=document.getElementById('t-label')
+  const inCheck = G.turn==='player' && isInCheck('player')
+  tl.textContent = G.aiThinking ? 'AI thinking…'
+    : inCheck ? '⚠ Your king is in check!'
+    : G.turn==='player' ? 'Your turn' : "AI's turn"
+  tl.classList.toggle('t-label--check', inCheck)
+  tl.classList.toggle('t-label--player', !inCheck && G.turn==='player')
+  tl.classList.toggle('t-label--enemy', !inCheck && G.turn!=='player')
+  // Announce turn changes for screen readers
+  if (typeof kbAnnounce === 'function') {
+    if (inCheck) kbAnnounce('Warning: your king is in check!')
+    else if (G.turn === 'player' && !G.aiThinking) kbAnnounce('Your turn')
+  }
+  const pi2=SP_INFO[G.playerSp], ai2i=SP_INFO[G.aiSp]
+  document.getElementById('p-label').textContent=`${pi2.emoji} YOU`
+  document.getElementById('a-label').textContent=`${ai2i.emoji} AI${G.numPlayers===4?' 1':''}`
+  document.getElementById('p-pieces').textContent=`Pieces: ${G.mceGame ? DungeonMCE.countPieces(G.mceGame,'player') : 0}`
+  document.getElementById('a-pieces').textContent=`Pieces: ${G.mceGame ? DungeonMCE.countPieces(G.mceGame,'ai') : 0}${
+    G.numPlayers===4 && G.ai2Sp && G.mceGame ? ` | ${SP_INFO[G.ai2Sp].emoji}${DungeonMCE.countPieces(G.mceGame,'ai2')} | ${SP_INFO[G.ai3Sp].emoji}${DungeonMCE.countPieces(G.mceGame,'ai3')}`:''}`
+  document.getElementById('p-cap').textContent=G.capturedByPlayer.length
+    ?'Cap: '+G.capturedByPlayer.map(k=>UNITS[k].name).join(', ')
+    :'Captured: none'
+  document.getElementById('a-cap').textContent=G.capturedByAi.length
+    ?'Lost: '+G.capturedByAi.map(k=>UNITS[k].name).join(', ')
+    :'Lost: none'
+}
+
+export function showSelected(p){
+  const d=UNITS[p.key]
+  const {moves,attacks}=getLegal(p)
+  const safeMoves=moves.filter(([tr,tc])=>!wouldLeaveInCheck(p,tr,tc))
+  const safeAttacks=attacks.filter(([tr,tc])=>!wouldLeaveInCheck(p,tr,tc))
+  let hexBtn = ''
+  if (p.key === 'shaman' && p.owner === 'player') {
+    const shamanSq = MCE.sq(p.r, p.c, G.mceGame)
+    const shamanPd = G.mceGame && G.mceGame.pieceData[shamanSq]
+    if (shamanPd && !shamanPd.hexUsed) {
+      hexBtn = `<button class="btn sm btn-hex" onclick="playerHex(${shamanSq})">⚡ HEX</button>`
+    }
+  }
+  document.getElementById('sel-info').innerHTML=
+    `<div class="sel-name">${d.name}</div>
+     <div class="sel-meta">${d.type} · ${d.cost}XP</div>
+     <div class="sel-meta sel-meta--moves">${safeMoves.length} moves</div>
+     <div class="sel-meta sel-meta--attacks">${safeAttacks.length} attacks</div>
+     ${hexBtn}`
+}
+
+export function playerHex(shamanSq) {
+  G.hexTargeting = { sq: shamanSq }
+  G.legalMoves = []
+  G.legalAttacks = DungeonMCE.allPieces(G.mceGame)
+    .filter(p => p.owner !== 'player')
+    .map(p => [p.r, p.c])
+  document.getElementById('sel-info').innerHTML =
+    `<div class="sel-name">Hex Target</div>
+     <div class="sel-meta">Click an enemy to immobilise for 2 turns</div>
+     <button class="btn sm" onclick="cancelHex()">Cancel</button>`
+  if (G_controller) G_controller.render()
+}
+
+export function cancelHex() {
+  G.hexTargeting = null
+  G.selR = null; G.selC = null; G.legalMoves = []; G.legalAttacks = []
+  document.getElementById('sel-info').innerHTML = '<span class="sel-info">Click a piece</span>'
+  if (G_controller) G_controller.render()
+}
+
+export function addLog(text){
+  G.history.push(text)
+  const el=document.getElementById('h-list')
+  const d=document.createElement('div')
+  d.className='h-entry';d.textContent=text
+  el.insertBefore(d,el.firstChild)
+  document.getElementById('undo-btn').disabled = G.history.length < 2 || G.turn !== 'player'
+}
+
+// ═══════════════════════════════════════════════════════════
+// END GAME
+// ═══════════════════════════════════════════════════════════
+export function endGame(winner){
+  destroyBattleController()
+  G.aiThinking=false
+  // Announce game result for screen readers
+  if (typeof kbAnnounce === 'function') {
+    kbAnnounce(winner === 'player' ? 'Victory! You won the battle.' : 'Defeat. The enemy has conquered.')
+  }
+  const pw=winner==='player'
+  const pi=SP_INFO[G.playerSp]
+  const winnerSp = winner==='player'?G.playerSp:winner==='ai'?G.aiSp:winner==='ai2'?G.ai2Sp:G.ai3Sp
+  const winnerInfo = SP_INFO[winnerSp]
+
+  const endEl = document.querySelector('.stone-frame--end')
+  endEl.classList.remove('end-victory','end-defeat')
+  endEl.classList.add(pw ? 'end-victory' : 'end-defeat')
+
+  document.getElementById('end-icon').textContent=pw?'👑':'💀'
+  document.getElementById('end-title').textContent=pw?'VICTORY':'DEFEAT'
+  document.getElementById('end-sub').textContent=pw
+    ?`${pi.emoji} ${pi.label} triumph!`
+    :`${winnerInfo.emoji} ${winnerInfo.label} have conquered!`
+
+  const mvp = G.capturedByPlayer.length
+    ? G.capturedByPlayer.reduce((best, k) => UNITS[k].cost > UNITS[best].cost ? k : best)
+    : null
+  const survivors = G.mceGame ? DungeonMCE.allPieces(G.mceGame).filter(p => p.owner === 'player') : []
+  const bestSurvivor = survivors.length
+    ? survivors.reduce((best, p) => UNITS[p.key].cost > UNITS[best.key].cost ? p : best)
+    : null
+
+  document.getElementById('end-stats').innerHTML=[
+    ['Turns', Math.ceil(G.history.length / 2)],
+    ['Captured', G.capturedByPlayer.length],
+    ['Lost', G.capturedByAi.length],
+    ['MVP Kill', mvp ? UNITS[mvp].name : '—'],
+    ['Top Survivor', bestSurvivor ? UNITS[bestSurvivor.key].name : '—'],
+  ].map(([l,v])=>`<div class="end-stat"><div class="end-val${typeof v==='string'?' end-val--text':''">${v}</div><div class="end-lbl">${l}</div></div>`).join('')
+
+  const surviving = survivors.map(p => UNITS[p.key].name)
+  const lost = G.capturedByAi.map(k => UNITS[k].name)
+  let piecesHtml = ''
+  if (surviving.length) {
+    piecesHtml += `<div>Surviving: <div class="end-pieces-row">${surviving.map((n,i)=>`<span class="end-piece-tag end-piece-tag--alive" style="--i:${i}">${n}</span>`).join('')}</div></div>`
+  }
+  if (lost.length) {
+    piecesHtml += `<div>Lost: <div class="end-pieces-row">${lost.map((n,i)=>`<span class="end-piece-tag end-piece-tag--dead" style="--i:${i}">${n}</span>`).join('')}</div></div>`
+  }
+  document.getElementById('end-pieces').innerHTML = piecesHtml
+  setTimeout(()=>show('end'),900)
+}
