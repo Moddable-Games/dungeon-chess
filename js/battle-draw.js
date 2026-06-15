@@ -382,7 +382,7 @@ export function endGame(winner){
     ['Lost', G.capturedByAi.length],
     ['MVP Kill', mvp ? UNITS[mvp].name : '—'],
     ['Top Survivor', bestSurvivor ? UNITS[bestSurvivor.key].name : '—'],
-  ].map(([l,v])=>`<div class="end-stat"><div class="end-val${typeof v==='string'?' end-val--text':''">${v}</div><div class="end-lbl">${l}</div></div>`).join('')
+  ].map(([l,v])=>`<div class="end-stat"><div class="end-val${typeof v==='string'?' end-val--text':''}">${v}</div><div class="end-lbl">${l}</div></div>`).join('')
 
   const surviving = survivors.map(p => UNITS[p.key].name)
   const lost = G.capturedByAi.map(k => UNITS[k].name)
