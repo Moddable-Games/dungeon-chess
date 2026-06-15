@@ -268,10 +268,10 @@ function pawnAttacks(g, from, target) {
   const [fr, fc] = MCE.rc(from, g);
   const [tr, tc] = MCE.rc(target, g);
   if (Math.abs(tr - fr) <= 1 && Math.abs(tc - fc) <= 1 && (tr !== fr || tc !== fc)) return true;
-  return cannonReaches(g, from, target, RD);
+  return dcCannonReaches(g, from, target, RD);
 }
 
-function cannonReaches(g, from, target, dirs) {
+function dcCannonReaches(g, from, target, dirs) {
   const tpd = g.pieceData[target];
   if (tpd && tpd.key === 'iron_golem') return false;
   return cannonReaches(g, from, target, dirs);
