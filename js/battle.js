@@ -1,7 +1,6 @@
-'use strict'
-// ═══════════════════════════════════════════════════════════
-// BATTLE SETUP
-// ═══════════════════════════════════════════════════════════
+import { UNITS, PT } from './data.js'
+import { G, draftList, show, buildAiDraft } from './state.js'
+
 document.getElementById('begin-btn').onclick = () => {
   G.playerDraft = [...draftList]
   G.aiDraft = buildAiDraft(G.aiSp)
@@ -14,7 +13,7 @@ document.getElementById('begin-btn').onclick = () => {
   show('place')
 }
 
-function placeAiPiecesColumn(draft, owner, fromLeft) {
+export function placeAiPiecesColumn(draft, owner, fromLeft) {
   if (!draft || !draft.length) return
   const { grid, rows, cols } = G.map
   const playCols = r => grid[r].map((_,c)=>c).filter(c=>grid[r][c]!==null&&grid[r][c]!=='w')
@@ -59,7 +58,7 @@ function placeAiPiecesColumn(draft, owner, fromLeft) {
   }
 }
 
-function buildStarting() {
+export function buildStarting() {
   const pieces=[]; let id=0
   const { grid, rows, cols } = G.map
   const playCols = r => grid[r].map((_,c)=>c).filter(c=>grid[r][c]!==null)

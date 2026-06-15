@@ -1,17 +1,18 @@
-'use strict'
-// ═══════════════════════════════════════════════════════════
-// PLACEMENT SCREEN
-// ═══════════════════════════════════════════════════════════
+import { TILE, TILE_MIN, computeTile, SP_INFO, UNITS, PT, FEN_CH } from './data.js'
+import { G, show, registerScreenHook } from './state.js'
+import { svgEl, SQ_LIGHT, SQ_DARK, SQ_WATER, SQ_WATER2, spToColor, appendPieceTint,
+         drawStoneTexture, drawFloorDetails, ensureSpriteDefs } from './board-renderer.js'
+import { drawDungeonSurround } from './dungeon-surround.js'
+import { startLightAnimation, stopLightAnim } from './atmosphere.js'
 
-// Placement state
-const PL = {
+export const PL = {
   selectedTrayIdx: null,  // index into placementPieces
   placedSquares: {},      // key 'r,c' → { idx, key }
   placementPieces: [],    // [{ key, placed:bool }] — one entry per drafted piece
   spawnRows: [],          // the two rows player may place on
 }
 
-function renderPlacementScreen() {
+export function renderPlacementScreen() {
   const pi = SP_INFO[G.playerSp]
   document.getElementById('place-sub').textContent =
     `${pi.emoji} ${pi.label} — place your pieces on the highlighted squares`
@@ -91,7 +92,7 @@ function populatePlacePanels() {
   }).join('')
 }
 
-function autoPlace() {
+export function autoPlace() {
   const { grid } = G.map
   const validSquares = []
   PL.spawnRows.forEach(r => {
@@ -148,7 +149,7 @@ function placeAiPieces(aiRows, draft=G.aiDraft, owner='ai') {
   })
 }
 
-function renderTray() {
+export function renderTray() {
   const pi = SP_INFO[G.playerSp]
   const list = document.getElementById('tray-list')
   list.innerHTML = ''
@@ -181,7 +182,7 @@ function renderTray() {
 let _placeStaticBuilt = false
 let _placeStaticMap = null
 
-function invalidatePlacementStatic() { _placeStaticBuilt = false }
+export function invalidatePlacementStatic() { _placeStaticBuilt = false }
 
 function renderPlacementBoardStatic(svg) {
   const { grid, rows, cols } = G.map
@@ -264,7 +265,7 @@ function renderPlacementBoardStatic(svg) {
   _placeStaticMap = G.map
 }
 
-function renderPlacementBoard() {
+export function renderPlacementBoard() {
   const svg = document.getElementById('place-board')
   const { grid, rows, cols } = G.map
   const W = cols * TILE, H = rows * TILE
@@ -353,14 +354,14 @@ function drawPlaceSurroundOnce() {
   if (_placeSurroundDrawn) return
   _placeSurroundDrawn = true
   // Stop any running light animation before heavy canvas work
-  if (lightAnimState) { lightAnimState.stop = true; lightAnimState = null }
+  stopLightAnim()
   const placeCanvasEl = document.getElementById('place-canvas')
   if (placeCanvasEl) drawDungeonSurround(placeCanvasEl, G.map)
   const placeLightsEl = document.getElementById('place-lights')
   if (placeLightsEl) startLightAnimation(placeLightsEl, G.map, TILE * 2.2)
 }
 
-function handlePlacementClick(r, c) {
+export function handlePlacementClick(r, c) {
   const sqKey = `${r},${c}`
   const existing = PL.placedSquares[sqKey]
 
@@ -396,7 +397,9 @@ function handlePlacementClick(r, c) {
   renderPlacementBoard()
 }
 
-function updatePlaceHint() {
+registerScreenHook('place', renderPlacementScreen)
+
+export function updatePlaceHint() {
   const remaining = PL.placementPieces.filter(p => !p.placed).length
   const hint = document.getElementById('place-hint')
   if (remaining === 0) {
