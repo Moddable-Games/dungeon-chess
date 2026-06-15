@@ -1,8 +1,10 @@
-'use strict'
-// ═══════════════════════════════════════════════════════════
-// GAME STATE
-// ═══════════════════════════════════════════════════════════
-const G = {
+import { TILE, SIDE_W, computeTile, MAPS, SP, SP_INFO, SP_UNITS, UNITS, DRAFT_RULES, PT, FEN_CH } from './data.js'
+import { stopLightAnim, renderAtmosphereCanvas } from './atmosphere.js'
+
+const _screenHooks = {}
+export function registerScreenHook(screenId, fn) { _screenHooks[screenId] = fn }
+
+export const G = {
   pieceStyle: 'custom-b',  // 'classic' | 'custom-a' | 'custom-b'
   numPlayers:2,
   playerSp:null, aiSp:null, ai2Sp:null, ai3Sp:null,
@@ -16,36 +18,13 @@ const G = {
   capturedByPlayer:[], capturedByAi:[],
   history:[],
 }
-let draftList = []
-
-
-
-function spToColor(sp) {
-  return sp===SP.U ? 'b' : 'w'
-}
-const SP_PIECE_COLOR = {
-  [SP.H]: null,
-  [SP.U]: null,
-  [SP.R]: 'rgba(200,50,20,0.55)',
-  [SP.G]: 'rgba(40,140,30,0.55)',
-}
-
-function appendPieceTint(parent, ownerSp, offset, sz) {
-  const col = SP_PIECE_COLOR[ownerSp];
-  if (col) {
-    parent.appendChild(svgEl('rect', {
-      x: offset, y: offset, width: sz, height: sz,
-      fill: col, style: 'pointer-events:none;mix-blend-mode:multiply'
-    }));
-  }
-}
+export let draftList = []
 
 // ═══════════════════════════════════════════════════════════
 // NAVIGATION
 // ═══════════════════════════════════════════════════════════
-function show(id) {
-  // Stop light animation when leaving any screen — prevents GPU compositing overhead
-  if (lightAnimState) { lightAnimState.stop = true; lightAnimState = null }
+export function show(id) {
+  stopLightAnim()
   // Release large canvas GPU memory from battle/placement screens when navigating away
   if (id !== 'battle') {
     const bc = document.getElementById('dungeon-canvas')
@@ -73,22 +52,19 @@ function show(id) {
   }
   if (id==='species') renderSpeciesScreen()
   if (id==='draft')   renderDraftScreen()
-  if (id==='place')   renderPlacementScreen()
   if (id !== 'replay') {
     const rc = document.getElementById('replay-canvas')
     const rl = document.getElementById('replay-lights')
     if (rc) { rc.width = 1; rc.height = 1 }
     if (rl) { rl.width = 1; rl.height = 1 }
   }
-  if (id==='rules' && typeof renderRulesUnitTable === 'function') renderRulesUnitTable()
-  if (id==='replay' && typeof rpBuildLog === 'function') rpBuildLog()
-  if (id==='battle' && typeof ttInit === 'function') ttInit()
+  if (_screenHooks[id]) _screenHooks[id]()
 }
 
 // ═══════════════════════════════════════════════════════════
 // MAP SCREEN
 // ═══════════════════════════════════════════════════════════
-function renderMapScreen() {
+export function renderMapScreen() {
   const grid = document.getElementById('map-grid')
   grid.innerHTML = ''
   const visibleMaps = MAPS.filter(m => G.numPlayers===4 ? m.players===4 : m.players===2)
@@ -152,7 +128,7 @@ function miniMapSVG(m) {
 // ═══════════════════════════════════════════════════════════
 // SPECIES SCREEN
 // ═══════════════════════════════════════════════════════════
-function renderSpeciesScreen() {
+export function renderSpeciesScreen() {
   const grid = document.getElementById('species-grid')
   grid.innerHTML = ''
   Object.values(SP).forEach(sp => {
@@ -184,7 +160,7 @@ function renderSpeciesScreen() {
 // ═══════════════════════════════════════════════════════════
 // DRAFT SCREEN
 // ═══════════════════════════════════════════════════════════
-function renderDraftScreen() {
+export function renderDraftScreen() {
   draftList = []
   const pi=SP_INFO[G.playerSp], ai=SP_INFO[G.aiSp]
   document.getElementById('screen-draft').style.setProperty('--sp-accent', pi.accent)
@@ -212,7 +188,7 @@ function renderDraftScreen() {
   refreshDraft()
 }
 
-function refreshDraft() {
+export function refreshDraft() {
   const spent=draftList.reduce((s,k)=>s+UNITS[k].cost,0), left=DRAFT_RULES.budget-spent
   const el=document.getElementById('xp-left')
   el.textContent=left; el.className='xp-num '+(left<10?'low':'ok')
@@ -251,7 +227,7 @@ function refreshDraft() {
   document.getElementById('begin-btn').disabled=!(hasK&&hasP&&left>=0)
 }
 
-function buildAiDraft(sp,budget=DRAFT_RULES.budget) {
+export function buildAiDraft(sp,budget=DRAFT_RULES.budget) {
   if (!sp || !SP_UNITS[sp]) return []
   const avail=SP_UNITS[sp],draft=[]; let xp=budget
   const take=k=>{draft.push(k);xp-=UNITS[k].cost}
